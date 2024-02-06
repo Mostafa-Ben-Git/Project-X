@@ -73,13 +73,18 @@ Before you begin, make sure you have the following installed on your machine:
    ```
    cd ../FRONTEND
    ```
-1. **Install Node.js dependencies:**
+2. **Install Node.js dependencies:**
 
    ```
    npm install
    ```
-1. **Start the development server:**
+3. **Start the development server:**
 
    ```
    npm run dev
    ```
+## Contributing
+Feel free to contribute to the project by opening issues or submitting pull requests. We welcome any improvements or additional features!
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
