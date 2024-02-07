@@ -87,4 +87,4 @@ Before you begin, make sure you have the following installed on your machine:
 Feel free to contribute to the project by opening issues or submitting pull requests. We welcome any improvements or additional features!
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
