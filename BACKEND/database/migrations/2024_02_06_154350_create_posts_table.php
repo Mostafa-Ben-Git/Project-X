@@ -15,8 +15,9 @@ return new class extends Migration
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class);
-            $table->string("description");
-            $table->integer("likes");
+            $table->string('title');
+            $table->text('body');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

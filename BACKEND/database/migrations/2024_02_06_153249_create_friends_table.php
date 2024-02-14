@@ -14,9 +14,8 @@ return new class extends Migration
     {
         Schema::create('friends', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class, "sourceId");
-            $table->foreignIdFor(User::class, "targetId");
-            // $table->smallInteger("status");
+            $table->foreignIdFor(User::class);
+            $table->foreignIdFor(User::class, "friend_id");
             $table->timestamps();
         });
     }
