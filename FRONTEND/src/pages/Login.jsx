@@ -6,17 +6,18 @@ import { validateLogin } from "../slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const [login, setLogin] = useState({
-    email: "evert58@example.net",
-    password: "passwor",
-  });
+  const [user, setUser] = useState({});
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const handleOnChange = (e) => {
+    setUser({ ...user, [e.target.name]: e.target.value });
+  };
+
   const handleLogin = (e) => {
     e.preventDefault();
-    dispatch(validateLogin(login));
+    dispatch(validateLogin(user));
     // navigate("/home");
   };
 
@@ -29,19 +30,19 @@ const Login = () => {
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div>
             <label
-              htmlFor="username"
+              htmlFor="email"
               className="block text-sm font-medium text-gray-700"
             >
               Email
             </label>
             <input
-              id="username"
-              name="username"
+              id="email"
+              name="email"
               type="text"
-              autoComplete="username"
+              autoComplete="email"
               required
-              value={login.email}
-              onChange={(e) => setLogin({ ...login, email: e.value.target })}
+              value={user.email}
+              onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
           </div>
@@ -58,8 +59,8 @@ const Login = () => {
               type="password"
               autoComplete="current-password"
               required
-              value={login.password}
-              onChange={(e) => setLogin({ ...login, password: e.value.target })}
+              value={user.password}
+              onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
           </div>

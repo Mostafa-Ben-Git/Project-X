@@ -6,12 +6,7 @@ import { validateLogin } from "../slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 
 function Register() {
-  const [user, setUser] = useState({
-    name: "",
-    email: "",
-    password: "",
-    password_confirmation: "",
-  });
+  const [user, setUser] = useState({});
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -51,7 +46,7 @@ function Register() {
               autoComplete="name"
               required
               value={user.name}
-              onChange={(e) => handleOnChange(e)}
+              onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
           </div>
@@ -68,7 +63,7 @@ function Register() {
               type="email"
               required
               value={user.email}
-              onChange={(e) => handleOnChange(e)}
+              onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
           </div>
@@ -86,7 +81,7 @@ function Register() {
               autoComplete="current-password"
               required
               value={user.password}
-              onChange={(e) => handleOnChange(e)}
+              onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
           </div>
@@ -104,7 +99,7 @@ function Register() {
               autoComplete="current-password"
               required
               value={user.password_confirmation}
-              onChange={(e) => handleOnChange(e)}
+              onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
           </div>
