@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\SignupRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
 
-    public function signup(SignupRequest $request)
+    public function signup(RegisterRequest $request)
     {
         $data = $request->validated();
 
@@ -23,7 +24,7 @@ class AuthController extends Controller
             'password' => Hash::make($data['password'])
         ]);
 
-        $token = $user->createToken('main')->plainTextToken;
+        $token = $user->createToken('api-token')->plainTextToken;
 
         return response([
             'user' => $user,
@@ -43,7 +44,7 @@ class AuthController extends Controller
             ], 422);
         }
         $user = $request->user();
-        $token = $user->createToken('main')->plainTextToken;
+        $token = $user->createToken('api-token')->plainTextToken;
 
         return response([
             'user' => $user,
