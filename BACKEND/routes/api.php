@@ -36,9 +36,9 @@ Route::post('/register', [RegisteredUserController::class, 'store'])
     ->middleware('guest')
     ->name('register');
 
-Route::post('/login', [AuthenticatedSessionController::class, 'store'])
-    ->middleware('guest')
-    ->name('login');
+// Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+//     ->middleware('guest')
+//     ->name('login');
 
 Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
     ->middleware('guest')
@@ -61,7 +61,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
 
 
-// Route::post('login', [AuthController::class, "login"]);
+Route::post('login', [AuthController::class, "login"]);
 // Route::post('signup', [AuthController::class, "signup"]);
 // Route::post('logout', [AuthController::class, "logout"]);
 // 1|s6AxT2o8bu5tXWj9XKq2JalfKJnHFlqYbe59gaqX66eb7f56

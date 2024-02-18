@@ -4,7 +4,11 @@ import apiService from "../api/apiService";
 export const validateLogin = createAsyncThunk("login", async (data) => {
   apiService
     .post("/api/login", data)
-    .then((res) => console.log(res))
+    .then((res) => {
+      if (res.status == 200) {
+        localStorage.setItem("access_token");
+      }
+    })
     .catch((e) => {
       throw e;
     });
