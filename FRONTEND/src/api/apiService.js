@@ -3,6 +3,7 @@ import axios from "axios";
 const apiService = axios.create({
   baseURL: "http://localhost:8000",
   withCredentials: true,
+  withXSRFToken: true,
 });
 
 apiService.interceptors.response.use(
@@ -26,19 +27,19 @@ apiService.interceptors.response.use(
   }
 );
 
-// apiService.interceptors.request.use(
-//   (config) => {
-//     const accessToken = localStorage.getItem("access_token");
+apiService.interceptors.request.use(
+  (config) => {
+    const accessToken = localStorage.getItem("access_token");
 
-//     if (accessToken) {
-//       config.headers.Authorization = `Bearer ${accessToken}`;
-//     }
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
 
-//     return config;
-//   },
-//   (error) => {
-//     return Promise.reject(error);
-//   }
-// );
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 export default apiService;

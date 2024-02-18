@@ -3,7 +3,7 @@ import apiService from "../api/apiService";
 
 export const validateLogin = createAsyncThunk("login", async (data) => {
   apiService
-    .post("/login", data)
+    .post("/api/login", data)
     .then((res) => console.log(res))
     .catch((e) => {
       throw e;
