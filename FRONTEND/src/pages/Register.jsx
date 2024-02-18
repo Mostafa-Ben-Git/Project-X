@@ -95,7 +95,7 @@ function Register() {
             <input
               id="password_confirmation"
               name="password_confirmation"
-              type="password_confirmation"
+              type="password"
               autoComplete="current-password"
               required
               value={user.password_confirmation}

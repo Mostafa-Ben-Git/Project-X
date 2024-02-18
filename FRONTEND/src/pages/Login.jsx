@@ -1,12 +1,17 @@
 /* eslint-disable no-unused-vars */
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "../api/apiService";
 import { validateLogin } from "../slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const [user, setUser] = useState({});
+  const [user, setUser] = useState({
+    email: "mostafa@ben.cm",
+    password: "12345678",
+  });
+
+  const { errors } = useSelector((store) => store.auth);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -38,7 +43,7 @@ const Login = () => {
             <input
               id="email"
               name="email"
-              type="text"
+              type="email"
               autoComplete="email"
               required
               value={user.email}
