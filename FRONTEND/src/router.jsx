@@ -1,13 +1,27 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Home from "./pages/Home";
-import PageNotFound from "./pages/PageNotFound";
 import GuestLayout from "./layouts/GuestLayout";
-import DefaultLayout from "./layouts/DefaultLayout";
+import UserLayout from "./layouts/UserLayout";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import PageNotFound from "./pages/PageNotFound";
+import Register from "./pages/Register";
 
 const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <UserLayout />,
+    children: [
+      {
+        path: "/",
+        element: <Navigate to={"/home"} />,
+      },
+      {
+        path: "home",
+        element: <Home />,
+      },
+    ],
+  },
   {
     path: "/",
     element: <GuestLayout />,
@@ -26,20 +40,7 @@ const router = createBrowserRouter([
       },
     ],
   },
-  {
-    path: "/",
-    element: <DefaultLayout />,
-    children: [
-      {
-        path: "/",
-        element: <Navigate to={"/home"} />,
-      },
-      {
-        path: "home",
-        element: <Home />,
-      },
-    ],
-  },
+
   {
     path: "*",
     element: <PageNotFound />,

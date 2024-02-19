@@ -1,29 +1,34 @@
 /* eslint-disable no-unused-vars */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "../api/apiService";
-import { validateLogin } from "../slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
+import { setInfo, validateLogin } from "../slices/authSlice";
 
 const Login = () => {
-  const [user, setUser] = useState({
+  const [login, setLogin] = useState({
     email: "mostafa@ben.cm",
     password: "12345678",
   });
 
-  const { errors } = useSelector((store) => store.auth);
+  const {
+    info: { errors, message },
+    isLaoding,
+  } = useSelector((store) => store.auth);
 
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const nav = useNavigate();
+
+  useEffect(() => {
+    dispatch(setInfo({}));
+  }, [dispatch]);
 
   const handleOnChange = (e) => {
-    setUser({ ...user, [e.target.name]: e.target.value });
+    setLogin({ ...login, [e.target.name]: e.target.value });
   };
 
   const handleLogin = (e) => {
     e.preventDefault();
-    dispatch(validateLogin(user));
-    // navigate("/home");
+    dispatch(validateLogin(login));
   };
 
   return (
@@ -32,6 +37,11 @@ const Login = () => {
         <h2 className="text-3xl font-extrabold text-center text-gray-900">
           Login
         </h2>
+        {!errors && message != null ? (
+          <p className="border border-red-500 bg-red-400 p-2 rounded text-gray-200">
+            {message}
+          </p>
+        ) : null}
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div>
             <label
@@ -46,10 +56,13 @@ const Login = () => {
               type="email"
               autoComplete="email"
               required
-              value={user.email}
+              value={login.email}
               onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
+            {errors?.email && (
+              <p className="text-red-300 text-xs">*{errors.email}</p>
+            )}
           </div>
           <div>
             <label
@@ -64,10 +77,13 @@ const Login = () => {
               type="password"
               autoComplete="current-password"
               required
-              value={user.password}
+              value={login.password}
               onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
+            {errors?.password && (
+              <p className="text-red-300 text-xs">*{errors.password}</p>
+            )}
           </div>
           <div className="text-right text-blue-200 underline decoration-solid hover:decoration-transparent">
             <Link to="/register">Create Account</Link>

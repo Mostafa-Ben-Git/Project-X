@@ -26,42 +26,31 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
-        return response([
-            'user' => $user,
-            'token' => $token
-        ]);
+        return response(compact('user', 'token'));
     }
 
     public function login(LoginRequest $request)
     {
         $credentials = $request->validated();
-        // $remember = $credentials['remember'] ?? false;
-        // unset($credentials['remember']);
-
         if (!Auth::attempt($credentials)) {
             return response([
-                'error' => 'The Provided credentials are not correct'
+                'message' => 'Provided email or password is incorrect'
             ], 422);
         }
-        $user = $request->user();
-        $token = $user->createToken('api-token')->plainTextToken;
 
-        return response([
-            'user' => $user,
-            'token' => $token
-        ]);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->tokens()->delete();
+        $token = $user->createToken('main')->plainTextToken;
+        return response(compact('user', 'token'));
     }
 
     public function logout(Request $request)
     {
-
+        /** @var \App\Models\User $user */
         $user = $request->user();
-        // Revoke the token that was used to authenticate the current request...
-        $user->currentAccessToken()->delete();
-
-        return response([
-            'success' => true
-        ]);
+        $user->tokens()->delete();
+        return response('', 204);
     }
 
     public function me(Request $request)

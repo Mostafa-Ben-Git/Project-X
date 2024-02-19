@@ -1,28 +1,34 @@
-/* eslint-disable no-unused-vars */
-import { useState } from "react";
-import { useDispatch } from "react-redux";
-import axios from "../api/apiService";
-import { validateLogin } from "../slices/authSlice";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import { setInfo, validateRegister } from "../slices/authSlice";
 
 function Register() {
-  const [user, setUser] = useState({});
+  const [signUpData, setSignUpData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
+  });
+
+  const {
+    info: { errors, message },
+    isLaoding,
+  } = useSelector((store) => store.auth);
 
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  useEffect(() => {
+    dispatch(setInfo({}));
+  }, [dispatch]);
+
+  const handleSignUp = (e) => {
     e.preventDefault();
-    try {
-      dispatch(validateLogin(user));
-      navigate("/home");
-    } catch (error) {
-      console.log(error);
-    }
+    dispatch(validateRegister(signUpData));
   };
 
   const handleOnChange = (e) => {
-    setUser({ ...user, [e.target.name]: e.target.value });
+    setSignUpData({ ...signUpData, [e.target.name]: e.target.value });
   };
 
   return (
@@ -31,7 +37,12 @@ function Register() {
         <h2 className="text-3xl font-extrabold text-center text-gray-900">
           Register
         </h2>
-        <form className="mt-8 space-y-6" onSubmit={(e) => handleLogin(e)}>
+        {!errors && message != null ? (
+          <p className="border border-red-500 bg-red-400 p-2 rounded text-gray-200">
+            {message}
+          </p>
+        ) : null}
+        <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
           <div>
             <label
               htmlFor="name"
@@ -45,10 +56,13 @@ function Register() {
               type="text"
               autoComplete="name"
               required
-              value={user.name}
+              value={signUpData.name}
               onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
+            {errors?.name && (
+              <p className="text-red-300 text-xs">*{errors.name}</p>
+            )}
           </div>
           <div>
             <label
@@ -62,10 +76,13 @@ function Register() {
               name="email"
               type="email"
               required
-              value={user.email}
+              value={signUpData.email}
               onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
+            {errors?.email && (
+              <p className="text-red-300 text-xs">*{errors.email}</p>
+            )}
           </div>
           <div>
             <label
@@ -80,17 +97,20 @@ function Register() {
               type="password"
               autoComplete="current-password"
               required
-              value={user.password}
+              value={signUpData.password}
               onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
+            {errors?.password[1] && (
+              <p className="text-red-300 text-xs">*{errors.password[1]}</p>
+            )}
           </div>
           <div>
             <label
               htmlFor="password_confirmation"
               className="block text-sm font-medium text-gray-700"
             >
-              password_confirmation
+              Password Confirmation
             </label>
             <input
               id="password_confirmation"
@@ -98,10 +118,13 @@ function Register() {
               type="password"
               autoComplete="current-password"
               required
-              value={user.password_confirmation}
+              value={signUpData.password_confirmation}
               onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
+            {errors?.password[0] && (
+              <p className="text-red-300 text-xs">*{errors.password[0]}</p>
+            )}
           </div>
           <div className="text-right text-blue-200 underline decoration-solid hover:decoration-transparent">
             <Link to="/login">Already Have Account ?</Link>
@@ -110,7 +133,7 @@ function Register() {
             <button
               type="submit"
               className="bg-indigo-500 text-white w-full p-3 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:border-indigo-700"
-              onClick={handleLogin}
+              onClick={handleSignUp}
             >
               Register
             </button>
