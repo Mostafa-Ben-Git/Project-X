@@ -16,7 +16,6 @@ const Login = () => {
   } = useSelector((store) => store.auth);
 
   const dispatch = useDispatch();
-  const nav = useNavigate();
 
   useEffect(() => {
     dispatch(setInfo({}));

@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
-import { getUser } from "../slices/authSlice";
+import { getUser, setToken } from "../slices/authSlice";
 
 function UserLayout() {
   const { user, token } = useSelector((store) => store.auth);
+  const localToken = localStorage.getItem("token");
 
   const dispatch = useDispatch();
 
@@ -14,7 +15,7 @@ function UserLayout() {
     }
   }, [user, dispatch]);
 
-  if (!token) {
+  if (token != localToken) {
     return <Navigate to="/login" />;
   }
 
