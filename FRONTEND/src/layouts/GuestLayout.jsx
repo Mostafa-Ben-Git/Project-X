@@ -13,7 +13,6 @@ function GuestLayout() {
     <div>Loading...</div>
   ) : (
     <div>
-      GuestLayout
       <Outlet />
     </div>
   );

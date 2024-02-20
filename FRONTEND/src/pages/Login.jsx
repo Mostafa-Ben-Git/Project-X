@@ -7,7 +7,7 @@ import { setInfo, validateLogin } from "../slices/authSlice";
 const Login = () => {
   const [login, setLogin] = useState({
     email: "mostafa@ben.cm",
-    password: "12345678",
+    password: "1234",
   });
 
   const {

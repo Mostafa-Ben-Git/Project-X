@@ -30,9 +30,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(["middleware" => "auth:sanctum"], function () {
     Route::get('/user', [AuthController::class, "me"]);
-    Route::post('logout', [AuthController::class, "logout"]);
+    Route::get('/user/posts', [AuthController::class, "me"]);
+
     Route::apiResource('users', UserController::class);
     Route::apiResource('users.posts', PostController::class)->scoped();
+
+    Route::post('logout', [AuthController::class, "logout"]);
 });
 
 Route::post('login', [AuthController::class, "login"]);

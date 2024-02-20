@@ -1,6 +1,14 @@
+import {
+  BellIcon,
+  Home,
+  MessageSquare,
+  UserCircle,
+  UsersRound,
+} from "lucide-react";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
+import Sidebar, { SidebarItem } from "../components/SideBar";
 import { getUser } from "../slices/authSlice";
 
 function UserLayout() {
@@ -20,9 +28,33 @@ function UserLayout() {
   }
 
   return (
-    <div>
-      UserLayout
-      <Outlet />
+    <div className="flex">
+      <Sidebar>
+        <SidebarItem icon={<Home size={35} />} to={"/home"} text={"home"} />
+        <SidebarItem
+          icon={<MessageSquare size={35} />}
+          to={"/messages"}
+          text={"messages"}
+        />
+        <SidebarItem
+          icon={<BellIcon size={35} />}
+          to={"/notifications"}
+          text={"notifications"}
+        />
+        <SidebarItem
+          icon={<UsersRound size={35} />}
+          to={"/friends"}
+          text={"friends"}
+        />
+        <SidebarItem
+          icon={<UserCircle size={35} />}
+          to={"/profile"}
+          text={"profile"}
+        />
+      </Sidebar>
+      <div className="p-6">
+        <Outlet />
+      </div>
     </div>
   );
 }
