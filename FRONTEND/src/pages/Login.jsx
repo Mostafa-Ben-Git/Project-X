@@ -92,6 +92,7 @@ const Login = () => {
               type="submit"
               className="bg-indigo-500 text-white w-full p-3 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:border-indigo-700"
               onClick={handleLogin}
+              disabled={isLaoding}
             >
               Login
             </button>

@@ -1,20 +1,17 @@
-import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 
 function GuestLayout() {
-  const { token, isLoading } = useSelector((store) => store.auth);
+  const localToken = localStorage.getItem("token");
 
-  if (token) {
+  if (localToken) {
     return <Navigate to="/home" />;
   }
 
   return (
-    isLoading && (
-      <div>
-        GuestLayout
-        <Outlet />
-      </div>
-    )
+    <div>
+      GuestLayout
+      <Outlet />
+    </div>
   );
 }
 
