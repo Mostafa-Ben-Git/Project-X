@@ -1,14 +1,19 @@
-import { Provider } from "react-redux";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { RouterProvider } from "react-router-dom";
 import router from "./router";
-import store from "./store";
+import { setToken } from "./slices/authSlice";
 
 function App() {
-  return (
-    <Provider store={store}>
-      <RouterProvider router={router} />
-    </Provider>
-  );
+  const localToken = localStorage.getItem("token");
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (localToken) {
+      dispatch(setToken(localToken));
+    }
+  }, [dispatch, localToken]);
+  return <RouterProvider router={router} />;
 }
 
 export default App;

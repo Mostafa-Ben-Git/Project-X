@@ -28,8 +28,8 @@ class RegisterRequest extends FormRequest
             'password' => [
                 'required',
                 'confirmed',
-                // Password::min(4)->mixedCase()->numbers()->symbols()
-                Password::default()
+                Password::min(4)->mixedCase()->numbers()->symbols()
+                // Password::default()
             ]
         ];;
     }

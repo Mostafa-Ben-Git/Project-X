@@ -75,12 +75,12 @@ const authSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(validateLogin.fulfilled, (state, action) => {
-        state.isLoading = false;
         if (action.payload.status === 200) {
           state.user = action.payload.data.user;
           state.token = action.payload.data.token;
         }
         state.info = action.payload.data;
+        state.isLoading = false;
       })
       .addCase(validateLogin.rejected, (state) => {
         state.status = "failed";
@@ -89,12 +89,12 @@ const authSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(validateRegister.fulfilled, (state, action) => {
-        state.isLoading = false;
         if (action.payload.status === 200) {
           state.user = action.payload.data.user;
           state.token = action.payload.data.token;
         }
         state.info = action.payload.data;
+        state.isLoading = false;
       })
       .addCase(validateRegister.rejected, (state) => {
         state.status = "failed";
