@@ -76,6 +76,7 @@ const authSlice = createSlice({
       })
       .addCase(validateLogin.fulfilled, (state, action) => {
         if (action.payload.status === 200) {
+          state.isLoading = false;
           state.user = action.payload.data.user;
           state.token = action.payload.data.token;
         }

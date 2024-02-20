@@ -12,7 +12,7 @@ const Login = () => {
 
   const {
     info: { errors, message },
-    isLaoding,
+    isLoading,
   } = useSelector((store) => store.auth);
 
   const dispatch = useDispatch();
@@ -90,9 +90,9 @@ const Login = () => {
           <div>
             <button
               type="submit"
-              className="bg-indigo-500 text-white w-full p-3 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:border-indigo-700"
+              className="bg-indigo-500 text-white w-full p-3 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:border-indigo-700 disabled:cursor-not-allowed"
               onClick={handleLogin}
-              disabled={isLaoding}
+              disabled={isLoading}
             >
               Login
             </button>
