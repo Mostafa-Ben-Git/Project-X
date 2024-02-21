@@ -1,6 +1,22 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import apiService from "../api/apiService";
 
+//TODO
+// export const validate = createAsyncThunk("validate", async (url, reqData) => {
+//   try {
+//     const res = await apiService.post(`/api/${url}`, reqData);
+//     if (res.status === 200) {
+//       localStorage.setItem("token", res.data.token);
+//     }
+//     return res;
+//   } catch (error) {
+//     const response = error.response;
+//     if (response && response.status === 422) {
+//       return response;
+//     }
+//   }
+// });
+
 export const validateLogin = createAsyncThunk("login", async (data) => {
   try {
     const res = await apiService.post("/api/login", data);
@@ -46,6 +62,21 @@ export const getUser = createAsyncThunk("user", async () => {
   }
 });
 
+export const logout = createAsyncThunk("logout", async () => {
+  try {
+    const res = await apiService.post("/api/logout");
+    if (res.status === 204) {
+      localStorage.removeItem("token");
+    }
+    return res;
+  } catch (error) {
+    const response = error.response;
+    if (response && response.status === 422) {
+      return response.data;
+    }
+  }
+});
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -75,13 +106,10 @@ const authSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(validateLogin.fulfilled, (state, action) => {
-        if (action.payload.status === 200) {
-          state.isLoading = false;
-          state.user = action.payload.data.user;
-          state.token = action.payload.data.token;
-        }
-        state.info = action.payload.data;
         state.isLoading = false;
+        state.user = action.payload.data?.user;
+        state.token = action.payload.data?.token;
+        state.info = action.payload.data;
       })
       .addCase(validateLogin.rejected, (state) => {
         state.status = "failed";
@@ -90,12 +118,10 @@ const authSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(validateRegister.fulfilled, (state, action) => {
-        if (action.payload.status === 200) {
-          state.user = action.payload.data.user;
-          state.token = action.payload.data.token;
-        }
-        state.info = action.payload.data;
         state.isLoading = false;
+        state.user = action.payload.data?.user;
+        state.token = action.payload.data?.token;
+        state.info = action.payload.data;
       })
       .addCase(validateRegister.rejected, (state) => {
         state.status = "failed";
@@ -108,6 +134,15 @@ const authSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(getUser.rejected, (state) => {
+        state.status = "failed";
+      })
+      .addCase(logout.pending, (state) => {
+        state.status = "logout";
+      })
+      .addCase(logout.fulfilled, (state) => {
+        state.user = {};
+      })
+      .addCase(logout.rejected, (state) => {
         state.status = "failed";
       });
   },

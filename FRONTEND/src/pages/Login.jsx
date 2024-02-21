@@ -1,13 +1,13 @@
 /* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { setInfo, validateLogin } from "../slices/authSlice";
 
 const Login = () => {
   const [login, setLogin] = useState({
-    email: "mostafa@ben.cm",
-    password: "1234",
+    email: "test@c.com",
+    password: "12345678",
   });
 
   const {

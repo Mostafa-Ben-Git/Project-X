@@ -33,6 +33,7 @@ apiService.interceptors.request.use(
 
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
+      config.headers["Content-Type"] = `application/json`;
     }
 
     return config;

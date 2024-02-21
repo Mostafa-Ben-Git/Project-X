@@ -1,48 +1,57 @@
-import { MoreVertical, MoreVerticalIcon } from "lucide-react";
-import { ColorRing } from "react-loader-spinner";
-import { useSelector } from "react-redux";
+import { Skeleton } from "@/components/ui/skeleton";
+import { LogOut } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
 
-import { NavLink } from "react-router-dom";
+import { NavLink, Navigate } from "react-router-dom";
+import { logout } from "../slices/authSlice";
 
 export default function Sidebar({ children }) {
-  const { user, isLoading } = useSelector((store) => store.auth);
+  const { user, isLoading, status } = useSelector((store) => store.auth);
+  const dispatch = useDispatch();
   return (
-    <aside className="h-screen w-1/5">
+    <aside className="h-screen">
       <nav className="h-full flex flex-col bg-white border-r shadow-sm">
         <div className="p-4 pb-2 flex justify-between items-center">
           <img
             src="https://img.logoipsum.com/212.svg"
             className={`overflow-hidden transition-all`}
+            loading="lazy"
             alt=""
           />
         </div>
         <ul className="flex-1 px-3 py-2 mt-3">{children}</ul>
 
-        <div className="border-t h-1/6 flex items-center justify-center">
+        <div className="border-t py-4 flex items-center justify-center">
           {isLoading ? (
-            <ColorRing
-              visible={true}
-              height="30"
-              width="30"
-              ariaLabel="color-ring-loading"
-              wrapperStyle={{}}
-              wrapperClass="color-ring-wrapper"
-              colors={["#e15b64", "#f47e60", "#f8b26a", "#abbd81", "#849b87"]}
-            />
+            <div className="flex items-center space-x-3 px-4">
+              <Skeleton className="h-[60px] w-[60px] rounded-xl bg-slate-500" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-[180px] bg-slate-500" />
+                <Skeleton className="h-4 w-[140px] bg-slate-500" />
+              </div>
+            </div>
           ) : (
-            <div className="flex flex-row items-center justify-between w-full px-2">
+            <div className="flex flex-row items-center justify-between px-2">
               <div className="flex gap-2">
                 <img
                   src="https://ui-avatars.com/api/?background=c7d2fe&color=3730a3&bold=true"
                   alt=""
                   className="w-15 h-15 rounded-md"
                 />
-                <div className="self-baseline">
-                  <h4 className="font-semibold text-xl">{user.name}</h4>
-                  <span className="text-sm text-gray-600">{user.email}</span>
+                <div className=" flex flex-col justify-center items-baseline">
+                  <p className="font-semibold text-lg">{user?.name}</p>
+                  <span className="text-sm text-gray-600">{user?.email}</span>
                 </div>
               </div>
-              <MoreVerticalIcon size={30} className="hover:cursor-pointer" />
+              <LogOut
+                size={30}
+                className={`m-4 rounded-lg cursor-pointer ${status === "logout" && "pointer-events-none"} hover: bg-slate-400`}
+                role="button"
+                onClick={() => {
+                  dispatch(logout());
+                  return <Navigate to={"/"} />;
+                }}
+              />
             </div>
           )}
         </div>
