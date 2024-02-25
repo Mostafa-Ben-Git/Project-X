@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { RouterProvider } from "react-router-dom";
-import router from "./router";
+import router from "./app/router";
 import { setToken } from "./slices/authSlice";
 
 function App() {

@@ -5,7 +5,7 @@ function GuestLayout() {
   const token = useSelector((store) => store.auth.token);
   const localToken = localStorage.getItem("token");
 
-  if (localToken == token) {
+  if (localToken === token) {
     return <Navigate to="/home" />;
   }
 

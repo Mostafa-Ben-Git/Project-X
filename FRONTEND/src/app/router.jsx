@@ -1,15 +1,15 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
-import GuestLayout from "./layouts/GuestLayout";
-import UserLayout from "./layouts/UserLayout";
-import Login from "./pages/Login";
-import PageNotFound from "./pages/PageNotFound";
-import Register from "./pages/Register";
-import FriendsPage from "./pages/home/FriendsPage";
-import ProfilePage from "./pages/home/ProfilePage";
-import MessagesPage from "./pages/home/MessagesPage";
-import HomePage from "./pages/home/HomePage";
-import NotifPage from "./pages/home/NotifPage";
+import GuestLayout from "../layouts/GuestLayout";
+import UserLayout from "../layouts/UserLayout";
+import Login from "../pages/Login";
+import PageNotFound from "../pages/PageNotFound";
+import Register from "../pages/Register";
+import FriendsPage from "../pages/home/FriendsPage";
+import ProfilePage from "../pages/home/ProfilePage";
+import MessagesPage from "../pages/home/MessagesPage";
+import HomePage from "../pages/home/HomePage";
+import NotifPage from "../pages/home/NotifPage";
 
 const router = createBrowserRouter([
   {
