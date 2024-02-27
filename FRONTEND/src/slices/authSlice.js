@@ -50,6 +50,7 @@ export const validateRegister = createAsyncThunk("register", async (data) => {
 export const getUser = createAsyncThunk("user", async () => {
   try {
     const res = await apiService.get("/api/user");
+    // await apiService.get("/sanctum/csrf-cookie");
     if (res.status === 200) {
       return res.data;
     }

@@ -41,7 +41,7 @@ class AuthController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $user->tokens()->delete();
-        $token = $user->createToken('main')->plainTextToken;
+        $token = $user->createToken('api-token')->plainTextToken;
         return response(compact('user', 'token'));
     }
 
