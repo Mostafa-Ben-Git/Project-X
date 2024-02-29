@@ -4,14 +4,12 @@ import apiService from "../api/apiService";
 import { setErrors, setIsLoading, setUser } from "../slices/authSlice";
 
 export const useAuth = () => {
-  
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, isLoading } = useSelector((store) => store.auth);
-  
+  const { user, isLoading, errors } = useSelector((store) => store.auth);
+
   const SESSION_NAME = "userLogedIn";
   let isLoggedIn = localStorage.getItem(SESSION_NAME) == "true";
-  
 
   const csrf = () => apiService.get("/sanctum/csrf-cookie");
 
@@ -85,6 +83,7 @@ export const useAuth = () => {
     logout,
     isLoggedIn,
     user,
+    errors,
     isLoading,
   };
 };
