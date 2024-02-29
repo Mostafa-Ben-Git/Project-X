@@ -1,47 +1,32 @@
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { setInfo, validateRegister } from "../slices/authSlice";
+import { MoonLoader } from "react-spinners";
+import { useAuth } from "../hooks/auth";
 
 function Register() {
+  const { register, errors, isLoading } = useAuth();
   const [signUpData, setSignUpData] = useState({
-    name: "",
-    email: "",
-    password: "",
+    name: "Mosta",
+    email: "mosta@gmail.com",
+    password: "1234",
     password_confirmation: "",
   });
 
-  const {
-    info: { errors, message },
-    isLaoding,
-  } = useSelector((store) => store.auth);
-
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(setInfo({}));
-  }, [dispatch]);
-
-  const handleSignUp = (e) => {
-    e.preventDefault();
-    dispatch(validateRegister(signUpData));
-  };
 
   const handleOnChange = (e) => {
     setSignUpData({ ...signUpData, [e.target.name]: e.target.value });
   };
 
+  const handleSignUp = (e) => {
+    e.preventDefault();
+    register(signUpData);
+  };
   return (
     <div className="min-h-screen flex items-center justify-center bg-indigo-900">
       <div className="max-w-sm w-full space-y-8 p-8 bg-gray-500 shadow-md rounded-md lg:max-w-xl">
         <h2 className="text-3xl font-extrabold text-center text-gray-900">
           Register
         </h2>
-        {!errors && message != null ? (
-          <p className="border border-red-500 bg-red-400 p-2 rounded text-gray-200">
-            {message}
-          </p>
-        ) : null}
         <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
           <div>
             <label
@@ -101,7 +86,7 @@ function Register() {
               onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
-            {errors?.password[1] && (
+            {errors?.password && (
               <p className="text-red-300 text-xs">*{errors.password[1]}</p>
             )}
           </div>
@@ -122,7 +107,7 @@ function Register() {
               onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
-            {errors?.password[0] && (
+            {errors?.password && (
               <p className="text-red-300 text-xs">*{errors.password[0]}</p>
             )}
           </div>
@@ -132,11 +117,15 @@ function Register() {
           <div>
             <button
               type="submit"
-              className="bg-indigo-500 text-white w-full p-3 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:border-indigo-700"
+              className="bg-indigo-500 text-white flex items-center justify-center w-full p-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:border-indigo-700 disabled:cursor-not-allowed"
               onClick={handleSignUp}
-              disabled={isLaoding}
+              disabled={isLoading}
             >
-              Register
+              {!isLoading ? (
+                "Register"
+              ) : (
+                <MoonLoader color="#ffffff" size={20} />
+              )}
             </button>
           </div>
         </form>

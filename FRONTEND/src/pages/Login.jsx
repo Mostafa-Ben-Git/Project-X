@@ -1,34 +1,28 @@
 /* eslint-disable no-unused-vars */
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { setInfo, validateLogin } from "../slices/authSlice";
+import { MoonLoader } from "react-spinners";
+import { useAuth } from "../hooks/auth.js";
 
 const Login = () => {
-  const [login, setLogin] = useState({
-    email: "test@c.com",
-    password: "12345678",
+  const { login, errors, isLoading } = useAuth();
+  const [loginData, setLoginData] = useState({
+    email: "test@example.com",
+    password: "1234",
+    remember: "",
   });
 
-  const {
-    info: { errors, message },
-    isLoading,
-  } = useSelector((store) => store.auth);
-
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(setInfo({}));
-  }, [dispatch]);
-
   const handleOnChange = (e) => {
-    setLogin({ ...login, [e.target.name]: e.target.value });
+    const key = e.target.name;
+    const value =
+      e.target.type == "checkbox" ? e.target.checked : e.target.value;
+    setLoginData({ ...loginData, [key]: value });
   };
 
-  const handleLogin = (e) => {
+  function handleLogin(e) {
     e.preventDefault();
-    dispatch(validateLogin(login));
-  };
+    login(loginData);
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-indigo-900">
@@ -36,11 +30,6 @@ const Login = () => {
         <h2 className="text-3xl font-extrabold text-center text-gray-900">
           Login
         </h2>
-        {!errors && message != null ? (
-          <p className="border border-red-500 bg-red-400 p-2 rounded text-gray-200">
-            {message}
-          </p>
-        ) : null}
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div>
             <label
@@ -55,12 +44,14 @@ const Login = () => {
               type="email"
               autoComplete="email"
               required
-              value={login.email}
+              value={loginData.email}
               onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
             {errors?.email && (
-              <p className="text-red-300 text-xs">*{errors.email}</p>
+              <p className="text-white text-xs bg-red-800 border border-red-300 p-1 mt-2 rounded-md">
+                *{errors.email}
+              </p>
             )}
           </div>
           <div>
@@ -76,13 +67,31 @@ const Login = () => {
               type="password"
               autoComplete="current-password"
               required
-              value={login.password}
+              value={loginData.password}
               onChange={handleOnChange}
               className="mt-1 p-3 w-full border rounded-md"
             />
             {errors?.password && (
-              <p className="text-red-300 text-xs">*{errors.password}</p>
+              <p className="text-white text-xs bg-red-800 border border-red-300 p-1 mt-2 rounded-md">
+                *{errors.password}
+              </p>
             )}
+          </div>
+          <div className="flex items-center gap-3 ml-4">
+            <input
+              type="checkbox"
+              name="remember"
+              id="box"
+              onChange={handleOnChange}
+              value={loginData.remember}
+              className="scale-150 hover:cursor-pointer"
+            />
+            <label
+              htmlFor="box"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Remember Me
+            </label>
           </div>
           <div className="text-right text-blue-200 underline decoration-solid hover:decoration-transparent">
             <Link to="/register">Create Account</Link>
@@ -90,11 +99,11 @@ const Login = () => {
           <div>
             <button
               type="submit"
-              className="bg-indigo-500 text-white w-full p-3 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:border-indigo-700 disabled:cursor-not-allowed"
+              className="bg-indigo-500 text-white flex items-center justify-center w-full p-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:border-indigo-700 disabled:cursor-not-allowed"
               onClick={handleLogin}
               disabled={isLoading}
             >
-              Login
+              {!isLoading ? "Login" : <MoonLoader color="#ffffff" size={20} />}
             </button>
           </div>
         </form>
