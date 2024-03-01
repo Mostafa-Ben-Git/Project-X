@@ -1,13 +1,13 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { LogOut } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 import { NavLink, Navigate } from "react-router-dom";
-import { logout } from "../slices/authSlice";
+import { useAuth } from "../hooks/auth";
 
 export default function Sidebar({ children }) {
   const { user, isLoading, status } = useSelector((store) => store.auth);
-  const dispatch = useDispatch();
+  const { logout } = useAuth();
   return (
     <aside className="h-screen">
       <nav className="h-full flex flex-col bg-white border-r shadow-sm">
@@ -48,7 +48,7 @@ export default function Sidebar({ children }) {
                 className={`m-4 rounded-lg cursor-pointer ${status === "logout" && "pointer-events-none"} hover: bg-slate-400`}
                 role="button"
                 onClick={() => {
-                  dispatch(logout());
+                  logout();
                   return <Navigate to={"/"} />;
                 }}
               />

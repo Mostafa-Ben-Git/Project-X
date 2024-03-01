@@ -8,11 +8,6 @@ function App() {
   const localToken = localStorage.getItem("token");
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (localToken) {
-      dispatch(setToken(localToken));
-    }
-  }, [dispatch, localToken]);
   return <RouterProvider router={router} />;
 }
 

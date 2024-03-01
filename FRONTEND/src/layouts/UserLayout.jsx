@@ -6,26 +6,20 @@ import {
   UsersRound,
 } from "lucide-react";
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 import Sidebar, { SidebarItem } from "../components/SideBar";
-import { getUser } from "../slices/authSlice";
+import { useAuth } from "../hooks/auth";
 
 function UserLayout() {
-  const { user, token } = useSelector((store) => store.auth);
-  const localToken = localStorage.getItem("token");
-
-  const dispatch = useDispatch();
+  const { getUser, user, isLoggedIn } = useAuth();
 
   useEffect(() => {
-    if (!user) {
-      dispatch(getUser());
+    if (!user && isLoggedIn) {
+      getUser();
     }
-  }, [user, dispatch]);
+  }, [user, getUser, isLoggedIn]);
 
-  if (token != localToken) {
-    return <Navigate to="/login" />;
-  }
+  if (!isLoggedIn && !user) return <Navigate to="/login" />;
 
   return (
     <div className="flex">

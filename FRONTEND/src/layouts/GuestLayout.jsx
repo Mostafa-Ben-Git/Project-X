@@ -1,17 +1,14 @@
-import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../hooks/auth";
 
 function GuestLayout() {
-  const token = useSelector((store) => store.auth.token);
-  const localToken = localStorage.getItem("token");
+  const { isLoggedIn } = useAuth();
 
-  if (localToken === token) {
+  if (isLoggedIn) {
     return <Navigate to="/home" />;
   }
 
-  return !token && localToken ? (
-    <div>Loading...</div>
-  ) : (
+  return (
     <div>
       <Outlet />
     </div>
