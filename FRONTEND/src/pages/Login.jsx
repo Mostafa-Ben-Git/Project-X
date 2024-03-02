@@ -9,13 +9,13 @@ const Login = () => {
   const [loginData, setLoginData] = useState({
     email: "test@example.com",
     password: "1234",
-    remember: "",
+    remember: false,
   });
 
   const handleOnChange = (e) => {
     const key = e.target.name;
     const value =
-      e.target.type == "checkbox" ? e.target.checked : e.target.value;
+      e.target.type === "checkbox" ? e.target.checked : e.target.value;
     setLoginData({ ...loginData, [key]: value });
   };
 
@@ -25,17 +25,12 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-indigo-900">
-      <div className="max-w-sm w-full space-y-8 p-8 bg-gray-500 shadow-md rounded-md lg:max-w-xl">
-        <h2 className="text-3xl font-extrabold text-center text-gray-900">
-          Login
-        </h2>
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+      <div className="max-w-md w-full space-y-8 p-8 bg-gray-800 shadow-md rounded-md lg:max-w-xl">
+        <h2 className="text-3xl font-extrabold text-center mb-4">Login</h2>
+        <form className="mt-8 space-y-4" onSubmit={handleLogin}>
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="email" className="block text-sm font-medium">
               Email
             </label>
             <input
@@ -46,19 +41,14 @@ const Login = () => {
               required
               value={loginData.email}
               onChange={handleOnChange}
-              className="mt-1 p-3 w-full border rounded-md"
+              className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
             />
             {errors?.email && (
-              <p className="text-white text-xs bg-red-800 border border-red-300 p-1 mt-2 rounded-md">
-                *{errors.email}
-              </p>
+              <p className="text-red-600 text-xs mt-2">*{errors.email}</p>
             )}
           </div>
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="password" className="block text-sm font-medium">
               Password
             </label>
             <input
@@ -69,37 +59,32 @@ const Login = () => {
               required
               value={loginData.password}
               onChange={handleOnChange}
-              className="mt-1 p-3 w-full border rounded-md"
+              className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
             />
             {errors?.password && (
-              <p className="text-white text-xs bg-red-800 border border-red-300 p-1 mt-2 rounded-md">
-                *{errors.password}
-              </p>
+              <p className="text-red-600 text-xs mt-2">*{errors.password}</p>
             )}
           </div>
-          <div className="flex items-center gap-3 ml-4">
+          <div className="flex items-center gap-3 ml-2">
             <input
               type="checkbox"
               name="remember"
               id="box"
               onChange={handleOnChange}
-              value={loginData.remember}
-              className="scale-150 hover:cursor-pointer"
+              checked={loginData.remember}
+              className="form-checkbox h-5 w-5 text-indigo-600"
             />
-            <label
-              htmlFor="box"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
+            <label htmlFor="box" className="text-sm font-medium">
               Remember Me
             </label>
           </div>
-          <div className="text-right text-blue-200 underline decoration-solid hover:decoration-transparent">
+          <div className="text-right underline hover:text-indigo-300">
             <Link to="/register">Create Account</Link>
           </div>
           <div>
             <button
               type="submit"
-              className="bg-indigo-500 text-white flex items-center justify-center w-full p-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:border-indigo-700 disabled:cursor-not-allowed"
+              className="bg-indigo-600 text-white flex items-center justify-center w-full p-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:border-indigo-700 disabled:cursor-not-allowed"
               onClick={handleLogin}
               disabled={isLoading}
             >

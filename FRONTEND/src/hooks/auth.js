@@ -52,11 +52,10 @@ export const useAuth = () => {
       await csrf();
       await apiService.post("/register", data);
       await getUser();
-      await getUser();
     } catch (error) {
       const response = error.response;
       if (response && response.status === 422) {
-        const { errors, message } = response.data;
+        const { errors } = response.data;
         // console.log(errors, message);
         dispatch(setErrors(errors));
       }

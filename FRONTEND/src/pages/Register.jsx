@@ -12,7 +12,6 @@ function Register() {
     password_confirmation: "",
   });
 
-
   const handleOnChange = (e) => {
     setSignUpData({ ...signUpData, [e.target.name]: e.target.value });
   };
@@ -21,18 +20,14 @@ function Register() {
     e.preventDefault();
     register(signUpData);
   };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-indigo-900">
-      <div className="max-w-sm w-full space-y-8 p-8 bg-gray-500 shadow-md rounded-md lg:max-w-xl">
-        <h2 className="text-3xl font-extrabold text-center text-gray-900">
-          Register
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+      <div className="max-w-md w-full space-y-8 p-8 bg-gray-800 shadow-md rounded-md lg:max-w-xl">
+        <h2 className="text-3xl font-extrabold text-center mb-4">Register</h2>
         <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
           <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="name" className="block text-sm font-medium">
               Name
             </label>
             <input
@@ -43,18 +38,15 @@ function Register() {
               required
               value={signUpData.name}
               onChange={handleOnChange}
-              className="mt-1 p-3 w-full border rounded-md"
+              className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
             />
             {errors?.name && (
-              <p className="text-red-300 text-xs">*{errors.name}</p>
+              <p className="text-red-600 text-xs mt-2">*{errors.name}</p>
             )}
           </div>
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              email
+            <label htmlFor="email" className="block text-sm font-medium">
+              Email
             </label>
             <input
               id="email"
@@ -63,56 +55,59 @@ function Register() {
               required
               value={signUpData.email}
               onChange={handleOnChange}
-              className="mt-1 p-3 w-full border rounded-md"
+              className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
             />
             {errors?.email && (
-              <p className="text-red-300 text-xs">*{errors.email}</p>
+              <p className="text-red-600 text-xs mt-2">*{errors.email}</p>
             )}
           </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={signUpData.password}
-              onChange={handleOnChange}
-              className="mt-1 p-3 w-full border rounded-md"
-            />
-            {errors?.password && (
-              <p className="text-red-300 text-xs">*{errors.password[1]}</p>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={signUpData.password}
+                onChange={handleOnChange}
+                className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
+              />
+              {errors?.password && (
+                <p className="text-red-600 text-xs mt-2">
+                  *{errors.password[1]}
+                </p>
+              )}
+            </div>
+            <div>
+              <label
+                htmlFor="password_confirmation"
+                className="block text-sm font-medium"
+              >
+                Password Confirmation
+              </label>
+              <input
+                id="password_confirmation"
+                name="password_confirmation"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={signUpData.password_confirmation}
+                onChange={handleOnChange}
+                className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
+              />
+              {errors?.password && (
+                <p className="text-red-600 text-xs mt-2">
+                  *{errors.password[0]}
+                </p>
+              )}
+            </div>
           </div>
-          <div>
-            <label
-              htmlFor="password_confirmation"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Password Confirmation
-            </label>
-            <input
-              id="password_confirmation"
-              name="password_confirmation"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={signUpData.password_confirmation}
-              onChange={handleOnChange}
-              className="mt-1 p-3 w-full border rounded-md"
-            />
-            {errors?.password && (
-              <p className="text-red-300 text-xs">*{errors.password[0]}</p>
-            )}
-          </div>
-          <div className="text-right text-blue-200 underline decoration-solid hover:decoration-transparent">
-            <Link to="/login">Already Have Account ?</Link>
+          <div className="text-right text-blue-200 underline mt-2">
+            <Link to="/login">Already Have an Account?</Link>
           </div>
           <div>
             <button
