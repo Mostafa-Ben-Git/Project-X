@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { MoonLoader } from "react-spinners";
-import { useAuth } from "../hooks/auth";
+import { useAuth } from "../../hooks/auth";
 
 function Register() {
   const { register, errors, isLoading } = useAuth();

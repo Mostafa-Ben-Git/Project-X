@@ -14,6 +14,7 @@ export const useAuth = () => {
   const csrf = () => apiService.get("/sanctum/csrf-cookie");
 
   const getUser = async () => {
+    dispatch(setIsLoading(true));
     try {
       const { data } = await apiService.get("/api/user");
       dispatch(setUser(data));
@@ -24,6 +25,9 @@ export const useAuth = () => {
         localStorage.removeItem(SESSION_NAME);
         navigate("/login");
       }
+    } finally {
+      // setTimeout(() => dispatch(setIsLoading(false)), 2000);
+      dispatch(setIsLoading(false));
     }
   };
 

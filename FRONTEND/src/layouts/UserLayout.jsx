@@ -22,7 +22,7 @@ function UserLayout() {
   if (!isLoggedIn && !user) return <Navigate to="/login" />;
 
   return (
-    <div className="flex">
+    <div className="flex px-16 bg-gray-800 text-white h-screen">
       <Sidebar>
         <SidebarItem icon={<Home size={35} />} to={"/home"} text={"home"} />
         <SidebarItem
@@ -46,7 +46,7 @@ function UserLayout() {
           text={"profile"}
         />
       </Sidebar>
-      <div className="p-6">
+      <div className="p-6 flex-grow overflow-y-scroll">
         <Outlet />
       </div>
     </div>

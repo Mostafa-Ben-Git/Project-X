@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { MoonLoader } from "react-spinners";
-import { useAuth } from "../hooks/auth.js";
+import { useAuth } from "../../hooks/auth.js";
 
 const Login = () => {
   const { login, errors, isLoading } = useAuth();

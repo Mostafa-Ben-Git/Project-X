@@ -2,9 +2,9 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import GuestLayout from "../layouts/GuestLayout";
 import UserLayout from "../layouts/UserLayout";
-import Login from "../pages/Login";
+import Login from "../pages/authentication/Login";
 import PageNotFound from "../pages/PageNotFound";
-import Register from "../pages/Register";
+import Register from "../pages/authentication/Register";
 import FriendsPage from "../pages/home/FriendsPage";
 import ProfilePage from "../pages/home/ProfilePage";
 import MessagesPage from "../pages/home/MessagesPage";

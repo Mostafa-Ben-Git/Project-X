@@ -1,9 +1,12 @@
 import { useSelector } from "react-redux";
+import PostBox from "../../features/posts/PostBox";
 
 function HomePage() {
-  const { user, isLoading } = useSelector((store) => store.auth);
-
-  return <div>HomePage</div>;
+  return (
+    <main>
+      <PostBox />
+    </main>
+  );
 }
 
 export default HomePage;
