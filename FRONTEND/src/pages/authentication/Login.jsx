@@ -88,7 +88,7 @@ const Login = () => {
               onClick={handleLogin}
               disabled={isLoading}
             >
-              {!isLoading ? "Login" : <MoonLoader color="#ffffff" size={20} />}
+              {!isLoading ? "Login" : <MoonLoader color="#ffffff" size={30} />}
             </button>
           </div>
         </form>
