@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { MoonLoader } from "react-spinners";
 import { useAuth } from "../../hooks/auth.js";
 
-
 const Login = () => {
   const { login, errors, isLoading } = useAuth();
   const [loginData, setLoginData] = useState({
@@ -26,9 +25,8 @@ const Login = () => {
   }
 
   return (
-    
-    <div className="min-h-screen flex items-center justify-center bg-emerald-400 text-white">
-      <div className="max-w-md w-full space-y-8 p-8 bg-gray-800 shadow-md rounded-md lg:max-w-xl awesome-border">
+    <div className="min-h-screen flex items-center justify-center bg-slate-500 text-white">
+      <div className="max-w-md w-full space-y-8 p-8 bg-gray-800 shadow-md rounded-md lg:max-w-xl">
         <h2 className="text-3xl font-extrabold text-center mb-4">Login</h2>
         <form className="mt-8 space-y-4" onSubmit={handleLogin}>
           <div>

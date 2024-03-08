@@ -93,16 +93,3 @@
     @apply bg-background text-foreground;
   }
 }
-.awesome-border {
-  border: 2px solid transparent; /* Définir une bordure transparente */
-  background: linear-gradient(45deg, #0070ff, #00d2ff, #0070ff); /* Dégradé coloré */
-  background-clip: padding-box; /* Appliquer le dégradé uniquement à l'intérieur de la bordure */
-  border-radius: 10px; /* Arrondir les coins de la bordure */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Ajouter une ombre */
-  transition: border-color 0.3s ease-in-out; /* Animation de transition pour la couleur de la bordure */
-}
-
-.awesome-border:hover {
-  border-color: #fff; /* Changer la couleur de la bordure au survol */
-}
-
