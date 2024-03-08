@@ -1,4 +1,37 @@
+import { City, Country, State } from "country-state-city";
+import { useState, useEffect } from "react";
+import Selector from "./Selector";
+
 function PostBox() {
+  let countryData = Country.getAllCountries();
+  const [stateData, setStateData] = useState();
+  const [cityData, setCityData] = useState();
+
+  const [country, setCountry] = useState(countryData[0]);
+  const [state, setState] = useState();
+  const [city, setCity] = useState();
+  const [showLocationSelector, setShowLocationSelector] = useState(false);
+
+  const handleLocationButtonClick = () => {
+    setShowLocationSelector(true);
+  };
+
+  useEffect(() => {
+    setStateData(State.getStatesOfCountry(country?.isoCode));
+  }, [country]);
+
+  useEffect(() => {
+    setCityData(City.getCitiesOfState(country?.isoCode, state?.isoCode));
+  }, [state]);
+
+  useEffect(() => {
+    stateData && setState(stateData[0]);
+  }, [stateData]);
+
+  useEffect(() => {
+    cityData && setCity(cityData[0]);
+  }, [cityData]);
+
   return (
     <form>
       <div className="w-full mb-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
@@ -43,6 +76,7 @@ function PostBox() {
               <span className="sr-only">Attach file</span>
             </button>
             <button
+              onClick={handleLocationButtonClick}
               type="button"
               className="inline-flex justify-center items-center p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600"
             >
@@ -57,8 +91,8 @@ function PostBox() {
               </svg>
               <span className="sr-only">Set location</span>
             </button>
-            <button
-              type="button"
+            <label
+              htmlFor="fileInput"
               className="inline-flex justify-center items-center p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600"
             >
               <svg
@@ -71,10 +105,52 @@ function PostBox() {
                 <path d="M18 0H2a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm4.376 10.481A1 1 0 0 1 16 15H4a1 1 0 0 1-.895-1.447l3.5-7A1 1 0 0 1 7.468 6a.965.965 0 0 1 .9.5l2.775 4.757 1.546-1.887a1 1 0 0 1 1.618.1l2.541 4a1 1 0 0 1 .028 1.011Z" />
               </svg>
               <span className="sr-only">Upload image</span>
-            </button>
+            </label>
+
+            <input type="file" id="fileInput" className="hidden" />
           </div>
         </div>
       </div>
+      {showLocationSelector && (
+        <section className="min-h-screen px-3 grid place-items-center pb-20 selection:text-white selection:bg-teal-500 bg-gradient-to-r from-teal-400 to-teal-500">
+          <div>
+            <h2 className="text-2xl font-bold text-teal-900">
+              Country, State and City Selectors
+            </h2>
+            <br />
+            <div className="flex flex-wrap gap-3 bg-teal-300 rounded-lg p-8">
+              <div>
+                <p className="text-teal-800 font-semibold">Country :</p>
+                <Selector
+                  data={countryData}
+                  selected={country}
+                  setSelected={setCountry}
+                />
+              </div>
+              {state && (
+                <div>
+                  <p className="text-teal-800 font-semibold">State :</p>
+                  <Selector
+                    data={stateData}
+                    selected={state}
+                    setSelected={setState}
+                  />
+                </div>
+              )}
+              {city && (
+                <div>
+                  <p className="text-teal-800 font-semibold">City :</p>
+                  <Selector
+                    data={cityData}
+                    selected={city}
+                    setSelected={setCity}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
     </form>
   );
 }
