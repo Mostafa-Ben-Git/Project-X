@@ -14,11 +14,9 @@ class PostController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(User $user)
+    public function index()
     {
-
-        $posts = $user->posts()->get();
-        return new PostResource($posts);
+        return new PostResource(Post::latest()->get());
     }
 
     /**
@@ -26,7 +24,13 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $post = new Post();
+        $post->title = $request->title;
+        $post->body = $request->body;
+        $post->user_id = $request->user_id;
+        $post->save();
+
+        return new PostResource($post);
     }
 
     /**

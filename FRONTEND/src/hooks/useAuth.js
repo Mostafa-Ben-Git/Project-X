@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import apiService from "../api/apiService";
 import { setErrors, setIsLoading, setUser } from "../slices/authSlice";
 
-export const useAuth = () => {
+export default function useAuth() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, isLoading, errors } = useSelector((store) => store.auth);
@@ -89,4 +89,4 @@ export const useAuth = () => {
     errors,
     isLoading,
   };
-};
+}

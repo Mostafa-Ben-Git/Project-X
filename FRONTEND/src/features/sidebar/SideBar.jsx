@@ -1,10 +1,16 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogOut } from "lucide-react";
 import { useSelector } from "react-redux";
 import { NavLink, Navigate } from "react-router-dom";
-import { useAuth } from "../hooks/auth";
-
-export default function Sidebar({ children }) {
+import useAuth from "../../hooks/useAuth";
+import { UserBanner } from "./UserBanner";
+import {
+  BellIcon,
+  Home,
+  MessageSquare,
+  UserCircle,
+  UsersRound,
+} from "lucide-react";
+export default function Sidebar() {
   const { user, isLoading, status } = useSelector((store) => store.auth);
   const { logout } = useAuth();
 
@@ -14,7 +20,7 @@ export default function Sidebar({ children }) {
   };
 
   return (
-    <aside className="h-screen bg-gray-800 text-white">
+    <aside className="w-[270px] max-w-xs h-screen fixed left-0 top-0 z-40 border-r">
       <nav className="h-full flex flex-col border-r shadow-sm">
         <div className="p-4 pb-2 flex justify-between items-center">
           <img
@@ -22,12 +28,34 @@ export default function Sidebar({ children }) {
             className="overflow-hidden transition-all"
           />
         </div>
-        <ul className="flex-1 px-3 py-2 mt-3">{children}</ul>
+        <ul className="flex-1 px-3 py-2 mt-3">
+          <SidebarItem icon={<Home size={24} />} to={"/home"} text={"home"} />
+          <SidebarItem
+            icon={<MessageSquare size={24} />}
+            to={"/messages"}
+            text={"messages"}
+          />
+          <SidebarItem
+            icon={<BellIcon size={24} />}
+            to={"/notifications"}
+            text={"notifications"}
+          />
+          <SidebarItem
+            icon={<UsersRound size={24} />}
+            to={"/friends"}
+            text={"friends"}
+          />
+          <SidebarItem
+            icon={<UserCircle size={24} />}
+            to={"/profile"}
+            text={"profile"}
+          />
+        </ul>
         <div className="border-t border-gray-700 py-4 flex items-center justify-center">
           {isLoading ? (
             <LoadingSkeleton />
           ) : (
-            <UserInfo user={user} status={status} onLogout={handleLogout} />
+            <UserBanner user={user} status={status} onLogout={handleLogout} />
           )}
         </div>
       </nav>
@@ -42,28 +70,6 @@ const LoadingSkeleton = () => (
       <Skeleton className="h-4 w-[180px] bg-gray-500" />
       <Skeleton className="h-4 w-[140px] bg-gray-500" />
     </div>
-  </div>
-);
-
-const UserInfo = ({ user, status, onLogout }) => (
-  <div className="flex flex-row items-center justify-between px-2">
-    <div className="flex gap-2">
-      <img
-        src="https://ui-avatars.com/api/?background=3730a3&color=c7d2fe&bold=true"
-        alt=""
-        className="w-15 h-15 rounded-md"
-      />
-      <div className="flex flex-col justify-center items-baseline">
-        <p className="font-semibold text-lg">{user?.name}</p>
-        <span className="text-sm text-gray-400">{user?.email}</span>
-      </div>
-    </div>
-    <LogOut
-      size={30}
-      className={`m-4 rounded-lg cursor-pointer${status === "logout" && "pointer-events-none"} hover:bg-gray-600`}
-      role="button"
-      onClick={onLogout}
-    />
   </div>
 );
 
