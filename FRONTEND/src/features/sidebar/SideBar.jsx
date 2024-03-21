@@ -20,7 +20,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-[270px] max-w-xs h-screen fixed left-0 top-0 z-40 border-r">
+    <aside className="h-screen bg-gray-800 text-white">
       <nav className="h-full flex flex-col border-r shadow-sm">
         <div className="p-4 pb-2 flex justify-between items-center">
           <img
