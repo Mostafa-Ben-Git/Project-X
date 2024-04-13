@@ -50,7 +50,7 @@ function Selector({ data, selected, setSelected }) {
                     key={person.id}
                     className={({ active }) =>
                       `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                        active ? "bg-teal-600 text-white" : "text-gray-900"
+                        active ? "my-element text-white" : "text-gray-900"
                       }`
                     }
                     value={person}

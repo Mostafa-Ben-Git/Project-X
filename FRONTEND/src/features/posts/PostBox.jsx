@@ -111,45 +111,51 @@ function PostBox() {
           </div>
         </div>
       </div>
+      
+ 
+
       {showLocationSelector && (
-        <section className="min-h-screen px-3 grid place-items-center pb-20 selection:text-white selection:bg-teal-500 bg-gradient-to-r from-teal-400 to-teal-500">
-          <div>
-            <h2 className="text-2xl font-bold text-teal-900">
-              Country, State and City Selectors
-            </h2>
-            <br />
-            <div className="flex flex-wrap gap-3 bg-teal-300 rounded-lg p-8">
-              <div>
-                <p className="text-teal-800 font-semibold">Country :</p>
-                <Selector
-                  data={countryData}
-                  selected={country}
-                  setSelected={setCountry}
-                />
+        <div className={`location-selector-wrapper ${showLocationSelector ? "open" : ""}`}>
+          <div className="location-selector-bg ">
+            <div className="location-selector">
+              <h2 className="text-2xl font-bold text-white">
+                Country, State and City Selectors
+              </h2>
+              <br />
+              <div className="flex flex-wrap gap-3 bg-blue-900 p-8 rounded-lg" style={{ backgroundColor: "#1f5184" }}>
+
+                <div>
+                  <p className="text-white font-semibold">Country :</p>
+                  <Selector
+                    data={countryData}
+                    selected={country}
+                    setSelected={setCountry}
+                  />
+                </div>
+                {state && (
+                  <div>
+                    <p className="text-white font-semibold">State :</p>
+                    <Selector
+                      data={stateData}
+                      selected={state}
+                      setSelected={setState}
+                    />
+                  </div>
+                )}
+                {city && (
+                  <div>
+                    <p className="text-white font-semibold">City :</p>
+                    <Selector
+                      data={cityData}
+                      selected={city}
+                      setSelected={setCity}
+                    />
+                  </div>
+                )}
               </div>
-              {state && (
-                <div>
-                  <p className="text-teal-800 font-semibold">State :</p>
-                  <Selector
-                    data={stateData}
-                    selected={state}
-                    setSelected={setState}
-                  />
-                </div>
-              )}
-              {city && (
-                <div>
-                  <p className="text-teal-800 font-semibold">City :</p>
-                  <Selector
-                    data={cityData}
-                    selected={city}
-                    setSelected={setCity}
-                  />
-                </div>
-              )}
             </div>
           </div>
-        </section>
+        </div>
       )}
     </form>
   );
