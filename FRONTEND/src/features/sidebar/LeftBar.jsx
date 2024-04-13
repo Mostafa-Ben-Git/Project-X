@@ -1,7 +1,7 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "components/ui/skeleton";
 import { useSelector } from "react-redux";
-import { NavLink, Navigate } from "react-router-dom";
-import useAuth from "../../hooks/useAuth";
+import { NavLink, Navigate, useLocation } from "react-router-dom";
+import useAuth from "hooks/useAuth";
 import { UserBanner } from "./UserBanner";
 import {
   BellIcon,
@@ -10,7 +10,7 @@ import {
   UserCircle,
   UsersRound,
 } from "lucide-react";
-export default function Sidebar() {
+export default function LeftBar() {
   const { user, isLoading, status } = useSelector((store) => store.auth);
   const { logout } = useAuth();
 
@@ -21,41 +21,41 @@ export default function Sidebar() {
 
   return (
     <aside className="h-screen bg-gray-800 text-white">
-      <nav className="h-full flex flex-col border-r shadow-sm">
-        <div className="p-4 pb-2 flex justify-between items-center">
+      <nav className="flex h-full flex-col border-r shadow-sm">
+        <div className="flex items-center justify-between p-4 pb-2">
           <img
             src="https://img.logoipsum.com/223.svg"
             className="overflow-hidden transition-all"
           />
         </div>
-        <ul className="flex-1 px-3 py-2 mt-3">
-          <SidebarItem icon={<Home size={24} />} to={"/home"} text={"home"} />
+        <ul className="mt-3 flex-1 px-3 py-2">
+          <SidebarItem icon={<Home size={30} />} to={"/home"} text={"home"} />
           <SidebarItem
-            icon={<MessageSquare size={24} />}
+            icon={<MessageSquare size={30} />}
             to={"/messages"}
             text={"messages"}
           />
           <SidebarItem
-            icon={<BellIcon size={24} />}
+            icon={<BellIcon size={30} />}
             to={"/notifications"}
             text={"notifications"}
           />
           <SidebarItem
-            icon={<UsersRound size={24} />}
+            icon={<UsersRound size={30} />}
             to={"/friends"}
             text={"friends"}
           />
           <SidebarItem
-            icon={<UserCircle size={24} />}
+            icon={<UserCircle size={30} />}
             to={"/profile"}
             text={"profile"}
           />
         </ul>
-        <div className="border-t border-gray-700 py-4 flex items-center justify-center">
+        <div className="border-gray-700">
           {isLoading ? (
             <LoadingSkeleton />
           ) : (
-            <UserBanner user={user} status={status} onLogout={handleLogout} />
+            <UserBanner />
           )}
         </div>
       </nav>
@@ -74,14 +74,18 @@ const LoadingSkeleton = () => (
 );
 
 export function SidebarItem({ icon, text, alert, to }) {
+  const location = useLocation();
+
   return (
     <NavLink
       to={to}
-      className="relative flex items-center py-2 px-3 my-1 font-medium rounded-xl cursor-pointer capitalize active:bg-gray-700 text-gray-300"
+      className={
+        "my-1 flex cursor-pointer items-center rounded-xl px-3 py-2 font-medium capitalize text-gray-300 hover:bg-gray-700"
+      }
     >
       {icon}
-      <span className="text-xl ml-4">{text}</span>
-      {alert && <div className="absolute right-2 w-2 h-2 rounded bg-red-400" />}
+      <span className="ml-4 text-xl">{text}</span>
+      {alert && <div className="absolute right-2 h-2 w-2 rounded bg-red-400" />}
     </NavLink>
   );
 }

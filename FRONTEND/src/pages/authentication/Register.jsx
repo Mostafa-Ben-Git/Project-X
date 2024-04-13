@@ -6,10 +6,11 @@ import useAuth from "../../hooks/useAuth";
 function Register() {
   const { register, errors, isLoading } = useAuth();
   const [signUpData, setSignUpData] = useState({
-    name: "Mosta",
-    email: "mosta@gmail.com",
-    password: "1234",
-    password_confirmation: "",
+    first_name: "john",
+    last_name: "doe",
+    email: "john@example.com",
+    password: "12345678",
+    password_confirmation: "12345678",
   });
 
   const handleOnChange = (e) => {
@@ -26,23 +27,45 @@ function Register() {
       <div className="max-w-md w-full space-y-8 p-8 bg-gray-800 shadow-md rounded-md lg:max-w-xl">
         <h2 className="text-3xl font-extrabold text-center mb-4">Register</h2>
         <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium">
-              Name
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              autoComplete="name"
-              required
-              value={signUpData.name}
-              onChange={handleOnChange}
-              className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
-            />
-            {errors?.name && (
-              <p className="text-red-600 text-xs mt-2">*{errors.name}</p>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="first_name" className="block text-sm font-medium">
+                first_name
+              </label>
+              <input
+                id="first_name"
+                name="first_name"
+                type="text"
+                autoComplete="first_name"
+                required
+                value={signUpData.first_name}
+                onChange={handleOnChange}
+                className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
+              />
+              {errors?.first_name && (
+                <p className="text-red-600 text-xs mt-2">
+                  *{errors.first_name}
+                </p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="last_name" className="block text-sm font-medium">
+                last_name
+              </label>
+              <input
+                id="last_name"
+                name="last_name"
+                type="text"
+                autoComplete="last_name"
+                required
+                value={signUpData.last_name}
+                onChange={handleOnChange}
+                className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
+              />
+              {errors?.last_name && (
+                <p className="text-red-600 text-xs mt-2">*{errors.last_name}</p>
+              )}
+            </div>
           </div>
           <div>
             <label htmlFor="email" className="block text-sm font-medium">

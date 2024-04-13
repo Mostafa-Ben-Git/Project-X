@@ -19,8 +19,8 @@ class PostFactory extends Factory
     {
         return [
             'user_id' => User::all()->random()->id,
-            'title' => fake()->sentence(),
-            'body' => fake()->paragraph(),
+            'text' => $this->faker->sentence(),
+            'image' => $this->faker->imageUrl(),
         ];
     }
 }
