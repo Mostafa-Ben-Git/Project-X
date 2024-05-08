@@ -2,11 +2,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import apiService from "../api/apiService";
 import { setErrors, setIsLoading, setUser } from "../slices/authSlice";
+import { useState } from "react";
 
-export const useAuth = () => {
+export default function useAuth() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, isLoading, errors } = useSelector((store) => store.auth);
+  const [isLoggedOut, setisLoggedOut] = useState(false);
 
   const SESSION_NAME = "userLogedIn";
   let isLoggedIn = localStorage.getItem(SESSION_NAME) == "true";
@@ -70,12 +72,15 @@ export const useAuth = () => {
   };
   const logout = async () => {
     try {
+      setisLoggedOut(true);
       await apiService.post("/logout");
       dispatch(setUser(null));
       localStorage.removeItem(SESSION_NAME);
       navigate("/login");
     } catch (e) {
       console.warn(e);
+    } finally {
+      setisLoggedOut(false);
     }
   };
 
@@ -85,8 +90,9 @@ export const useAuth = () => {
     getUser,
     logout,
     isLoggedIn,
+    isLoggedOut,
     user,
     errors,
     isLoading,
   };
-};
+}

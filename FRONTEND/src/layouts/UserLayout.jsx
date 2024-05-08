@@ -1,17 +1,13 @@
-import {
-  BellIcon,
-  Home,
-  MessageSquare,
-  UserCircle,
-  UsersRound,
-} from "lucide-react";
+import LeftBar from "features/sidebar/LeftBar";
+import RightBar from "features/sidebar/RightBar";
+import useAuth from "hooks/useAuth";
+import usePost from "hooks/usePost";
 import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import Sidebar, { SidebarItem } from "../components/SideBar";
-import { useAuth } from "../hooks/auth";
 
 function UserLayout() {
   const { getUser, user, isLoggedIn } = useAuth();
+  const { pos } = usePost();
 
   useEffect(() => {
     if (!user && isLoggedIn) {
@@ -19,36 +15,16 @@ function UserLayout() {
     }
   }, [user, getUser, isLoggedIn]);
 
+
   if (!isLoggedIn && !user) return <Navigate to="/login" />;
 
   return (
-    <div className="flex px-16 bg-gray-800 text-white h-screen">
-      <Sidebar>
-        <SidebarItem icon={<Home size={35} />} to={"/home"} text={"home"} />
-        <SidebarItem
-          icon={<MessageSquare size={35} />}
-          to={"/messages"}
-          text={"messages"}
-        />
-        <SidebarItem
-          icon={<BellIcon size={35} />}
-          to={"/notifications"}
-          text={"notifications"}
-        />
-        <SidebarItem
-          icon={<UsersRound size={35} />}
-          to={"/friends"}
-          text={"friends"}
-        />
-        <SidebarItem
-          icon={<UserCircle size={35} />}
-          to={"/profile"}
-          text={"profile"}
-        />
-      </Sidebar>
-      <div className="p-6 flex-grow overflow-y-scroll">
+    <div className="flex bg-gray-800 pl-32 text-white">
+      <LeftBar />
+      <div className="flex-grow-[2] overflow-y-scroll px-8">
         <Outlet />
       </div>
+      <RightBar />
     </div>
   );
 }

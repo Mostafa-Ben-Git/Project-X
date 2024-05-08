@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../hooks/auth";
+import useAuth from "../hooks/useAuth";
 
 function GuestLayout() {
   const { isLoggedIn } = useAuth();
