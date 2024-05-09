@@ -1,6 +1,6 @@
-function RightBar() {
+function RightBar({className}) {
   return (
-    <aside className="hidden h-screen bg-gray-800 text-white border-l w-1/3 md:block">
+    <aside className={className}>
       RightBar
     </aside>
   );

@@ -7,7 +7,7 @@ import { Navigate, Outlet } from "react-router-dom";
 
 function UserLayout() {
   const { getUser, user, isLoggedIn } = useAuth();
-  const { pos } = usePost();
+  const { fetchPosts, page } = usePost();
 
   useEffect(() => {
     if (!user && isLoggedIn) {
@@ -15,16 +15,19 @@ function UserLayout() {
     }
   }, [user, getUser, isLoggedIn]);
 
+  useEffect(() => {
+    fetchPosts(page);
+  }, [page]);
 
   if (!isLoggedIn && !user) return <Navigate to="/login" />;
 
   return (
-    <div className="flex bg-gray-800 pl-32 text-white">
-      <LeftBar />
-      <div className="flex-grow-[2] overflow-y-scroll px-8">
+    <div className="flex h-screen bg-gray-800 pl-12 text-white 2xl:pl-32">
+      <LeftBar className="flex-none" />
+      <div className="grow overflow-y-scroll p-8">
         <Outlet />
       </div>
-      <RightBar />
+      <RightBar className="  hidden w-1/4 flex-none 2xl:block" />
     </div>
   );
 }

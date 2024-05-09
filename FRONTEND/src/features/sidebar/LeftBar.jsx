@@ -10,7 +10,7 @@ import {
   UserCircle,
   UsersRound,
 } from "lucide-react";
-export default function LeftBar() {
+export default function LeftBar({className}) {
   const { user, isLoading, status } = useSelector((store) => store.auth);
   const { logout } = useAuth();
 
@@ -20,7 +20,7 @@ export default function LeftBar() {
   };
 
   return (
-    <aside className="h-screen bg-gray-800 text-white">
+    <aside className={className}>
       <nav className="flex h-full flex-col border-r shadow-sm">
         <div className="flex items-center justify-between p-4 pb-2">
           <img

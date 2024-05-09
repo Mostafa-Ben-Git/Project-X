@@ -15,6 +15,7 @@ export default defineConfig({
       hooks: path.resolve("src/hooks/"),
       images: path.resolve("src/images/"),
       features: path.resolve("src/features/"),
+      slices: path.resolve("src/slices/"),
       "@": path.resolve(__dirname, "./src"),
     },
   },
