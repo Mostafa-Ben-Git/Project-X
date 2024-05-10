@@ -16,7 +16,7 @@ class PostController extends Controller
      */
     public function index()
     {
-        return PostResource::collection(Post::paginate(6));
+        return PostResource::collection(Post::latest()->paginate(6));
     }
 
     /**
@@ -24,11 +24,11 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
+
         $post = new Post();
-        $post->title = $request->title;
-        $post->body = $request->body;
-        $post->user_id = $request->user_id;
-        $post->save();
+        $post->text = nl2br($request->text);
+        $request->user()->posts()->save($post);
+
 
         return new PostResource($post);
     }
@@ -47,7 +47,6 @@ class PostController extends Controller
      */
     public function update(Request $request, Post $post)
     {
-        //
     }
 
     /**

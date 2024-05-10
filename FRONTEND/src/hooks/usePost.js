@@ -1,14 +1,13 @@
 import apiService from "@/api/apiService";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import {
   setFetching,
   setHasNextPage,
+  setNewPost,
   setPage,
   setPosts,
 } from "slices/postsSlice";
 import useIntersectionObserver from "./useIntersectionObserver";
-import { useState } from "react";
 
 export default function usePost() {
   const dispatch = useDispatch();
@@ -34,9 +33,31 @@ export default function usePost() {
   };
 
   const lastPostRef = useIntersectionObserver(() => {
-    console.log(hasNextPage);
     dispatch(setPage());
   }, [!isFetching, hasNextPage]);
 
-  return { isFetching, posts, fetchPosts, page, lastPostRef, hasNextPage };
+  const addPost = async (post) => {
+    // dispatch(setPosts([post, ...posts]));
+    try {
+      dispatch(setFetching(true));
+      const { data } = await apiService.post("api/posts", post);
+      dispatch(setNewPost(data));
+    } catch (error) {
+      const responseData = error.response;
+      console.error("Error adding post", responseData);
+    }
+    finally {
+      dispatch(setFetching(false));
+    } 
+  };
+
+  return {
+    isFetching,
+    posts,
+    fetchPosts,
+    page,
+    lastPostRef,
+    hasNextPage,
+    addPost,
+  };
 }

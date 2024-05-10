@@ -12,6 +12,10 @@ class Post extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $fillable = [
+        'title', 'images'
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -24,5 +28,4 @@ class Post extends Model
     {
         return $this->hasMany(Comment::class);
     }
-
 }

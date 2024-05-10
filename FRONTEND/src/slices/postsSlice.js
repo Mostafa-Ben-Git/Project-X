@@ -17,6 +17,9 @@ const postsSlice = createSlice({
     setPosts(state, action) {
       state.posts = [...state.posts, ...action.payload];
     },
+    setNewPost(state, action) {
+      state.posts = [action.payload, ...state.posts];
+    },
     setFetching(state, action) {
       state.isFetching = action.payload;
     },
@@ -37,6 +40,7 @@ const postsSlice = createSlice({
 
 export const {
   setPosts,
+  setNewPost,
   setFetching,
   setStatus,
   setErrors,
