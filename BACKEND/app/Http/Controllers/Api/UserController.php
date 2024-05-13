@@ -14,7 +14,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        return new UserResource(User::all());
+        return UserResource::collection(User::all());
     }
 
     /**
@@ -23,9 +23,7 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $user = User::create($request->all());
-        return response()->json([
-            "user" => $user,
-        ]);
+        return response()->json($user, 201);
     }
 
     /**

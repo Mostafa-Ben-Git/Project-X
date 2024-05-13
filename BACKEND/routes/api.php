@@ -29,12 +29,12 @@ Route::group(["middleware" => "auth:sanctum"], function () {
     });
 
     Route::get('/user/posts', [AuthController::class, "me"]);
+    Route::apiResource('/users', UserController::class);
+    Route::apiResource("/posts", PostController::class);
 
     // Route::apiResource('users.posts', PostController::class)->scoped();
 });
 
-Route::apiResource('/users', UserController::class);
-Route::apiResource("/posts", PostController::class);
 
 // Route::post('login', [AuthController::class, "login"]);
 // Route::post('logout', [AuthController::class, "logout"]);

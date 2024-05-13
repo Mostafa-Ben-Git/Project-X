@@ -1,7 +1,7 @@
-import { Skeleton } from "components/ui/skeleton";
+
 import { useSelector } from "react-redux";
 import { NavLink, Navigate, useLocation } from "react-router-dom";
-import useAuth from "hooks/useAuth";
+import useAuth from "@/hooks/useAuth";
 import { UserBanner } from "./UserBanner";
 import {
   BellIcon,
@@ -10,7 +10,8 @@ import {
   UserCircle,
   UsersRound,
 } from "lucide-react";
-export default function LeftBar() {
+import { Skeleton } from "@/components/ui/skeleton";
+export default function LeftBar({className}) {
   const { user, isLoading, status } = useSelector((store) => store.auth);
   const { logout } = useAuth();
 
@@ -20,7 +21,7 @@ export default function LeftBar() {
   };
 
   return (
-    <aside className="h-screen bg-gray-800 text-white">
+    <aside className={className}>
       <nav className="flex h-full flex-col border-r shadow-sm">
         <div className="flex items-center justify-between p-4 pb-2">
           <img

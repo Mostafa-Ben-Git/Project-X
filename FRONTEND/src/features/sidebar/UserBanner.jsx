@@ -1,15 +1,15 @@
-import useAuth from "hooks/useAuth";
+import useAuth from "@/hooks/useAuth";
 import { LogOut } from "lucide-react";
 import { MoonLoader } from "react-spinners";
 
 export const UserBanner = () => {
   const { user, logout, status, isLoggedOut } = useAuth();
   return (
-    <div className="m-3 flex min-w-max gap-4 rounded-md p-3 hover:bg-slate-500">
+    <div className="m-3 flex items-center flex-col gap-4 rounded-md p-3 hover:bg-slate-500 lg:flex-row">
       <img
         src={user?.avatar}
         alt=""
-        className="h-15 w-15 rounded-full object-cover"
+        className="w-14 aspect-square rounded-full"
       />
       <div className="flex gap-2">
         <div className="flex flex-col items-baseline justify-center">

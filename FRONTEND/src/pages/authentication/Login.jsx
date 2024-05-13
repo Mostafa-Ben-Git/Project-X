@@ -8,7 +8,7 @@ const Login = () => {
   const { login, errors, isLoading } = useAuth();
   const [loginData, setLoginData] = useState({
     email: "test@example.com",
-    password: "1234",
+    password: "12345678",
     remember: false,
   });
 

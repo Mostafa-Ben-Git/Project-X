@@ -5,20 +5,22 @@
 * {
   font-family: "Inter", sans-serif;
 }
-*::-webkit-scrollbar {
-  width: 10px;
+::-webkit-scrollbar {
+  width: 10px; /* Width of the scrollbar */
 }
 
-*::-webkit-scrollbar-track {
-  border-radius: 5px;
+::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Track color */
 }
 
 ::-webkit-scrollbar-thumb {
-  background-image: linear-gradient(to bottom, #0070ff, #00d2ff, #0070ff);
-  border-radius: 10px;
-  border: 2px solid #ffff;
+  background: #888; /* Thumb color */
+  border-radius: 5px; /* Rounded corners */
 }
 
+::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Thumb color on hover */
+}
 .active {
   @apply rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700;
 }
@@ -81,7 +83,7 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
+    /* --border: 217.2 32.6% 17.5%; */
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
   }
