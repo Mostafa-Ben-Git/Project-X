@@ -1,4 +1,5 @@
-import usePost from "hooks/usePost";
+
+import usePost from "@/hooks/usePost";
 import { Image, LocateFixedIcon, PinIcon, X } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -15,7 +16,7 @@ function PostBox() {
     fileInputRef.current.click();
   };
 
-  const isEmpty = postData.text === "";
+  const isEmpty = postData.text === "" && postData.images.length === 0;
 
   const handleOnChange = (e) => {
     const key = e.target.name;
@@ -28,19 +29,8 @@ function PostBox() {
     const file = e.target.files[0];
     setPostData({
       ...postData,
-      images: [...postData.images, URL.createObjectURL(file)],
+      images: [...postData.images, file],
     });
-    // const reader = new FileReader();
-    // reader.onload = () => {
-    //   if (reader.readyState === 2) {
-    //     setPostData({
-    //       ...postData,
-    //       images: [...postData.images, reader.result],
-    //     });
-    //   }
-    // };
-    // reader.readAsDataURL(file);
-    console.log(postData.images);
   };
 
   const handleRemoveImage = (index) => {
@@ -50,13 +40,19 @@ function PostBox() {
     });
   };
 
-
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        console.log(postData);
-        addPost(postData);
+        const formData = new FormData();
+        if (!isEmpty) {
+          formData.append("text", postData.text);
+          postData.images.forEach((image) => {
+            formData.append("images[]", image);
+          });
+
+          addPost(formData);
+        }
       }}
       encType="multipart/form-data"
     >
@@ -77,7 +73,12 @@ function PostBox() {
             {postData.images.length > 0 && (
               <div className="grid grid-cols-3 gap-4">
                 {postData.images.map((image, index) => (
-                  <ImagePreview key={index} index={index} image={image} handleRemoveImage={handleRemoveImage} />
+                  <ImagePreview
+                    key={index}
+                    index={index}
+                    image={image}
+                    handleRemoveImage={handleRemoveImage}
+                  />
                 ))}
               </div>
             )}
@@ -129,17 +130,19 @@ function PostBox() {
   );
 }
 
-function ImagePreview({ image ,handleRemoveImage, index}) {
+function ImagePreview({ image, handleRemoveImage, index }) {
   return (
     <div className="relative">
       <img
-        src={image}
+        src={URL.createObjectURL(image)}
         alt="Post Image"
-        className="relative aspect-square w-full rounded-md border-2 border-slate-400"
+        className="relative aspect-square w-full rounded-md border-2 border-slate-400 object-cover"
       />
-      <span className="absolute right-2 top-2 grid place-items-center bg-slate-400 rounded-full p-1 cursor-pointer"
-      onClick={()=>handleRemoveImage(index)}>
-        <X size={20}/>
+      <span
+        className="absolute right-2 top-2 grid cursor-pointer place-items-center rounded-full bg-slate-400 p-1"
+        onClick={() => handleRemoveImage(index)}
+      >
+        <X size={20} />
       </span>
     </div>
   );

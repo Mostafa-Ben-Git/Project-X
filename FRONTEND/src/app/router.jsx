@@ -1,15 +1,14 @@
+import GuestLayout from "@/layouts/GuestLayout";
+import UserLayout from "@/layouts/UserLayout";
+import PageNotFound from "@/pages/PageNotFound";
+import Login from "@/pages/authentication/Login";
+import Register from "@/pages/authentication/Register";
+import FriendsPage from "@/pages/home/FriendsPage";
+import HomePage from "@/pages/home/HomePage";
+import MessagesPage from "@/pages/home/MessagesPage";
+import NotifPage from "@/pages/home/NotifPage";
+import ProfilePage from "@/pages/home/ProfilePage";
 import { createBrowserRouter, Navigate } from "react-router-dom";
-
-import GuestLayout from "../layouts/GuestLayout";
-import UserLayout from "../layouts/UserLayout";
-import Login from "../pages/authentication/Login";
-import PageNotFound from "../pages/PageNotFound";
-import Register from "../pages/authentication/Register";
-import FriendsPage from "../pages/home/FriendsPage";
-import ProfilePage from "../pages/home/ProfilePage";
-import MessagesPage from "../pages/home/MessagesPage";
-import HomePage from "../pages/home/HomePage";
-import NotifPage from "../pages/home/NotifPage";
 
 const router = createBrowserRouter([
   {

@@ -1,4 +1,8 @@
-function Post({ text, longAgo, image, user, innerRef }) {
+import Carousel from "./Carousel";
+import { ImagesCarousel } from "./ImagesCarousel";
+
+
+function Post({ text, longAgo, images, user, innerRef }) {
   return (
     <li
       className="border-state-600 w-full rounded-lg border p-4"
@@ -8,7 +12,7 @@ function Post({ text, longAgo, image, user, innerRef }) {
         <span>
           <img
             src={user.avatar}
-            alt=""
+            alt={"avatar of " + user.first_name + " " + user.last_name}
             className="aspect-square max-w-[50px] rounded-full"
           />
         </span>
@@ -20,9 +24,13 @@ function Post({ text, longAgo, image, user, innerRef }) {
         </div>
       </div>
       <p className="mt-4" dangerouslySetInnerHTML={{ __html: text }}></p>
-      {image && <img src={image} alt="Post" className="mt-4 rounded-lg" />}
+
+      {/* <ImagesCarousel images={images} /> */}
+
+      {images && (
+        <ImagesCarousel images={images} />
+      )}
     </li>
   );
 }
-
 export default Post;

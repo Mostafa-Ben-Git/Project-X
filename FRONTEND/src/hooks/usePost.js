@@ -6,7 +6,7 @@ import {
   setNewPost,
   setPage,
   setPosts,
-} from "slices/postsSlice";
+} from "@/slices/postsSlice";
 import useIntersectionObserver from "./useIntersectionObserver";
 
 export default function usePost() {

@@ -18,7 +18,9 @@ class PostResource extends JsonResource
         return [
             'post_id' => $this->id,
             'text' => $this->text,
-            'image' => $this->image,
+            'images' => $this->when($this->images->isNotEmpty(), function () {
+                return $this->images->map(fn ($image) => $image->image_path);
+            }),
             'likes' => $this->likes->count(),
             'longAgo' => $this->created_at->diffForHumans(),
             'user' => [

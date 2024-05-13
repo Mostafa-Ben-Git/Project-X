@@ -1,6 +1,6 @@
-import Post from "features/post/Post";
-import PostBox from "features/post/PostBox";
-import usePost from "hooks/usePost";
+import Post from "@/features/post/Post";
+import PostBox from "@/features/post/PostBox";
+import usePost from "@/hooks/usePost";
 import { MoonLoader } from "react-spinners";
 
 function HomePage() {

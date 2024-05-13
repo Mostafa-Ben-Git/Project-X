@@ -1,7 +1,7 @@
-import { Skeleton } from "components/ui/skeleton";
+
 import { useSelector } from "react-redux";
 import { NavLink, Navigate, useLocation } from "react-router-dom";
-import useAuth from "hooks/useAuth";
+import useAuth from "@/hooks/useAuth";
 import { UserBanner } from "./UserBanner";
 import {
   BellIcon,
@@ -10,6 +10,7 @@ import {
   UserCircle,
   UsersRound,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 export default function LeftBar({className}) {
   const { user, isLoading, status } = useSelector((store) => store.auth);
   const { logout } = useAuth();

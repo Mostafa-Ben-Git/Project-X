@@ -1,7 +1,7 @@
-import LeftBar from "features/sidebar/LeftBar";
-import RightBar from "features/sidebar/RightBar";
-import useAuth from "hooks/useAuth";
-import usePost from "hooks/usePost";
+import LeftBar from "@/features/sidebar/LeftBar";
+import RightBar from "@/features/sidebar/RightBar";
+import useAuth from "@/hooks/useAuth";
+import usePost from "@/hooks/usePost";
 import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 

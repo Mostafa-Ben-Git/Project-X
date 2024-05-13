@@ -1,4 +1,4 @@
-import useAuth from "hooks/useAuth";
+import useAuth from "@/hooks/useAuth";
 import { LogOut } from "lucide-react";
 import { MoonLoader } from "react-spinners";
 

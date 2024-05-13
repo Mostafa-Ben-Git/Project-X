@@ -1,21 +1,13 @@
 /* eslint-disable no-undef */
-import eslint from "vite-plugin-eslint";
 import path from "path";
+import eslin from "vite-plugin-eslint";
 import react from "@vitejs/plugin-react";
-
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [react(), eslint()],
+  plugins: [react(),eslin({ failOnWarning: false, failOnError: true })],
   resolve: {
     alias: {
-      components: path.resolve("src/components/"),
-      pages: path.resolve("src/pages/"),
-      lib: path.resolve("src/lib/"),
-      hooks: path.resolve("src/hooks/"),
-      images: path.resolve("src/images/"),
-      features: path.resolve("src/features/"),
-      slices: path.resolve("src/slices/"),
       "@": path.resolve(__dirname, "./src"),
     },
   },
