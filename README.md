@@ -55,15 +55,15 @@ Before you begin, make sure you have the following installed on your machine:
     DB_USERNAME=your_database_username
     DB_PASSWORD=your_database_password
    ```
-6. **Migrate the database:**
+6. **Migrate the database and :**
 
    ```
-   php artisan migrate
+   php artisan migrate:fresh --seed
    ```
 7. **Start the server API :**
 
    ```
-   php artisan serve
+   php artisan serve --host=localhost
    ```
 
 ## Frontend Setup

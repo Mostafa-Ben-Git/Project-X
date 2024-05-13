@@ -7,6 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class PostResource extends JsonResource
 {
+    public static $wrap = null;
     /**
      * Transform the resource into an array.
      *
@@ -16,13 +17,22 @@ class PostResource extends JsonResource
     {
         return [
             'post_id' => $this->id,
-            'user_id' => $this->user_id,
-            'username' => $this->user->username,
             'text' => $this->text,
-            'image' => $this->image,
-            'longAgo' => $this->created_at->diffForHumans(),
+            'images' => $this->when($this->images->isNotEmpty(), function () {
+                return $this->images->map(fn ($image) => $image->image_path);
+            }),
             'likes' => $this->likes->count(),
-            'comments' => CommentResource::collection($this->comments)
+            'longAgo' => $this->created_at->diffForHumans(),
+            'user' => [
+                'id' => $this->user->id,
+                'first_name' => $this->user->first_name,
+                'last_name' => $this->user->last_name,
+                'email' => $this->user->email,
+                'avatar' => $this->user->avatar,
+                'friends_count' => $this->user->friends->count(),
+                'posts_count' => $this->user->posts->count(),
+            ],
+            // 'comments' => CommentResource::collection($this->comments)
 
         ];
     }
