@@ -19,8 +19,8 @@ return new class extends Migration
             $table->enum('statut', ['en ligne', 'hors ligne'])->default('hors ligne');
             $table->enum('genre', ['masculin', 'féminin', 'autre'])->nullable();
             $table->string('adresse')->nullable();
-            $table->string('ville origine')->nullable();
-            $table->string('ville habituelle')->nullable();
+            $table->string('ville_origine')->nullable();
+            $table->string('ville_habituelle')->nullable();
             $table->string('Situation amoureuse')->nullable();
             $table->text('interets')->nullable();
             $table->string('education')->nullable();
