@@ -116,9 +116,9 @@ const ProfilePage = () => {
 
 
 
-     <div>
+     {/* <div>
       {posts.title}
-     </div>
+     </div> */}
        
     </div>
   );
