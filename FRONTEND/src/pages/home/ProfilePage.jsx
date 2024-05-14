@@ -11,16 +11,24 @@ import {
 
 const ProfilePage = () => {
   const { user } = useAuth();
+
   console.log(user.cover_image)
 
   // const jsonObject = user.liens_sociaux && JSON.parse(user.liens_sociaux);
   // console.log(jsonObject )
 
+
+  const jsonObject = user?.liens_sociaux === undefined ? null : JSON.parse(
+    user.liens_sociaux
+  );
+  console.log(jsonObject);
+
+
   return (
     <div>
       <div className="w-64">
         <Card>
-          
+
           {user && (
             <>
               {/* {user.cover_image && (
@@ -80,6 +88,7 @@ const ProfilePage = () => {
 
                 {/* Afficher les liens sociaux */}
 
+
                 {/* <div className="text-l  font-normal text-black">
                   <a
                     href={jsonObject.instagram}
@@ -109,6 +118,39 @@ const ProfilePage = () => {
                     <Twitter color="black" size={24} />
                   </a>
                 </div> */}
+=======
+                {jsonObject && (
+                  <div className="text-l  font-normal text-black">
+                    <a
+                      href={jsonObject.instagram}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-l  font-normal text-black"
+                      style={{ color: "black" }}
+                    >
+                      <Instagram color="black" size={24} />
+                    </a>
+                    <a
+                      href={jsonObject.facebook}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-l  font-normal text-black"
+                      style={{ color: "black" }}
+                    >
+                      <Facebook color="black" size={24} />
+                    </a>
+                    <a
+                      href={jsonObject.twitter}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-l  font-normal text-black"
+                      style={{ color: "black" }}
+                    >
+                      <Twitter color="black" size={24} />
+                    </a>
+                  </div>
+                )}
+>>>>>>> 2dce5cca64764338a719313e407ea4f4291716be
               </div>
             </>
           )}
