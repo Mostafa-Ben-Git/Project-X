@@ -1,3 +1,4 @@
+import { PostsProvider } from "@/context/PostsContext";
 import GuestLayout from "@/layouts/GuestLayout";
 import UserLayout from "@/layouts/UserLayout";
 import PageNotFound from "@/pages/PageNotFound";
@@ -13,7 +14,11 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <UserLayout />,
+    element: (
+      <PostsProvider>
+        <UserLayout />
+      </PostsProvider>
+    ),
     children: [
       {
         path: "/",

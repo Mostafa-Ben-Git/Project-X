@@ -1,13 +1,14 @@
 import LeftBar from "@/features/sidebar/LeftBar";
 import RightBar from "@/features/sidebar/RightBar";
 import useAuth from "@/hooks/useAuth";
-import usePost from "@/hooks/usePost";
+import usePosts from "@/hooks/usePosts";
+
 import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
 function UserLayout() {
   const { getUser, user, isLoggedIn } = useAuth();
-  const { fetchPosts, page } = usePost();
+  const { fetchPosts, page } = usePosts();
 
   useEffect(() => {
     if (!user && isLoggedIn) {

@@ -1,10 +1,11 @@
 import Post from "@/features/post/Post";
 import PostBox from "@/features/post/PostBox";
-import usePost from "@/hooks/usePost";
+import usePosts from "@/hooks/usePosts";
+
 import { MoonLoader } from "react-spinners";
 
 function HomePage() {
-  const { isFetching, posts, lastPostRef, hasNextPage } = usePost();
+  const { isFetching, posts, lastPostRef, hasNextPage } = usePosts();
 
   return (
     <main>
