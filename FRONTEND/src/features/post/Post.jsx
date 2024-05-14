@@ -1,6 +1,4 @@
-import Carousel from "./Carousel";
 import { ImagesCarousel } from "./ImagesCarousel";
-
 
 function Post({ text, longAgo, images, user, innerRef }) {
   return (
@@ -25,11 +23,7 @@ function Post({ text, longAgo, images, user, innerRef }) {
       </div>
       <p className="mt-4" dangerouslySetInnerHTML={{ __html: text }}></p>
 
-      {/* <ImagesCarousel images={images} /> */}
-
-      {images && (
-        <ImagesCarousel images={images} />
-      )}
+      {images && <ImagesCarousel images={images} />}
     </li>
   );
 }
