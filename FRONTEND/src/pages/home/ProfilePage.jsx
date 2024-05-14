@@ -11,16 +11,25 @@ import {
 
 const ProfilePage = () => {
   const { user } = useAuth();
+  console.log(user.cover_image)
 
-  const jsonObject = user.liens_sociaux && JSON.parse(user.liens_sociaux);
+  // const jsonObject = user.liens_sociaux && JSON.parse(user.liens_sociaux);
   // console.log(jsonObject )
 
   return (
     <div>
       <div className="w-64">
         <Card>
+          
           {user && (
             <>
+              {/* {user.cover_image && (
+                <img
+                  src={user.cover_image}
+                  alt="Cover Image"
+                  className="w-full rounded-t-md"
+                />
+              )} */}
               {user.avatar && (
                 <img
                   src={user.avatar}
@@ -71,7 +80,7 @@ const ProfilePage = () => {
 
                 {/* Afficher les liens sociaux */}
 
-                <div className="text-l  font-normal text-black">
+                {/* <div className="text-l  font-normal text-black">
                   <a
                     href={jsonObject.instagram}
                     target="_blank"
@@ -99,7 +108,7 @@ const ProfilePage = () => {
                   >
                     <Twitter color="black" size={24} />
                   </a>
-                </div>
+                </div> */}
               </div>
             </>
           )}
