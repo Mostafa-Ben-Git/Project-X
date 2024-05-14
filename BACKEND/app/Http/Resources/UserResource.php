@@ -14,6 +14,13 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $liens_sociaux = [
+            'facebook' => 'https://facebook.com/' . $this->faker->userName,
+            'twitter' => 'https://twitter.com/' . $this->faker->userName,
+            'instagram' => 'https://instagram.com/' . $this->faker->userName,
+        ];
+        $liens_sociaux_encoded = json_encode($liens_sociaux);
+        
         return [
             'id' => $this->id,
             'first_name' => $this->first_name,
@@ -21,12 +28,17 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'avatar' => $this->avatar,
             'friends_count' => $this->friends->count(),
+            'date_de_naissance'=>$this->date_de_naissance,
+            'ville_habituelle'=>$this->ville_habituelle,
+            'liens_sociaux' => $liens_sociaux_encoded,
             'posts_count' => $this->posts->count(),
+            'education'=>$this->education,
             'friends' => $this->friends->map(fn ($friend) => [
                 "id" => $friend->id,
                 "username" => $friend->username,
                 "full_name" => $friend->first_name . ' ' . $friend->last_name,
                 'avatar' => $friend->avatar
+                
             ])->toArray(),
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),

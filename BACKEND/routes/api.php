@@ -26,7 +26,19 @@ use Illuminate\Support\Facades\Route;
 Route::group(["middleware" => "auth:sanctum"], function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
+        
     });
+
+    Route::group(["middleware" => "auth:sanctum"], function () {
+        
+        // Route::get('/user/posts', function (Request $request) {
+        //     return $request->user()->posts();
+        // });
+    
+      
+        Route::get('/user/posts', [AuthController::class, "me"]);
+    });
+    
 
     Route::get('/user/posts', [AuthController::class, "me"]);
     Route::apiResource('/users', UserController::class);
