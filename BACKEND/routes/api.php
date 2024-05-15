@@ -35,7 +35,7 @@ Route::group(["middleware" => "auth:sanctum"], function () {
   });
 
   Route::post(
-    '/posts/{post}/like',
+    '/posts/{post}/changeLikeStatus',
     ['App\Http\Controllers\Api\LikeController', 'changeLikeStatus']
   );
 

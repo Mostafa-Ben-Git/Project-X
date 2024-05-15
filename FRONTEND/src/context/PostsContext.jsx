@@ -53,7 +53,7 @@ function PostsProvider({ children }) {
 
   const likingHandler = async (post_id) => {
     try {
-      await apiService.post(`api/posts/${post_id}/like`);
+      await apiService.post(`api/posts/${post_id}/changeLikeStatus`);
     } catch (error) {
       const responseData = error.response;
       console.error("Error adding post", responseData);
