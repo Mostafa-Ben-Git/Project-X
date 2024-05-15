@@ -5,6 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Nette\Utils\Random;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -29,7 +30,7 @@ class UserFactory extends Factory
         return [
             'first_name' => $firstName,
             'last_name' => $lastName,
-            'username' => fake()->userName,
+            'username' => str_split($lastName, 5)[0].random_int(100, 999),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('12345678'),

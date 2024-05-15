@@ -11,6 +11,7 @@ function PostsProvider({ children }) {
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
   const [status, setStatus] = useState("idle");
   const [errors, setErrors] = useState({});
 
@@ -37,7 +38,7 @@ function PostsProvider({ children }) {
 
   const addPost = async (post) => {
     try {
-      setIsFetching(true);
+      setIsPosting(true);
       const { data } = await apiService.post("api/posts", post);
       setNewPost(data);
       setPosts((prevPosts) => [data, ...prevPosts]);
@@ -46,11 +47,22 @@ function PostsProvider({ children }) {
       console.error("Error adding post", responseData);
       setErrors(responseData);
     } finally {
-      setIsFetching(false);
+      setIsPosting(false);
+    }
+  };
+
+  const likingHandler = async (post_id) => {
+    try {
+      await apiService.post(`api/posts/${post_id}/like`);
+    } catch (error) {
+      const responseData = error.response;
+      console.error("Error adding post", responseData);
+      setErrors(responseData);
     }
   };
 
   const value = {
+    likingHandler,
     isFetching,
     posts,
     newPost,
@@ -61,6 +73,8 @@ function PostsProvider({ children }) {
     setPage, // Setter for page
     lastPostRef,
     hasNextPage,
+    isPosting,
+    setIsPosting,
     addPost,
     status,
     setStatus, // Setter for status

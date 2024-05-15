@@ -7,10 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Like extends Model
 {
-    use HasFactory;
+  use HasFactory;
 
-    public function posts()
-    {
-        $this->belongsTo(Post::class);
-    }
+  protected $fillable = [
+    'user_id',
+  ];
+
+  public function posts()
+  {
+    $this->belongsTo(Post::class);
+  }
 }

@@ -3,6 +3,9 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Resources\PostResource;
+use App\Http\Resources\UserResource;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,15 +27,22 @@ use Illuminate\Support\Facades\Route;
 // });
 
 Route::group(["middleware" => "auth:sanctum"], function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+  Route::get('/user', function (Request $request) {
+    return UserResource::make($request->user());
+  });
+  Route::get('/user/posts', function (Request $request) {
+    return PostResource::collection($request->user()->posts());
+  });
 
-    Route::get('/user/posts', [AuthController::class, "me"]);
-    Route::apiResource('/users', UserController::class);
-    Route::apiResource("/posts", PostController::class);
+  Route::post(
+    '/posts/{post}/like',
+    ['App\Http\Controllers\Api\LikeController', 'changeLikeStatus']
+  );
 
-    // Route::apiResource('users.posts', PostController::class)->scoped();
+  Route::apiResource('/users', UserController::class);
+  Route::apiResource("/posts", PostController::class);
+
+  // Route::apiResource('users.posts', PostController::class)->scoped();
 });
 
 

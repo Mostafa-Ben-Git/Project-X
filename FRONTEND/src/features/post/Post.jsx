@@ -1,6 +1,7 @@
 import { ImagesCarousel } from "./ImagesCarousel";
+import PostInfo from "./PostInfo";
 
-function Post({ text, longAgo, images, user, innerRef }) {
+function Post({ text, longAgo, images, user, innerRef, info, post_id }) {
   return (
     <li
       className="border-state-600 w-full rounded-lg border p-4"
@@ -24,6 +25,8 @@ function Post({ text, longAgo, images, user, innerRef }) {
       <p className="mt-4" dangerouslySetInnerHTML={{ __html: text }}></p>
 
       {images && <ImagesCarousel images={images} />}
+
+      <PostInfo {...info} post_id={post_id}/>
     </li>
   );
 }
