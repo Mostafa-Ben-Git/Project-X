@@ -30,20 +30,10 @@ class UserResource extends JsonResource
       'friends_count' => $this->friends->count(),
       "age" => $dateOfBirth->diffInYears(now()),
       'date_de_naissance' => $this->date_de_naissance,
-<<<<<<< HEAD
-      'ville_origine'=>$this->ville_origine,
       'ville_habituelle' => $this->ville_habituelle,
       'liens_sociaux' => json_decode($this->liens_sociaux),
       'posts_count' => $this->posts->count(),
       'education' => $this->education,
-      'cover_image'=>$this->cover_image,
-
-=======
-      'ville_habituelle' => $this->ville_habituelle,
-      'liens_sociaux' => $this->liens_sociaux,
-      'posts_count' => $this->posts->count(),
-      'education' => $this->education,
->>>>>>> 2dce5cca64764338a719313e407ea4f4291716be
       'friends' => $this->friends->map(fn ($friend) => [
         "id" => $friend->id,
         "username" => $friend->username,
