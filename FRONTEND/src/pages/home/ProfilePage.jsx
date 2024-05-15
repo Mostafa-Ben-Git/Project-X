@@ -1,5 +1,7 @@
 import useAuth from "@/hooks/useAuth";
 import { Card } from "@material-tailwind/react";
+import { useEffect }from 'react'
+
 import {
   Facebook,
   GraduationCap,
@@ -10,34 +12,39 @@ import {
 } from "lucide-react";
 
 const ProfilePage = () => {
-  const { user } = useAuth();
 
-  console.log(user.cover_image)
+  const { user ,posts } = useAuth();
+  
+
+ 
+   console.log(posts?.text)
+  
 
   // const jsonObject = user.liens_sociaux && JSON.parse(user.liens_sociaux);
   // console.log(jsonObject )
 
-
-  const jsonObject = user?.liens_sociaux === undefined ? null : JSON.parse(
-    user.liens_sociaux
-  );
-  console.log(jsonObject);
-
+  let jsonObject = 1;
+  try {
+    jsonObject = user?.liens_sociaux ? JSON.parse(user.liens_sociaux) : null;
+  } catch (error) {
+    console.error('Error parsing JSON:', error);
+  }
+ console.log(jsonObject)
 
   return (
     <div>
+      {user.cover_image && (
+            <img src={user?.cover_image}
+            
+            style={{height:"300px" ,width:"700px", position:"relative"}}
+            />
+          )}
       <div className="w-64">
-        <Card>
+      
+        <Card style={{ width:"250px", position:"absolute",marginTop:"-120px" ,marginLeft:"40px"}}>
 
           {user && (
             <>
-              {/* {user.cover_image && (
-                <img
-                  src={user.cover_image}
-                  alt="Cover Image"
-                  className="w-full rounded-t-md"
-                />
-              )} */}
               {user.avatar && (
                 <img
                   src={user.avatar}
@@ -62,6 +69,10 @@ const ProfilePage = () => {
                     </span>
                   </p>
                 )}
+                <div className="text-l font-normal text-black">
+                
+
+                </div>
                 <div className="flex items-center">
                   <Home color="black" size={24} />
                   {user.ville_habituelle && (
@@ -86,39 +97,9 @@ const ProfilePage = () => {
                   )}
                 </div>
 
-                {/* Afficher les liens sociaux */}
+               
+                 
 
-
-                {/* <div className="text-l  font-normal text-black">
-                  <a
-                    href={jsonObject.instagram}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-l  font-normal text-black"
-                    style={{ color: "black" }}
-                  >
-                    <Instagram color="black" size={24} />
-                  </a>
-                  <a
-                    href={jsonObject.facebook}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-l  font-normal text-black"
-                    style={{ color: "black" }}
-                  >
-                    <Facebook color="black" size={24} />
-                  </a>
-                  <a
-                    href={jsonObject.twitter}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-l  font-normal text-black"
-                    style={{ color: "black" }}
-                  >
-                    <Twitter color="black" size={24} />
-                  </a>
-                </div> */}
-=======
                 {jsonObject && (
                   <div className="text-l  font-normal text-black">
                     <a
@@ -156,10 +137,22 @@ const ProfilePage = () => {
           )}
         </Card>
       </div>
-
-      {/* <div>
-      {posts.title}
-     </div> */}
+      <div style={{ width:"250px", position:"absolute",marginTop:"120px" ,marginLeft:"90px"}}>
+            <h2>Posts</h2>
+            {posts.length === 0 ? (
+              <p>No posts found.</p>
+            ) : (
+              <ul>
+                {posts.map(post => (
+                  <li key={post.id}>
+                    <h3>{post.text}</h3>
+                    
+                    
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
     </div>
   );
 };

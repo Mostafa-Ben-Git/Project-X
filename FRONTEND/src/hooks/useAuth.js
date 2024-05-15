@@ -1,13 +1,13 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import apiService from "../api/apiService";
-import { setErrors, setIsLoading, setUser } from "../slices/authSlice";
+import { setErrors, setIsLoading, setUser,setPosts } from "../slices/authSlice";
 import { useState } from "react";
 
 export default function useAuth() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, isLoading, errors } = useSelector((store) => store.auth);
+  const { user, posts,isLoading, errors } = useSelector((store) => store.auth);
   const [isLoggedOut, setisLoggedOut] = useState(false);
 
   const SESSION_NAME = "userLogedIn";
@@ -32,6 +32,24 @@ export default function useAuth() {
       dispatch(setIsLoading(false));
     }
   };
+  const getUserPosts = async () => {
+    dispatch(setIsLoading(true));
+    try {
+      const { data } = await apiService.get("/api/user/posts");
+      dispatch(setPosts(data));
+    } catch (error) {
+      const response = error.response;
+      if (response && response.status === 401) {
+        localStorage.removeItem(SESSION_NAME);
+        navigate("/login");
+      } else {
+        console.error('Error fetching user posts:', error);
+      }
+    } finally {
+      dispatch(setIsLoading(false));
+    }
+  };
+  
 
   const login = async (data) => {
     dispatch(setErrors({}));
@@ -85,14 +103,27 @@ export default function useAuth() {
   };
 
   return {
+
     login,
     register,
     getUser,
+    
+    getUserPosts,
     logout,
     isLoggedIn,
     isLoggedOut,
     user,
+    posts,
     errors,
     isLoading,
   };
 }
+
+
+
+
+
+
+
+
+
