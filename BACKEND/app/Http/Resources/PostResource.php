@@ -34,6 +34,7 @@ class PostResource extends JsonResource
         'last_name' => $this->user->last_name,
         'email' => $this->user->email,
         'avatar' => $this->user->avatar,
+        'bio' => $this->user->bio,
         'friends_count' => $this->user->friends->count(),
         'posts_count' => $this->user->posts->count(),
       ],

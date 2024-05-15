@@ -1,5 +1,6 @@
 import { ImagesCarousel } from "./ImagesCarousel";
 import PostInfo from "./PostInfo";
+import { UserHoverCart } from "./UserHoverCart";
 
 function Post({ text, longAgo, images, user, innerRef, info, post_id }) {
   return (
@@ -16,17 +17,15 @@ function Post({ text, longAgo, images, user, innerRef, info, post_id }) {
           />
         </span>
         <div className="ml-4">
-          <p className="font-semibold">
-            {user.first_name} {user.last_name}
-          </p>
+          <UserHoverCart {...user} />
           <span className="text-sm text-gray-400">{longAgo}</span>
         </div>
       </div>
-      <p className="mt-4" dangerouslySetInnerHTML={{ __html: text }}></p>
+      <p className="mt-4 text-lg" dangerouslySetInnerHTML={{ __html: text }}></p>
 
       {images && <ImagesCarousel images={images} />}
 
-      <PostInfo {...info} post_id={post_id}/>
+      <PostInfo {...info} post_id={post_id} />
     </li>
   );
 }
