@@ -1,6 +1,6 @@
 import useAuth from "@/hooks/useAuth";
 import { Card } from "@material-tailwind/react";
-import { useEffect }from 'react'
+import { useEffect } from "react";
 
 import {
   Facebook,
@@ -12,37 +12,35 @@ import {
 } from "lucide-react";
 
 const ProfilePage = () => {
+  const { user, posts, getUserPosts } = useAuth();
 
-  const { user ,posts } = useAuth();
-  
-
- 
-   console.log(posts?.text)
-  
+  useEffect(() => {
+    getUserPosts();
+  }, []);
 
   // const jsonObject = user.liens_sociaux && JSON.parse(user.liens_sociaux);
   // console.log(jsonObject )
 
-  let jsonObject = 1;
-  try {
-    jsonObject = user?.liens_sociaux ? JSON.parse(user.liens_sociaux) : null;
-  } catch (error) {
-    console.error('Error parsing JSON:', error);
-  }
- console.log(jsonObject)
+  const jsonObject = user?.liens_sociaux;
+  console.log(jsonObject);
 
   return (
     <div>
-      {user.cover_image && (
-            <img src={user?.cover_image}
-            
-            style={{height:"300px" ,width:"700px", position:"relative"}}
-            />
-          )}
+      {user?.cover_image && (
+        <img
+          src={user.cover_image}
+          style={{ height: "300px", width: "700px", position: "relative" }}
+        />
+      )}
       <div className="w-64">
-      
-        <Card style={{ width:"250px", position:"absolute",marginTop:"-120px" ,marginLeft:"40px"}}>
-
+        <Card
+          style={{
+            width: "250px",
+            position: "absolute",
+            marginTop: "-120px",
+            marginLeft: "40px",
+          }}
+        >
           {user && (
             <>
               {user.avatar && (
@@ -69,10 +67,7 @@ const ProfilePage = () => {
                     </span>
                   </p>
                 )}
-                <div className="text-l font-normal text-black">
-                
-
-                </div>
+                <div className="text-l font-normal text-black"></div>
                 <div className="flex items-center">
                   <Home color="black" size={24} />
                   {user.ville_habituelle && (
@@ -96,9 +91,6 @@ const ProfilePage = () => {
                     <div className="ml-2 font-normal">{user.education}</div>
                   )}
                 </div>
-
-               
-                 
 
                 {jsonObject && (
                   <div className="text-l  font-normal text-black">
@@ -131,28 +123,22 @@ const ProfilePage = () => {
                     </a>
                   </div>
                 )}
-
               </div>
             </>
           )}
         </Card>
       </div>
-      <div style={{ width:"250px", position:"absolute",marginTop:"120px" ,marginLeft:"90px"}}>
-            <h2>Posts</h2>
-            {posts.length === 0 ? (
-              <p>No posts found.</p>
-            ) : (
-              <ul>
-                {posts.map(post => (
-                  <li key={post.id}>
-                    <h3>{post.text}</h3>
-                    
-                    
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+      <div
+        style={{
+          width: "250px",
+          position: "absolute",
+          marginTop: "120px",
+          marginLeft: "90px",
+        }}
+      >
+        <h2>Posts</h2>
+        {posts && posts?.map((post) => <p key={post.post_id}>{post.text}</p>)}
+      </div>
     </div>
   );
 };
