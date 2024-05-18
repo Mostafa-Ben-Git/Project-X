@@ -8,13 +8,14 @@ function HomePage() {
   const { isFetching, posts, lastPostRef, hasNextPage } = usePosts();
 
   return (
-    <main>
+    <main className="p-8">
       <PostBox />
       <ul className="flex flex-wrap justify-center gap-4">
         {posts?.map((post, i, posts) => (
           <Post
             {...post}
             key={`post-${post.post_id}-${Math.random()}`}
+            className="border rounded-md cursor-pointer"
             innerRef={posts.length - 1 === i ? lastPostRef : undefined}
           />
         ))}

@@ -7,27 +7,63 @@ import {
 import usePosts from "@/hooks/usePosts";
 import { cn } from "@/lib/utils";
 import { Heart, MessageCircle, Share, Share2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function PostInfo({ likes, comments_count, is_liked, post_id }) {
+  const { posts, setPosts, currentPost } = usePosts();
+
   const [like, setLike] = useState(likes);
   const [isLiked, setIsLiked] = useState(is_liked);
   const heart = useRef(null);
 
   const { likingHandler } = usePosts();
 
-  function handelLike() {
+  function handelLike(e) {
+    e.stopPropagation();
     setLike(isLiked ? like - 1 : like + 1);
     setIsLiked(!isLiked);
+    // if (currentPost) {
+    //   setPosts((prevPosts) => {
+    //     return prevPosts.map((post) => {
+    //       if (post.post_id === currentPost.post.post_id) {
+    //         return currentPost.post;
+    //       } else {
+    //         return post;
+    //       }
+    //     });
+    //   });
+    // }
+
+    // if (currentPost) {
+    //   setPosts((prevPosts) => {
+    //     return prevPosts.map((post) => {
+    //       if (post.post_id === post_id) {
+    //         return {
+    //           ...post,
+    //           info: {
+    //             ...post.info,
+    //             is_liked: isLiked,
+    //             likes: like,
+    //           },
+    //         };
+    //       }
+    //       return post;
+    //     });
+    //   });
+    // }
+
+    // Heart Animation
+
     if (!isLiked) {
       heart.current.classList.add("animate-beat-heart-once");
     } else {
       heart.current.classList.remove("animate-beat-heart-once");
     }
+
     likingHandler(post_id);
   }
   return (
-    <div className="mt-6 flex justify-around p-2">
+    <div className="mt-6 flex justify-around">
       <TooltipProvider delayDuration={200}>
         {/* Like Tooltip */}
         <Tooltip>
@@ -45,7 +81,7 @@ function PostInfo({ likes, comments_count, is_liked, post_id }) {
                   fill={isLiked ? "red" : "none"}
                 />
               </span>
-              <span>{like}</span>
+              <span>{Number(like)}</span>
             </div>
           </TooltipTrigger>
           <TooltipContent side="bottom" arrowPadding={10}>

@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useRef, useState } from "react";
 
 import apiService from "@/api/apiService"; // Assuming you have an API service
 import useIntersectionObserver from "@/hooks/useIntersectionObserver";
@@ -13,16 +13,23 @@ function PostsProvider({ children }) {
   const [isFetching, setIsFetching] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   const [status, setStatus] = useState("idle");
-  const [errors, setErrors] = useState({});
+  const [currentPost, setCurrentPost] = useState(null);
+  const [commentPage, setCommentPage] = useState(1);
 
-  async function fetchPosts(pageNumber) {
+  const [errors, setErrors] = useState({});
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const homePageRef = useRef(null);
+
+  async function fetchPosts(pageNumber = page) {
     setIsFetching(true);
     try {
       const { data: postes } = await apiService.get(
         `api/posts?page=${pageNumber}`,
+        {},
       );
+      setPage((prevPage) => prevPage + 1);
       if (postes.meta.last_page <= page) setHasNextPage(false);
-      setPosts((prevPosts) => [...prevPosts, ...postes.data]);
+      else setPosts((prevPosts) => [...prevPosts, ...postes.data]);
     } catch (error) {
       const responseData = error.response;
       console.error("Error fetching posts", responseData);
@@ -33,7 +40,7 @@ function PostsProvider({ children }) {
   }
 
   const lastPostRef = useIntersectionObserver(() => {
-    setPage((prevPage) => prevPage + 1);
+    fetchPosts(page);
   }, [!isFetching, hasNextPage]);
 
   const addPost = async (post) => {
@@ -51,6 +58,28 @@ function PostsProvider({ children }) {
     }
   };
 
+  const getPostByUsername = async (username, post_id) => {
+    setIsFetching(true);
+    try {
+      const { data } = await apiService.get(
+        `api/${username}/posts/${post_id}$page=${commentPage}`,
+      );
+      if (commentPage === 1) {
+        setCurrentPost(data);
+      } else {
+        setCurrentPost((prevPost) => ({
+          ...prevPost,
+          comments: [...prevPost.comments, ...data.comments],
+        }));
+      }
+    } catch (error) {
+      const responseData = error.response;
+      console.error("Error fetching posts", responseData);
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
   const likingHandler = async (post_id) => {
     try {
       await apiService.post(`api/posts/${post_id}/changeLikeStatus`);
@@ -58,12 +87,17 @@ function PostsProvider({ children }) {
       const responseData = error.response;
       console.error("Error adding post", responseData);
       setErrors(responseData);
-    }
+    } 
   };
 
   const value = {
+    setScrollPosition,
+    scrollPosition,
+    homePageRef,
+    getPostByUsername,
     likingHandler,
     isFetching,
+    currentPost,
     posts,
     newPost,
     setNewPost,

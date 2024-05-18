@@ -43,7 +43,7 @@ export default function useAuth() {
     } catch (error) {
       const response = error.response;
       if (response && response.status === 422) {
-        const { errors } = response.data; 
+        const { errors } = response.data;
         dispatch(setErrors(errors));
       }
     } finally {

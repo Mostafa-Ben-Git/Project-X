@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Resources\PostResource;
@@ -31,12 +32,17 @@ Route::group(["middleware" => "auth:sanctum"], function () {
     return UserResource::make($request->user());
   });
   Route::get('/user/posts', function (Request $request) {
-    return PostResource::collection($request->user()->posts());
+    return PostResource::collection($request->user()->posts);
   });
 
   Route::post(
     '/posts/{post}/changeLikeStatus',
-    ['App\Http\Controllers\Api\LikeController', 'changeLikeStatus']
+    [LikeController::class, 'changeLikeStatus']
+  );
+
+  Route::get(
+    "/{username}/posts/{post}",
+    [PostController::class, "getPostByUsernameAndId"]
   );
 
   Route::apiResource('/users', UserController::class);
