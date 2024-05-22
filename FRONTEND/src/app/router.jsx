@@ -4,6 +4,7 @@ import UserLayout from "@/layouts/UserLayout";
 import PageNotFound from "@/pages/PageNotFound";
 import Login from "@/pages/authentication/Login";
 import Register from "@/pages/authentication/Register";
+import PostPage from "@/pages/dynamic/PostPage";
 import FriendsPage from "@/pages/home/FriendsPage";
 import HomePage from "@/pages/home/HomePage";
 import MessagesPage from "@/pages/home/MessagesPage";
@@ -43,6 +44,10 @@ const router = createBrowserRouter([
       {
         path: "notifications",
         element: <NotifPage />,
+      },
+      {
+        path: "/:username/post/:post_id",
+        element: <PostPage />,
       },
     ],
   },

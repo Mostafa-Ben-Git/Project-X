@@ -137,7 +137,7 @@ const ProfilePage = () => {
         }}
       >
         <h2>Posts</h2>
-        {posts && posts?.map((post) => <p key={post.post_id}>{post.text}</p>)}
+        {posts && posts?.map((post) => <p key={post.post_id}>{post.content}</p>)}
       </div>
     </div>
   );

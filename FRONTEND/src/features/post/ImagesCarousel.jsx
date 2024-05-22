@@ -10,7 +10,7 @@ import {
 export function ImagesCarousel({ images }) {
   if (!images) return;
   return (
-    <div className="mt-6">
+    <div className="my-6">
       {images.length <= 1 ? (
         <Image image={images[0]} />
       ) : (

@@ -18,7 +18,7 @@ class ImageFactory extends Factory
     public function definition(): array
     {
         return [
-            "post_id" => Post::all()->random()->id,
+            "post_id" => Post::factory(),
             "image_path" => $this->faker->imageUrl()
         ];
     }

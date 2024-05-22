@@ -10,7 +10,7 @@ import { Image, PinIcon, SmilePlus, X } from "lucide-react";
 import { useRef } from "react";
 
 function PostBox() {
-  const { addPost, isFetching, newPost, setNewPost } = usePosts();
+  const { addPost, isFetching, newPost, setNewPost ,isPosting} = usePosts();
 
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -103,10 +103,10 @@ function PostBox() {
         <div className="flex flex-row-reverse items-center justify-between border-t px-3 py-2 dark:border-gray-600">
           <button
             type="submit"
-            disabled={isEmpty || isFetching}
+            disabled={isEmpty || isPosting}
             className="inline-flex items-center rounded-lg bg-blue-700 px-4 py-2.5 text-center text-xs font-medium text-white hover:bg-blue-800 focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-blue-900"
           >
-            {isFetching ? "Posting..." : "Post"}
+            {isPosting ? "Posting..." : "Post"}
           </button>
           <div className="flex space-x-1 ps-0 sm:ps-2 rtl:space-x-reverse">
             <button
@@ -129,6 +129,7 @@ function PostBox() {
               <DropdownMenuContent>
                 <EmojiPicker
                   theme="dark"
+                  emojiStyle="native"
                   onEmojiClick={handleEmojiClick}
                   rows={4}
                   perRow={8}

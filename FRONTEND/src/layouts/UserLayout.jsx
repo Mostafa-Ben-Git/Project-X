@@ -8,7 +8,7 @@ import { Navigate, Outlet } from "react-router-dom";
 
 function UserLayout() {
   const { getUser, user, isLoggedIn } = useAuth();
-  const { fetchPosts, page } = usePosts();
+  const { fetchPosts } = usePosts();
 
   useEffect(() => {
     if (!user && isLoggedIn) {
@@ -17,18 +17,20 @@ function UserLayout() {
   }, [user, getUser, isLoggedIn]);
 
   useEffect(() => {
-    fetchPosts(page);
-  }, [page]);
+    const abortController = new AbortController();
+    fetchPosts();
+    return () => abortController.abort();
+  }, []);
 
   if (!isLoggedIn && !user) return <Navigate to="/login" />;
 
   return (
-    <div className="flex h-screen bg-gray-800 pl-12 text-white 2xl:pl-32">
+    <div className="flex h-screen bg-gray-800 pl-12 text-white 2xl:pl-60">
       <LeftBar className="flex-none" />
-      <div className="grow overflow-y-scroll p-8">
+      <div className="grow overflow-y-scroll">
         <Outlet />
       </div>
-      <RightBar className="  hidden w-1/4 flex-none 2xl:block" />
+      <RightBar className="  hidden w-1/4 flex-none border-l xl:block" />
     </div>
   );
 }
