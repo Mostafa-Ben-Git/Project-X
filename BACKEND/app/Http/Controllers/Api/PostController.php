@@ -11,6 +11,7 @@ use App\Models\Image;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PostController extends Controller
 {
@@ -19,7 +20,7 @@ class PostController extends Controller
    */
   public function index()
   {
-    return PostResource::collection(Post::latest()->paginate(6));
+    return PostResource::collection(Post::whereNull('parent_id')->latest()->paginate(6));
   }
 
   /**
@@ -31,7 +32,13 @@ class PostController extends Controller
 
     $post = new Post();
 
-    $post->text = nl2br($request->text);
+    $trimmedText = nl2br(Str::of($request->text)->trim());
+    $post->text = $trimmedText;
+    
+    if ($request->has("parent_id")) {
+      $post->parent_id = $request->parent_id;
+    }
+
     $user->posts()->save($post);
 
     if ($request->has("images")) {
@@ -73,16 +80,12 @@ class PostController extends Controller
   {
     //
   }
-  public function getPostByUsernameAndId($username, $id)
+  public function getPostComments(Post $post)
   {
-    $post = User::where('username', $username)->first()->posts()->where('id', $id)->first();
-    if ($post == null) {
-      return response()->json(['message' => 'Post not found.'], 404);
+    if ($post->comments->count() > 0) {
+      return PostResource::collection($post->comments()->paginate(5));
     } else {
-      return response()->json([
-        'post' => new PostResource($post),
-        'comments' => CommentResource::collection(Comment::where('post_id', $post->id)->latest()->paginate(4))
-      ], 200);
+      return response()->json(["message" => "No comments found"], 404);
     }
   }
 }

@@ -20,7 +20,8 @@ class PostResource extends JsonResource
   {
     return [
       'post_id' => $this->id,
-      'text' => $this->text,
+      'parent_id' => $this->parent_id,
+      'content' => $this->content,
       'images' => $this->when($this->images->isNotEmpty(), function () {
         return $this->images->map(fn ($image) => $image->image_path);
       }),
@@ -39,7 +40,9 @@ class PostResource extends JsonResource
         'email' => $this->user->email,
         'avatar' => $this->user->avatar,
         'bio' => $this->user->bio,
-        'friends_count' => $this->user->friends->count(),
+        "joined_at" => $this->user->created_at->diffForHumans(),
+        'followers_count' => $this->user->followers->count(),
+        'following_count' => $this->user->following->count(),
         'posts_count' => $this->user->posts->count(),
       ],
       // $this->mergeWhen($this->comments->isNotEmpty() && $request->comments === 'true', [

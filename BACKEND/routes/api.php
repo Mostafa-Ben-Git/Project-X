@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Resources\PostResource;
 use App\Http\Resources\UserResource;
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,7 +34,7 @@ Route::group(["middleware" => "auth:sanctum"], function () {
     return UserResource::make($request->user());
   });
   Route::get('/user/posts', function (Request $request) {
-    return PostResource::collection($request->user()->posts);
+    return PostResource::collection($request->user()->posts->whereNull('parent_id'));
   });
 
   Route::post(
@@ -41,8 +43,17 @@ Route::group(["middleware" => "auth:sanctum"], function () {
   );
 
   Route::get(
-    "/{username}/posts/{post}",
-    [PostController::class, "getPostByUsernameAndId"]
+    "/posts/{post}/comments",
+    [PostController::class, "getPostComments"]
+  );
+
+  Route::get(
+    '/tests',
+    function (Request $request) {
+      return PostResource::make(Post::whereNull('parent_id')->inRandomOrder()->first());
+      // return PostResource::make(Post::find(1)->first());
+      // return PostResource::collection(Post::whereNull('parent_id')->latest()->paginate(6));
+    }
   );
 
   Route::apiResource('/users', UserController::class);

@@ -3,9 +3,11 @@ import { ImagesCarousel } from "./ImagesCarousel";
 import PostInfo from "./PostInfo";
 import { UserHoverCart } from "./UserHoverCart";
 import { cn } from "@/lib/utils";
+import usePosts from "@/hooks/usePosts";
+import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 
 function Post({
-  text,
+  content,
   longAgo,
   images,
   user,
@@ -13,25 +15,29 @@ function Post({
   info,
   post_id,
   className,
+  clickable = true,
 }) {
   const navgigate = useNavigate();
+  const { setCurrentPost } = usePosts();
   const handelClick = (e) => {
     e.stopPropagation();
+    setCurrentPost(null);
     navgigate(`/${user.username}/post/${post_id}`);
   };
   return (
-    <li
-      className={cn("w-full list-none p-4", className)}
-      ref={innerRef}
-      onClick={handelClick}
-    >
+    <li className={cn("w-full list-none p-4", className)} ref={innerRef}>
       <div className="flex items-center">
         <span>
-          <img
-            src={user.avatar}
-            alt={"avatar of " + user.first_name + " " + user.last_name}
-            className="aspect-square max-w-[50px] rounded-full"
-          />
+          <Avatar className="h-20 w-20">
+            <AvatarImage
+              src={user.avatar}
+              className="aspect-square max-w-[50px] rounded-full"
+            />
+            <AvatarFallback>
+              {user.first_name[0]}
+              {user.last_name[0]}
+            </AvatarFallback>
+          </Avatar>
         </span>
         <div className="ml-4">
           <UserHoverCart {...user} />
@@ -39,8 +45,9 @@ function Post({
         </div>
       </div>
       <p
-        className="mt-6 text-lg "
-        dangerouslySetInnerHTML={{ __html: text }}
+        className="mt-6 p-1 text-lg hover:bg-slate-100 hover:bg-opacity-10"
+        dangerouslySetInnerHTML={{ __html: content }}
+        {...(clickable && { onClick: handelClick })}
       ></p>
 
       {images && <ImagesCarousel images={images} />}

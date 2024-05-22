@@ -12,7 +12,7 @@ function Comment({
       className={cn("w-full list-none p-4 border-b", className)}
       ref={innerRef}
     >
-      <div className="flex items-center">
+      <div className="flex items-center ">
         <span>
           <img
             src={user.avatar}

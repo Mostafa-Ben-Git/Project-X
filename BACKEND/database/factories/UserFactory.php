@@ -26,14 +26,24 @@ class UserFactory extends Factory
     $firstName = fake()->firstName;
     $lastName = fake()->lastName;
 
+    $username = Str::lower($firstName[0] . $lastName) . rand(100, 999);
+
+    $colors = collect([
+      str_replace('#', '', $this->faker->hexColor),
+      str_replace('#', '', $this->faker->hexColor),
+      str_replace('#', '', $this->faker->hexColor)
+    ])->implode(',');
+
+    $avatar_type = fake()->randomElement(['beam', 'bauhaus', 'pixel']);
+
     return [
       'first_name' => $firstName,
       'last_name' => $lastName,
-      'username' => str_split($lastName, 5)[0] . random_int(100, 999),
+      'username' => $username,
       'email' => fake()->unique()->safeEmail(),
       'email_verified_at' => now(),
       'password' => static::$password ??= Hash::make('12345678'),
-      'avatar' => 'https://ui-avatars.com/api/?name=' . urlencode($firstName . ' ' . $lastName),
+      'avatar' => "https://source.boringavatars.com/{$avatar_type}/120/Stefan?colors={$colors}",
       'date_de_naissance' => $this->faker->date,
       'cover_image' => $this->faker->imageUrl(),
       'bio' => $this->faker->paragraph,

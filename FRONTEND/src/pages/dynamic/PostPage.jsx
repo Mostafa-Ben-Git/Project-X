@@ -5,26 +5,31 @@ import { ArrowLeft } from "lucide-react";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { MoonLoader } from "react-spinners";
+import ReplayBox from "@/features/post/ReplayBox";
 
 function PostPage() {
   const { username, post_id } = useParams();
-  const { getPostByUsername, isFetching, currentPost, setPosts } = usePosts();
+  const {
+    isFetching,
+    currentPost,
+    setCurrentPost,
+    status,
+    posts,
+    comments,
+    fetchComments,
+    commentPage,
+  } = usePosts();
 
   useEffect(() => {
-    getPostByUsername(username, post_id);
+    fetchComments(post_id, commentPage);
   }, []);
 
-  function updatePost(post_id) {
-    setPosts((prevPosts) => {
-      return prevPosts.map((post) => {
-        if (post.post_id === currentPost.post.post_id) {
-          return currentPost.post;
-        } else {
-          return post;
-        }
-      });
-    });
-  }
+  useEffect(() => {
+    const post = posts.find(
+      (post) => post.post_id == post_id && post.user.username == username,
+    );
+    setCurrentPost(post);
+  }, [commentPage, fetchComments, post_id, posts, setCurrentPost, username]);
 
   return (
     <div className="position-relative w-full">
@@ -44,15 +49,24 @@ function PostPage() {
               <MoonLoader color="#ffffff" size={30} />
             </div>
           ) : (
-            currentPost && <Post {...currentPost.post} className="border-b" />
+            currentPost && (
+              <Post {...currentPost} className="border-b" clickable={false} />
+            )
           )}
         </section>
         <section>
-          {currentPost && (
+          <ReplayBox />
+        </section>
+        <section>
+          {status === "fetching_comments" && comments.length === 0 ? (
+            <div className="flex w-full items-center justify-center rounded-lg bg-slate-400 p-5">
+              <MoonLoader color="#ffffff" size={30} />
+            </div>
+          ) : (
             <ul>
-              {currentPost?.comments?.map((comment) => {
-                return <Comment key={comment.comment_id} {...comment} />;
-              })}
+              {comments?.map((comment) => (
+                <Post {...comment} key={comment.id} className="border-b" />
+              ))}
             </ul>
           )}
         </section>

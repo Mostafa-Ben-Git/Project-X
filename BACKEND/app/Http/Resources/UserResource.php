@@ -27,20 +27,17 @@ class UserResource extends JsonResource
       'last_name' => $this->last_name,
       'email' => $this->email,
       'avatar' => $this->avatar,
-      'friends_count' => $this->friends->count(),
+      'bio' => $this->bio,
+      'followers_count' => $this->followers->count(),
+      'following_count' => $this->following->count(),
+      'posts_count' => $this->posts->count(),
       "age" => $dateOfBirth->diffInYears(now()),
       'date_de_naissance' => $this->date_de_naissance,
       'ville_habituelle' => $this->ville_habituelle,
       'liens_sociaux' => $this->liens_sociaux,
-      'posts_count' => $this->posts->count(),
       'education' => $this->education,
-      'friends' => $this->friends->map(fn ($friend) => [
-        "id" => $friend->id,
-        "username" => $friend->username,
-        "full_name" => $friend->first_name . ' ' . $friend->last_name,
-        'avatar' => $friend->avatar
-
-      ])->toArray(),
+      // 'followers' => UserResource::collection($this->followers),
+      // 'following' => UserResource::collection($this->following),
       'created_at' => $this->created_at->toIso8601String(),
       'updated_at' => $this->updated_at->toIso8601String(),
     ];

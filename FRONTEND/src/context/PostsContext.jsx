@@ -12,12 +12,19 @@ function PostsProvider({ children }) {
   const [hasNextPage, setHasNextPage] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
-  const [status, setStatus] = useState("idle");
+
+  const [newComment, setNewComment] = useState("");
+
   const [currentPost, setCurrentPost] = useState(null);
+  const [comments, setComments] = useState([]);
   const [commentPage, setCommentPage] = useState(1);
 
   const [errors, setErrors] = useState({});
   const [scrollPosition, setScrollPosition] = useState(0);
+
+  const [status, setStatus] = useState("");
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const homePageRef = useRef(null);
 
   async function fetchPosts(pageNumber = page) {
@@ -57,26 +64,37 @@ function PostsProvider({ children }) {
       setIsPosting(false);
     }
   };
-
-  const getPostByUsername = async (username, post_id) => {
-    setIsFetching(true);
+  const addComment = async (post) => {
     try {
-      const { data } = await apiService.get(
-        `api/${username}/posts/${post_id}$page=${commentPage}`,
-      );
-      if (commentPage === 1) {
-        setCurrentPost(data);
-      } else {
-        setCurrentPost((prevPost) => ({
-          ...prevPost,
-          comments: [...prevPost.comments, ...data.comments],
-        }));
-      }
+      setIsPosting(true);
+      const { data } = await apiService.post("api/posts", post);
+      setNewPost(data);
+      setPosts((prevPosts) => [data, ...prevPosts]);
     } catch (error) {
       const responseData = error.response;
-      console.error("Error fetching posts", responseData);
+      console.error("Error adding post", responseData);
+      setErrors(responseData);
     } finally {
-      setIsFetching(false);
+      setIsPosting(false);
+    }
+  };
+
+  const fetchComments = async (post_id, pageComment) => {
+    try {
+      setStatus("fetching_comments");
+      const { data } = await apiService.get(
+        `api/posts/${post_id}/comments?page=${pageComment}`,
+      );
+      console.log(data.data);
+      if (data.links.next === null) setCommentPage(null);
+      else setComments((prevComments) => [...prevComments, ...data.data]);
+    } catch (error) {
+      const responseData = error.response;
+      console.error("Error fetching comments", responseData);
+      setErrors(responseData);
+    } finally {
+
+      setStatus("");
     }
   };
 
@@ -87,15 +105,20 @@ function PostsProvider({ children }) {
       const responseData = error.response;
       console.error("Error adding post", responseData);
       setErrors(responseData);
-    } 
+    }
   };
 
   const value = {
+
+    fetchComments,
     setScrollPosition,
     scrollPosition,
     homePageRef,
-    getPostByUsername,
     likingHandler,
+    newComment,
+    setNewComment,
+    commentPage,
+    setCommentPage,
     isFetching,
     currentPost,
     posts,
@@ -110,8 +133,8 @@ function PostsProvider({ children }) {
     isPosting,
     setIsPosting,
     addPost,
-    status,
-    setStatus, // Setter for status
+    comments,
+    setCurrentPost,
     errors,
     setErrors, // Setter for errors
   };
