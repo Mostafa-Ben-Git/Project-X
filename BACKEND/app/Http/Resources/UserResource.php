@@ -35,6 +35,7 @@ class UserResource extends JsonResource
       "age" => $dateOfBirth->diffInYears(now()),
       'date_de_naissance' => $this->date_de_naissance,
       'ville_habituelle' => $this->ville_habituelle,
+      'ville_origine'=> $this->ville_origine,
       'liens_sociaux' => $this->liens_sociaux,
       'education' => $this->education,
       // 'followers' => UserResource::collection($this->followers),

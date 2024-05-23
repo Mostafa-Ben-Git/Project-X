@@ -6,6 +6,8 @@ import {
   setIsLoading,
   setUser,
   setPosts,
+  updateUser
+  
 } from "../slices/authSlice";
 import { useState } from "react";
 
@@ -49,6 +51,20 @@ export default function useAuth() {
       dispatch(setIsLoading(false));
     }
   };
+  const updateUserData = async (data) => {
+    dispatch(setIsLoading(true));
+    try {
+      await csrf();
+      const response = await apiService.put("/api/user", data);
+      dispatch(updateUser(response.data));
+    } catch (error) {
+      console.error("Error updating user data:", error.response);
+    } finally {
+      dispatch(setIsLoading(false));
+    }
+  };
+  
+ 
 
   const login = async (data) => {
     dispatch(setErrors({}));
@@ -105,13 +121,14 @@ export default function useAuth() {
     login,
     register,
     getUser,
-
+    updateUserData,
     getUserPosts,
     logout,
     isLoggedIn,
     isLoggedOut,
     user,
     posts,
+    
     errors,
     isLoading,
   };

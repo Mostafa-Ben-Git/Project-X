@@ -39,7 +39,26 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        //
+        $user->update($request->all());
+    
+        if ($request->hasFile('avatar')) {
+            $image = $request->file('avatar');
+            $imageName = $user->username . '' . time() . '' . str_replace(' ', '_', $image->getClientOriginalName());
+            $image->move(public_path('images/profiles'), $imageName);
+            $user->profile_image = asset('images/profiles/' . $imageName);
+            $user->save();
+        }
+        
+        if ($request->hasFile('cover_image')) {
+            $image = $request->file('cover_image');
+            $imageName = $user->username . '' . time() . '' . str_replace(' ', '_', $image->getClientOriginalName());
+            $image->move(public_path('images/profiles'), $imageName);
+            $user->cover_image = asset('images/profiles/' . $imageName);
+            $user->save();
+        }
+    
+        return new UserResource($user);
+        dd($user);
     }
 
     /**
