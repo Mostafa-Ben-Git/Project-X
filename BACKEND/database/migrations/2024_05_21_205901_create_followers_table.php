@@ -22,7 +22,7 @@ return new class extends Migration
       $table->foreign('following_id')->references('id')->on('users')->onDelete('cascade');
 
       // Ensure that a user cannot follow the same user more than once
-      // $table->unique(['follower_id', 'following_id']);
+      $table->unique(['follower_id', 'following_id']);
     });
   }
 

@@ -31,13 +31,8 @@ function Post({
     });
   };
   return (
-    <li
-      className={cn(
-        "w-full list-none p-4",
-        className,
-      )}
-      ref={innerRef}
-    >
+    <li className={cn("w-full list-none p-4", className)} ref={innerRef}>
+      
       <div className="flex items-center">
         <span>
           <Avatar className="h-20 w-20">
@@ -51,7 +46,7 @@ function Post({
             </AvatarFallback>
           </Avatar>
         </span>
-        <div className="ml-4">
+        <div className="ml-4 space-x-4">
           <UserHoverCart {...user} />
           <span className="text-sm text-gray-400">{dates.ago}</span>
         </div>

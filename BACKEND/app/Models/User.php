@@ -49,16 +49,36 @@ class User extends Authenticatable
 
   public function followers()
   {
-    return $this->belongsToMany(User::class, 'followers', 'following_id', 'follower_id');
+    return $this->belongsToMany(User::class, 'followers', 'following_id', 'follower_id')
+      ->withTimestamps();
   }
 
-  public function following()
+  public function followings()
   {
-    return $this->belongsToMany(User::class, 'followers', 'follower_id', 'following_id');
+    return $this->belongsToMany(User::class, 'followers', 'follower_id', 'following_id')
+      ->withTimestamps();
   }
 
   public function posts(): HasMany
   {
     return $this->hasMany(Post::class);
+  }
+  public function isFollowing(User $user): bool
+  {
+    return $this->followers()->where('users.id', $user->id)->exists();
+  }
+
+  public function suggestions()
+  {
+    // Get the IDs of the users the current user is following
+    $followingIds = $this->followings()->pluck('users.id');
+
+    $suggestedUsers = User::whereNotIn('users.id', $followingIds)
+      ->withCount('followers')
+      ->get()
+      ->sortByDesc('followers_count')
+      ->take(4);
+
+    return $suggestedUsers;
   }
 }

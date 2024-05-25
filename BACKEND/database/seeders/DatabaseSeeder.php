@@ -29,8 +29,22 @@ class DatabaseSeeder extends Seeder
       "last_name" => "postman",
     ]);
 
-    User::factory(10)->create();
-    Follower::factory()->count(100)->create();
+    User::factory(20)->create()->each(function ($user) {
+      $followers = User::where('id', '!=', $user->id)
+        ->inRandomOrder()
+        ->take(rand(1, 10))
+        ->pluck('id');
+
+      // Attach followers, ensuring no duplicates and adding timestamps manually
+      $syncData = [];
+      foreach ($followers as $followerId) {
+        $syncData[$followerId] = ['created_at' => now(), 'updated_at' => now()];
+      }
+
+      $user->followers()->sync($syncData);
+    });
+
+    // Follower::factory()->count(100)->create();
 
     Post::factory()
       ->count(20)

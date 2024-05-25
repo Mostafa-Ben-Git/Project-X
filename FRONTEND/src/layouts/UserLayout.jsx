@@ -24,12 +24,12 @@ function UserLayout() {
   if (!isLoggedIn && !user) return <Navigate to="/login" />;
 
   return (
-    <div className="flex h-screen pl-12 text-white 2xl:pl-40">
+    <div className="flex h-screen pl-12 text-white 2xl:pl-40 overflow-hidden">
       <LeftBar className="flex-none" />
-      <ScrollArea className="w-full ">
+      <ScrollArea className="w-full">
         <Outlet />
       </ScrollArea>
-      <RightBar className="  hidden w-1/4 flex-none border-l xl:block" />
+      <RightBar className="hidden w-[28%] flex-none border-l lg:block" />
     </div>
   );
 }

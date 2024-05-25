@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\FollowerController;
 use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\UserController;
@@ -30,12 +31,20 @@ use Illuminate\Support\Facades\Route;
 // });
 
 Route::group(["middleware" => "auth:sanctum"], function () {
+
   Route::get('/user', function (Request $request) {
     return UserResource::make($request->user());
   });
+
   Route::get('/user/posts', function (Request $request) {
     return PostResource::collection($request->user()->posts->whereNull('parent_id'));
   });
+
+  Route::get('/user/suggestions', function (Request $request) {
+    return UserResource::collection($request->user()->suggestions());
+  });
+
+  Route::post('/users/{user}/changeFollowStatus', [FollowerController::class, 'changeFollowStatus']);
 
   Route::post(
     '/posts/{post}/changeLikeStatus',
@@ -55,14 +64,17 @@ Route::group(["middleware" => "auth:sanctum"], function () {
   Route::get(
     '/tests',
     function (Request $request) {
-      return PostResource::make(Post::whereNull('parent_id')->inRandomOrder()->first());
+      return UserResource::collection(user::find(1)->suggestions());
+      // return PostResource::make(Post::whereNull('parent_id')->inRandomOrder()->first());
       // return PostResource::make(Post::find(1)->first());
       // return PostResource::collection(Post::whereNull('parent_id')->latest()->paginate(6));
     }
   );
 
+  Route::get('/users/search', [UserController::class, 'search']);
   Route::apiResource('/users', UserController::class);
   Route::apiResource("/posts", PostController::class);
+
 
   // Route::apiResource('users.posts', PostController::class)->scoped();
 });

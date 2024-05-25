@@ -48,7 +48,7 @@ class PostResource extends JsonResource
         'bio' => $this->user->bio,
         "joined_at" => $this->user->created_at->diffForHumans(),
         'followers_count' => $this->user->followers->count(),
-        'following_count' => $this->user->following->count(),
+        'following_count' => $this->user->followings->count(),
         'posts_count' => $this->user->posts->count(),
       ],
       // $this->mergeWhen($this->comments->isNotEmpty() && $request->comments === 'true', [

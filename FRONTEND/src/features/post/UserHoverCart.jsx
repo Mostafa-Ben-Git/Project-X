@@ -7,6 +7,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { cn } from "@/lib/utils";
 
 export function UserHoverCart({
   first_name,
@@ -15,17 +16,19 @@ export function UserHoverCart({
   avatar,
   followers_count,
   following_count,
+  is_following,
   username,
+  className,
 }) {
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <Button variant="link" className="ps-0 text-xl font-bold">
+        <button className={cn("text-xl font-bold", className)}>
           {first_name} {last_name}
-        </Button>
+        </button>
       </HoverCardTrigger>
-      <HoverCardContent className="w-80 ">
-        <div className="mb-2 flex items-center space-x-2">
+      <HoverCardContent className="w-80">
+        <div className="mb-2 flex w-full items-center space-x-4">
           <Avatar>
             <AvatarImage src={avatar} />
             <AvatarFallback>
@@ -39,6 +42,9 @@ export function UserHoverCart({
             </h4>
             <p className="text-sm text-muted-foreground">{username}</p>
           </div>
+          <button className="rounded-full border border-purple-200 px-4 py-1 text-sm font-semibold hover:border-transparent hover:bg-purple-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2">
+            {is_following ? "Following" : "Follow"}
+          </button>
         </div>
         <div className="space-y-2">
           <p className="text-sm">T{bio}</p>
