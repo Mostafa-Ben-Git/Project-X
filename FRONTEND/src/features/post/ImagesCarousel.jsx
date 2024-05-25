@@ -34,7 +34,7 @@ function Image({ image }) {
   return (
     <Card className="rounded-sm">
       <CardContent className={`flex aspect-square items-center justify-center`}>
-        <img src={image} alt="" className="w-full rounded-sm"/>
+        <img src={image} alt="" className="w-full rounded-sm" loading="lazy" />
       </CardContent>
     </Card>
   );

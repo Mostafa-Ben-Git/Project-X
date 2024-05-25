@@ -7,24 +7,20 @@ export const PostsContext = createContext();
 
 function PostsProvider({ children }) {
   const [posts, setPosts] = useState([]);
-  const [newPost, setNewPost] = useState({ text: "", images: [] });
+
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
 
-  const [newComment, setNewComment] = useState("");
-
   const [currentPost, setCurrentPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentPage, setCommentPage] = useState(1);
+  const [isFetchingComments, setIsFetchingComments] = useState(false);
 
   const [errors, setErrors] = useState({});
   const [scrollPosition, setScrollPosition] = useState(0);
 
-  const [status, setStatus] = useState("");
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const homePageRef = useRef(null);
 
   async function fetchPosts(pageNumber = page) {
@@ -32,7 +28,6 @@ function PostsProvider({ children }) {
     try {
       const { data: postes } = await apiService.get(
         `api/posts?page=${pageNumber}`,
-        {},
       );
       setPage((prevPage) => prevPage + 1);
       if (postes.meta.last_page <= page) setHasNextPage(false);
@@ -54,22 +49,11 @@ function PostsProvider({ children }) {
     try {
       setIsPosting(true);
       const { data } = await apiService.post("api/posts", post);
-      setNewPost(data);
-      setPosts((prevPosts) => [data, ...prevPosts]);
-    } catch (error) {
-      const responseData = error.response;
-      console.error("Error adding post", responseData);
-      setErrors(responseData);
-    } finally {
-      setIsPosting(false);
-    }
-  };
-  const addComment = async (post) => {
-    try {
-      setIsPosting(true);
-      const { data } = await apiService.post("api/posts", post);
-      setNewPost(data);
-      setPosts((prevPosts) => [data, ...prevPosts]);
+      if (data.parent_id) {
+        setComments((prevPosts) => [data, ...prevPosts]);
+      } else {
+        setPosts((prevPosts) => [data, ...prevPosts]);
+      }
     } catch (error) {
       const responseData = error.response;
       console.error("Error adding post", responseData);
@@ -80,21 +64,39 @@ function PostsProvider({ children }) {
   };
 
   const fetchComments = async (post_id, pageComment) => {
+    if (pageComment === null) return;
     try {
-      setStatus("fetching_comments");
-      const { data } = await apiService.get(
+      setIsFetchingComments(true);
+      const res = await apiService.get(
         `api/posts/${post_id}/comments?page=${pageComment}`,
       );
-      console.log(data.data);
-      if (data.links.next === null) setCommentPage(null);
-      else setComments((prevComments) => [...prevComments, ...data.data]);
+      if (res.status === 200) {
+        const data = res.data;
+        if (data.data.length > 0) {
+          setCommentPage((prevPage) => prevPage + 1);
+          setComments((prevComments) => [...prevComments, ...data.data]);
+        } else {
+          setCommentPage(null);
+        }
+      } else {
+        setCommentPage(null);
+      }
     } catch (error) {
       const responseData = error.response;
       console.error("Error fetching comments", responseData);
-      setErrors(responseData);
     } finally {
+      setIsFetchingComments(false);
+    }
+  };
 
-      setStatus("");
+  const fetchPostByUsernameAndId = async (username, post_id) => {
+    try {
+      const { data } = await apiService.get(`api/${username}/post/${post_id}`);
+      return data;
+    } catch (error) {
+      const responseData = error.response;
+      console.error("Error fetching post", responseData);
+      setErrors(responseData);
     }
   };
 
@@ -109,21 +111,19 @@ function PostsProvider({ children }) {
   };
 
   const value = {
-
     fetchComments,
+    isFetchingComments,
     setScrollPosition,
+    fetchPostByUsernameAndId,
     scrollPosition,
     homePageRef,
     likingHandler,
-    newComment,
-    setNewComment,
+    setComments,
     commentPage,
     setCommentPage,
     isFetching,
     currentPost,
     posts,
-    newPost,
-    setNewPost,
     setPosts, // Setter for posts
     fetchPosts,
     page,

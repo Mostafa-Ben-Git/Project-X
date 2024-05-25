@@ -1,31 +1,43 @@
+import usePosts from "@/hooks/usePosts";
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import { Dot } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ImagesCarousel } from "./ImagesCarousel";
 import PostInfo from "./PostInfo";
 import { UserHoverCart } from "./UserHoverCart";
-import { cn } from "@/lib/utils";
-import usePosts from "@/hooks/usePosts";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 
 function Post({
   content,
-  longAgo,
+  dates,
   images,
   user,
-  innerRef,
   info,
   post_id,
+  postData,
   className,
+  innerRef,
+  type = "post",
   clickable = true,
+  extraInfo = false,
 }) {
-  const navgigate = useNavigate();
-  const { setCurrentPost } = usePosts();
+  const nav = useNavigate();
   const handelClick = (e) => {
     e.stopPropagation();
-    setCurrentPost(null);
-    navgigate(`/${user.username}/post/${post_id}`);
+    nav(`/${user.username}/post/${post_id}`, {
+      state: {
+        postData,
+      },
+    });
   };
   return (
-    <li className={cn("w-full list-none p-4", className)} ref={innerRef}>
+    <li
+      className={cn(
+        "w-full list-none p-4",
+        className,
+      )}
+      ref={innerRef}
+    >
       <div className="flex items-center">
         <span>
           <Avatar className="h-20 w-20">
@@ -41,7 +53,7 @@ function Post({
         </span>
         <div className="ml-4">
           <UserHoverCart {...user} />
-          <span className="text-sm text-gray-400">{longAgo}</span>
+          <span className="text-sm text-gray-400">{dates.ago}</span>
         </div>
       </div>
       <p
@@ -52,7 +64,15 @@ function Post({
 
       {images && <ImagesCarousel images={images} />}
 
-      <PostInfo {...info} post_id={post_id} />
+      {extraInfo && (
+        <div className="mt-4 flex items-center space-x-2 border-y-2 text-sm">
+          <p>{dates.time}</p>
+          <Dot size={40} />
+          <p>{dates.date}</p>
+        </div>
+      )}
+
+      <PostInfo {...info} post_id={post_id} replay={type === "replay"} />
     </li>
   );
 }

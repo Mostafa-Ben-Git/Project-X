@@ -48,6 +48,11 @@ Route::group(["middleware" => "auth:sanctum"], function () {
   );
 
   Route::get(
+    "/{username}/post/{post_id}",
+    [PostController::class, "getPostByUsernameAndId"]
+  );
+
+  Route::get(
     '/tests',
     function (Request $request) {
       return PostResource::make(Post::whereNull('parent_id')->inRandomOrder()->first());

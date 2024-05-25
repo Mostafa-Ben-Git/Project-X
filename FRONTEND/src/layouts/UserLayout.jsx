@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import LeftBar from "@/features/sidebar/LeftBar";
 import RightBar from "@/features/sidebar/RightBar";
 import useAuth from "@/hooks/useAuth";
@@ -17,19 +18,17 @@ function UserLayout() {
   }, [user, getUser, isLoggedIn]);
 
   useEffect(() => {
-    const abortController = new AbortController();
     fetchPosts();
-    return () => abortController.abort();
   }, []);
 
   if (!isLoggedIn && !user) return <Navigate to="/login" />;
 
   return (
-    <div className="flex h-screen bg-gray-800 pl-12 text-white 2xl:pl-60">
+    <div className="flex h-screen pl-12 text-white 2xl:pl-40">
       <LeftBar className="flex-none" />
-      <div className="grow overflow-y-scroll">
+      <ScrollArea className="w-full ">
         <Outlet />
-      </div>
+      </ScrollArea>
       <RightBar className="  hidden w-1/4 flex-none border-l xl:block" />
     </div>
   );

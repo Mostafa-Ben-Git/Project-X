@@ -28,7 +28,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
       <div className="max-w-md w-full space-y-8 p-8 bg-gray-800 shadow-md rounded-md lg:max-w-xl">
         <h2 className="text-3xl font-extrabold text-center mb-4">Login</h2>
-        <form className="mt-8 space-y-4" onSubmit={handleLogin}>
+        <form className="mt-8 space-y-4" onSubmit={handleLogin} encType="multipart/form-data">
           <div>
             <label htmlFor="email" className="block text-sm font-medium">
               Email

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { MoonLoader } from "react-spinners";
 import useAuth from "../../hooks/useAuth";
@@ -11,23 +11,48 @@ function Register() {
     email: "john@example.com",
     password: "12345678",
     password_confirmation: "12345678",
+    avatar: null,
   });
+  const avatarRef = useRef(null);
 
   const handleOnChange = (e) => {
     setSignUpData({ ...signUpData, [e.target.name]: e.target.value });
   };
 
+  const handleSetAvatar = (e) => {
+    const file = e.target.files[0];
+    // console.log(file);
+    setSignUpData({
+      ...signUpData,
+      avatar: file,
+    });
+  };
+
   const handleSignUp = (e) => {
     e.preventDefault();
-    register(signUpData);
+    const formData = new FormData();
+    formData.append("first_name", signUpData.first_name);
+    formData.append("last_name", signUpData.last_name);
+    formData.append("email", signUpData.email);
+    formData.append("password", signUpData.password);
+    formData.append("password_confirmation", signUpData.password_confirmation);
+    formData.append("avatar", signUpData.avatar);
+    register(formData);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-      <div className="max-w-md w-full space-y-8 p-8 bg-gray-800 shadow-md rounded-md lg:max-w-xl">
-        <h2 className="text-3xl font-extrabold text-center mb-4">Register</h2>
-        <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
+      <div className=" relative w-full max-w-md space-y-8 rounded-md bg-gray-800 p-8 shadow-md lg:max-w-xl">
+        <h2 className="mb-4 text-center text-3xl font-extrabold">Register</h2>
+        <form className="  mt-8 space-y-6" onSubmit={handleSignUp}>
+          {signUpData.avatar !== null && (
+            <img
+              src={URL.createObjectURL(signUpData.avatar)}
+              alt="Post Image"
+              className="absolute right-0 top-0 aspect-square w-28 translate-x-[50%] rounded-full border-2 object-cover"
+            />
+          )}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label htmlFor="first_name" className="block text-sm font-medium">
                 first_name
@@ -40,10 +65,10 @@ function Register() {
                 required
                 value={signUpData.first_name}
                 onChange={handleOnChange}
-                className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
+                className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
               />
               {errors?.first_name && (
-                <p className="text-red-600 text-xs mt-2">
+                <p className="mt-2 text-xs text-red-600">
                   *{errors.first_name}
                 </p>
               )}
@@ -60,10 +85,10 @@ function Register() {
                 required
                 value={signUpData.last_name}
                 onChange={handleOnChange}
-                className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
+                className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
               />
               {errors?.last_name && (
-                <p className="text-red-600 text-xs mt-2">*{errors.last_name}</p>
+                <p className="mt-2 text-xs text-red-600">*{errors.last_name}</p>
               )}
             </div>
           </div>
@@ -78,13 +103,13 @@ function Register() {
               required
               value={signUpData.email}
               onChange={handleOnChange}
-              className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
+              className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
             />
             {errors?.email && (
-              <p className="text-red-600 text-xs mt-2">*{errors.email}</p>
+              <p className="mt-2 text-xs text-red-600">*{errors.email}</p>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label htmlFor="password" className="block text-sm font-medium">
                 Password
@@ -97,10 +122,10 @@ function Register() {
                 required
                 value={signUpData.password}
                 onChange={handleOnChange}
-                className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
+                className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
               />
               {errors?.password && (
-                <p className="text-red-600 text-xs mt-2">
+                <p className="mt-2 text-xs text-red-600">
                   *{errors.password[1]}
                 </p>
               )}
@@ -120,22 +145,40 @@ function Register() {
                 required
                 value={signUpData.password_confirmation}
                 onChange={handleOnChange}
-                className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
+                className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
               />
               {errors?.password && (
-                <p className="text-red-600 text-xs mt-2">
+                <p className="mt-2 text-xs text-red-600">
                   *{errors.password[0]}
                 </p>
               )}
             </div>
           </div>
-          <div className="text-right text-blue-200 underline mt-2">
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium">
+              Avatar
+            </label>
+            <input
+              id="avatar"
+              name="avatar"
+              type="file"
+              ref={avatarRef}
+              accept="image/*"
+              onChange={handleSetAvatar}
+              className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
+            />
+            {errors?.avatar && (
+              <p className="mt-2 text-xs text-red-600">*{errors.avatar}</p>
+            )}
+          </div>
+
+          <div className="mt-2 text-right text-blue-200 underline">
             <Link to="/login">Already Have an Account?</Link>
           </div>
           <div>
             <button
               type="submit"
-              className="bg-indigo-500 text-white flex items-center justify-center w-full p-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:border-indigo-700 disabled:cursor-not-allowed"
+              className="flex w-full items-center justify-center rounded-md bg-indigo-500 p-4 text-white hover:bg-indigo-700 focus:border-indigo-700 focus:outline-none focus:ring disabled:cursor-not-allowed"
               onClick={handleSignUp}
               disabled={isLoading}
             >

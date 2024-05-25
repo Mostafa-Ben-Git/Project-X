@@ -32,11 +32,13 @@ class PostController extends Controller
 
     $post = new Post();
 
-    $trimmedText = nl2br(Str::of($request->text)->trim());
-    $post->text = $trimmedText;
-    
+    $trimmedText = nl2br(Str::of($request->content)->trim());
+    $post->content = $trimmedText;
+
     if ($request->has("parent_id")) {
       $post->parent_id = $request->parent_id;
+    } else {
+      $post->parent_id = null;
     }
 
     $user->posts()->save($post);
@@ -83,9 +85,19 @@ class PostController extends Controller
   public function getPostComments(Post $post)
   {
     if ($post->comments->count() > 0) {
-      return PostResource::collection($post->comments()->paginate(5));
+      return PostResource::collection($post->comments()->latest()->paginate(5));
     } else {
       return response()->json(["message" => "No comments found"], 404);
+    }
+  }
+
+  public function getPostByUsernameAndId($username, $post_id)
+  {
+    $post = User::where('username', $username)->first()->posts()->where('id', $post_id)->first();
+    if ($post == null) {
+      return response()->json(['message' => 'Post not found.'], 404);
+    } else {
+      return new PostResource($post);
     }
   }
 }

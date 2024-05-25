@@ -50,7 +50,9 @@ function ReplayBox() {
       <div className="flex w-full gap-6 rounded-t-lg bg-white p-4 px-4 dark:bg-gray-800">
         <Avatar className="flex-none">
           <AvatarImage src={user?.avatar} alt="@shadcn" />
-          <AvatarFallback>CN</AvatarFallback>
+          <AvatarFallback>
+            {user?.first_name[0] + user?.last_name[0]}
+          </AvatarFallback>
         </Avatar>
         <div className="flex w-1/2 flex-grow overflow-hidden rounded-sm border">
           <textarea

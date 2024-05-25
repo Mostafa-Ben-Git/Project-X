@@ -9,13 +9,14 @@ function HomePage() {
 
   return (
     <main className="p-8">
-      <PostBox />
-      <ul className="flex flex-wrap justify-center gap-4">
+      {!isFetching && <PostBox className="rounded-sm p-2"/>}
+      <ul className="flex flex-wrap justify-center gap-4 mt-4">
         {posts?.map((post, i, posts) => (
           <Post
             {...post}
+            postData={post}
             key={`post-${post.post_id}-${Math.random()}`}
-            className="border rounded-md cursor-pointer"
+            className="cursor-pointer rounded-md border"
             innerRef={posts.length - 1 === i ? lastPostRef : undefined}
           />
         ))}

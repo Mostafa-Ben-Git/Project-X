@@ -1,39 +1,84 @@
+import apiService from "@/api/apiService";
 import Post from "@/features/post/Post";
-import Comment from "@/features/post/Comment";
+import PostBox from "@/features/post/PostBox";
+import ReplayBox from "@/features/post/ReplayBox";
 import usePosts from "@/hooks/usePosts";
 import { ArrowLeft } from "lucide-react";
-import { useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { MoonLoader } from "react-spinners";
-import ReplayBox from "@/features/post/ReplayBox";
+import { useCallback, useEffect, useState } from "react";
+import { useLocation, useParams } from "react-router-dom";
+import { FadeLoader, MoonLoader } from "react-spinners";
 
 function PostPage() {
   const { username, post_id } = useParams();
+  const { state } = useLocation();
   const {
-    isFetching,
-    currentPost,
-    setCurrentPost,
+    // isFetching,
+    // currentPost,
+    // setCurrentPost,
     status,
     posts,
+    // fetchComments,
+    // commentPage,
+    // setCommentPage,
     comments,
-    fetchComments,
-    commentPage,
+    setComments,
   } = usePosts();
 
+  const [currentPost, setCurrentPost] = useState(state?.postData || null);
+  const [isFetching, setIsFetching] = useState(false);
+  // const [comments, setComments] = useState([]);
+  const [commentPage, setCommentPage] = useState(1);
+  const [isFetchingComments, setIsFetchingComments] = useState(false);
+
   useEffect(() => {
-    fetchComments(post_id, commentPage);
+    const fetchPostByUsernameAndId = async (username, post_id) => {
+      setIsFetching(true);
+      try {
+        const { data } = await apiService.get(
+          `api/${username}/post/${post_id}`,
+        );
+        setCurrentPost(data);
+      } catch (error) {
+        const responseData = error.response;
+        console.error("Error fetching post", responseData);
+      } finally {
+        setIsFetching(false);
+      }
+    };
+
+    if (!currentPost) {
+      fetchPostByUsernameAndId(username, post_id);
+    }
+  }, [currentPost, post_id, setCurrentPost, username]);
+
+  const fetchComments = useCallback(async (post_id, pageComment) => {
+    if (pageComment === null) return;
+    try {
+      setIsFetchingComments(true);
+      const { data } = await apiService.get(
+        `api/posts/${post_id}/comments?page=${pageComment}`,
+      );
+      if (data.data.length > 0)
+        setComments((prevComments) => [...prevComments, ...data.data]);
+      if (data.links.next !== null) setCommentPage((page) => page + 1);
+      else setCommentPage(null);
+    } catch (error) {
+      const responseData = error.response;
+      setCommentPage(null);
+      console.error("Error fetching comments", responseData);
+    } finally {
+      setIsFetchingComments(false);
+    }
   }, []);
 
   useEffect(() => {
-    const post = posts.find(
-      (post) => post.post_id == post_id && post.user.username == username,
-    );
-    setCurrentPost(post);
-  }, [commentPage, fetchComments, post_id, posts, setCurrentPost, username]);
+    setComments([]);
+    fetchComments(post_id, commentPage);
+  }, []);
 
   return (
-    <div className="position-relative w-full">
-      <header className="align-center  top-0 flex bg-slate-400 bg-opacity-80 px-4 py-2 text-3xl">
+    <div className="w-full">
+      <header className="align-center  top-0 flex bg-opacity-80 px-4 py-2 text-3xl">
         <span
           className="mr-2 cursor-pointer self-center rounded-full bg-transparent p-2 transition-all duration-100 hover:bg-slate-200"
           onClick={() => window.history.go(-1)}
@@ -42,35 +87,58 @@ function PostPage() {
         </span>
         Posts
       </header>
-      <main>
-        <section>
-          {isFetching ? (
-            <div className="flex w-full items-center justify-center rounded-lg bg-slate-400 p-5">
-              <MoonLoader color="#ffffff" size={30} />
-            </div>
-          ) : (
-            currentPost && (
-              <Post {...currentPost} className="border-b" clickable={false} />
-            )
-          )}
-        </section>
-        <section>
-          <ReplayBox />
-        </section>
-        <section>
-          {status === "fetching_comments" && comments.length === 0 ? (
-            <div className="flex w-full items-center justify-center rounded-lg bg-slate-400 p-5">
-              <MoonLoader color="#ffffff" size={30} />
-            </div>
-          ) : (
+      {isFetching ? (
+        <div className="flex w-full items-center justify-center rounded-lg bg-slate-400 p-5">
+          <MoonLoader color="#ffffff" size={30} />
+        </div>
+      ) : (
+        <main>
+          <section>
+            <Post
+              {...currentPost}
+              className="border-b"
+              clickable={false}
+              extraInfo={true}
+            />
+          </section>
+          <section>
+            <PostBox parent_id={post_id} isReplay={true} />
+          </section>
+          <section className="text-xs">
             <ul>
               {comments?.map((comment) => (
-                <Post {...comment} key={comment.id} className="border-b" />
+                <Post
+                  {...comment}
+                  key={`post-${comment.post_id}-${Math.random()}`}
+                  className="border-b"
+                  postData={comment}
+                  type="replay"
+                  clickable={false}
+                />
               ))}
             </ul>
-          )}
-        </section>
-      </main>
+            {commentPage === null && (
+              <div className="flex w-full items-center justify-center p-5">
+                No Comments
+              </div>
+            )}
+            {commentPage !== null && (
+              <div className="flex w-full items-center justify-center p-5">
+                <span
+                  className="cursor-pointer underline"
+                  onClick={() => fetchComments(post_id, commentPage)}
+                >
+                  {isFetchingComments ? (
+                    <FadeLoader color="#ffffff" size={16} />
+                  ) : (
+                    "Load more"
+                  )}
+                </span>
+              </div>
+            )}
+          </section>
+        </main>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { CalendarDays, DotIcon } from "lucide-react";
+import { DotIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ export function UserHoverCart({
       </HoverCardTrigger>
       <HoverCardContent className="w-80 ">
         <div className="mb-2 flex items-center space-x-2">
-          <Avatar className="h-20 w-20">
+          <Avatar>
             <AvatarImage src={avatar} />
             <AvatarFallback>
               {first_name[0]}

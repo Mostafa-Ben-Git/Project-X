@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import apiService from "../api/apiService";
 import { setErrors, setIsLoading, setUser } from "../slices/authSlice";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function useAuth() {
   const dispatch = useDispatch();
@@ -39,6 +40,7 @@ export default function useAuth() {
     try {
       await csrf();
       await apiService.post("/login", data);
+      toast.success("Login successfully");
       await getUser();
     } catch (error) {
       const response = error.response;
@@ -57,6 +59,7 @@ export default function useAuth() {
     try {
       await csrf();
       await apiService.post("/register", data);
+      toast.success("Registered successfully", { duration: 2000 });
       await getUser();
     } catch (error) {
       const response = error.response;

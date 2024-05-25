@@ -1,19 +1,17 @@
+import UserAvatar from "@/components/UserAvatar";
 import useAuth from "@/hooks/useAuth";
+import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { LogOut } from "lucide-react";
 import { MoonLoader } from "react-spinners";
 
 export const UserBanner = () => {
   const { user, logout, status, isLoggedOut } = useAuth();
   return (
-    <div className="m-3 flex items-center flex-col gap-4 rounded-md p-3 hover:bg-slate-500 lg:flex-row">
-      <img
-        src={user?.avatar}
-        alt=""
-        className="w-14 aspect-square rounded-full"
-      />
+    <div className="m-3 flex flex-col items-center gap-4 rounded-md p-3 hover:bg-slate-500 lg:flex-row">
+      <UserAvatar user={user} />
       <div className="flex gap-2">
-        <div className="flex flex-col items-baseline justify-center">
-          <p className="whitespace-nowrap text-sm font-extrabold">{`${user?.first_name} ${user?.last_name}`}</p>
+        <div className="flex flex-col items-center justify-center lg:items-baseline">
+          <p className="whitespace-nowrap text-lg font-extrabold">{`${user?.first_name} ${user?.last_name}`}</p>
           <span className="text-sm text-gray-400">{user?.username}</span>
         </div>
       </div>
