@@ -41,22 +41,39 @@ class UserController extends Controller
     {
         $user->update($request->all());
     
+        
         if ($request->hasFile('avatar')) {
+           dd('here');
+            if ($user->avatar) {
+                $oldAvatarPath = public_path('images/profiles/' . basename($user->avatar));
+                if (file_exists($oldAvatarPath)) {
+                    unlink($oldAvatarPath);
+                }
+            }
+            
+          
             $image = $request->file('avatar');
-            $imageName = $user->username . '' . time() . '' . str_replace(' ', '_', $image->getClientOriginalName());
+            $imageName = $user->username . '_' . time() . '_' . str_replace(' ', '_', $image->getClientOriginalName());
             $image->move(public_path('images/profiles'), $imageName);
-            $user->profile_image = asset('images/profiles/' . $imageName);
+            $user->avatar = asset('images/profiles/' . $imageName);
             $user->save();
         }
-        
         if ($request->hasFile('cover_image')) {
+            
+            if ($user->cover_image) {
+                $oldCoverImagePath = public_path('images/profiles/' . basename($user->cover_image));
+                if (file_exists($oldCoverImagePath)) {
+                    unlink($oldCoverImagePath);
+                }
+            }
+            
+          
             $image = $request->file('cover_image');
-            $imageName = $user->username . '' . time() . '' . str_replace(' ', '_', $image->getClientOriginalName());
+            $imageName = $user->username . '_' . time() . '_' . str_replace(' ', '_', $image->getClientOriginalName());
             $image->move(public_path('images/profiles'), $imageName);
             $user->cover_image = asset('images/profiles/' . $imageName);
             $user->save();
         }
-    
         return new UserResource($user);
         dd($user);
     }
@@ -67,4 +84,17 @@ class UserController extends Controller
     public function destroy(User $user)
     {
     }
+    public function search(Request $request)
+    {
+        $request->validate([
+            'query' => 'required|string|min:3',
+        ]);
+    
+        $query = $request->input('query');
+    
+        $users = User::where('username', 'LIKE', "%{$query}%")->paginate(10);
+    
+        return UserResource::collection($users);
+    }
+    
 }

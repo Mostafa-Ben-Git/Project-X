@@ -48,7 +48,7 @@ const ProfilePage = () => {
     education: '',
     liens_sociaux: '',
     cover_image: '',
-    profile_image: '',
+    avatar: '',
   });
 
   useEffect(() => {
@@ -86,6 +86,7 @@ const ProfilePage = () => {
 
   const handleFileChange = (e) => {
     const { id, files } = e.target;
+   
     setFormData((prevState) => ({
       ...prevState,
       [id]: files[0],
@@ -104,7 +105,7 @@ const ProfilePage = () => {
 
   const jsonObject = user?.liens_sociaux;
   console.log(jsonObject);
-
+// console.log(user.cover_image)
   return (
     <div>
    
@@ -115,7 +116,7 @@ const ProfilePage = () => {
             <SheetTitle>Edit profile</SheetTitle>
             <SheetDescription>
               Update info profile
-              <form onSubmit={handleSubmit} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+              <form onSubmit={handleSubmit} style={{ maxHeight: '80vh', overflowY: 'auto' }} encType="multipart/form_data">
                 <div className="mb-3">
                   <label htmlFor="username" className="form-label">Username</label>
                   <input type="text" className="form-control" id="username" value={formData.username} onChange={handleChange} />
@@ -140,13 +141,7 @@ const ProfilePage = () => {
                   <label htmlFor="bio" className="form-label">Bio</label>
                   <textarea className="form-control" id="bio" rows="3" value={formData.bio} onChange={handleChange}></textarea>
                 </div>
-                <div className="mb-3">
-                  <label htmlFor="statut" className="form-label">Status</label>
-                  <select className="form-control" id="statut" value={formData.statut} onChange={handleChange}>
-                    <option value="en ligne">Online</option>
-                    <option value="hors ligne">Offline</option>
-                  </select>
-                </div>
+                
                 <div className="mb-3">
                   <label htmlFor="genre" className="form-label">Gender</label>
                   <select className="form-control" id="genre" value={formData.genre} onChange={handleChange}>
@@ -188,8 +183,8 @@ const ProfilePage = () => {
                   <input type="file" className="form-control" id="cover_image" onChange={handleFileChange} />
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="profile_image" className="form-label">Profile image</label>
-                  <input type="file" className="form-control" id="profile_image" onChange={handleFileChange} />
+                  <label htmlFor="avatar" className="form-label">Profile image</label>
+                  <input type="file" className="form-control" id="avatar" onChange={handleFileChange} />
                 </div>
                 <button type="submit" className="btn btn-primary">Save Changes</button>
               </form>

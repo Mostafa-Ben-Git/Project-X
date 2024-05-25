@@ -9,6 +9,7 @@ const authSlice = createSlice({
     isLoading: false,
     status: "idle",
     errors: {},
+    searchResults: []
   },
   reducers: {
     setUser(state, action) {
@@ -29,10 +30,13 @@ const authSlice = createSlice({
     setPosts(state, action) { 
       state.posts = action.payload;
     },
+    setSearchResults(state, action) {
+      state.searchResults = action.payload;
+    },
     
   },
 });
 
-export const { setToken, setUser,updateUser,setPosts, setIsLoading, setErrors } = authSlice.actions;
+export const { setToken, setUser,updateUser,setPosts, setIsLoading, setErrors,setSearchResults } = authSlice.actions;
 
 export default authSlice.reducer;

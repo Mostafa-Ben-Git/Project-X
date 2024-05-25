@@ -6,7 +6,8 @@ import {
   setIsLoading,
   setUser,
   setPosts,
-  updateUser
+  updateUser,
+  setSearchResults
   
 } from "../slices/authSlice";
 import { useState } from "react";
@@ -14,7 +15,7 @@ import { useState } from "react";
 export default function useAuth() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, posts, isLoading, errors } = useSelector((store) => store.auth);
+  const { user, posts, isLoading, errors,searchResults } = useSelector((store) => store.auth);
   const [isLoggedOut, setisLoggedOut] = useState(false);
 
   const SESSION_NAME = "userLogedIn";
@@ -55,7 +56,7 @@ export default function useAuth() {
     dispatch(setIsLoading(true));
     try {
       await csrf();
-      const response = await apiService.put("/api/user", data);
+      const response = await apiService.put(`/api/users/${user.id}`, data);
       dispatch(updateUser(response.data));
     } catch (error) {
       console.error("Error updating user data:", error.response);
@@ -63,6 +64,30 @@ export default function useAuth() {
       dispatch(setIsLoading(false));
     }
   };
+ const searchUsers = async (searchQuery) => {
+    try {
+      const response = await apiService.get('/api/users/search', {
+        params: {
+          q: searchQuery
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error searching users:', error);
+      throw error;
+    }
+  };
+  // const searchUsers = async (query) => {
+  //   dispatch(setIsLoading(true));
+  //   try {
+  //     const { data } = await apiService.get(`/api/users/search?query=${query}`);
+  //     dispatch(setSearchResults(data.data));
+  //   } catch (error) {
+  //     console.error("Error searching users:", error.response);
+  //   } finally {
+  //     dispatch(setIsLoading(false));
+  //   }
+  // };
   
  
 
@@ -124,11 +149,12 @@ export default function useAuth() {
     updateUserData,
     getUserPosts,
     logout,
+    searchResults,
     isLoggedIn,
     isLoggedOut,
     user,
     posts,
-    
+    searchUsers,
     errors,
     isLoading,
   };

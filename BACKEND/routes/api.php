@@ -37,6 +37,7 @@ Route::group(["middleware" => "auth:sanctum"], function () {
     return PostResource::collection($request->user()->posts->whereNull('parent_id'));
   });
 
+
   Route::post(
     '/posts/{post}/changeLikeStatus',
     [LikeController::class, 'changeLikeStatus']
@@ -58,6 +59,8 @@ Route::group(["middleware" => "auth:sanctum"], function () {
 
   Route::apiResource('/users', UserController::class);
   Route::apiResource("/posts", PostController::class);
+  Route::get('/users/search', [UserController::class, 'search']);
+
 
   // Route::apiResource('users.posts', PostController::class)->scoped();
 });
