@@ -57,9 +57,9 @@ Route::group(["middleware" => "auth:sanctum"], function () {
     }
   );
 
+  Route::get('/users/search', [UserController::class, 'search']);
   Route::apiResource('/users', UserController::class);
   Route::apiResource("/posts", PostController::class);
-  Route::get('/users/search', [UserController::class, 'search']);
 
 
   // Route::apiResource('users.posts', PostController::class)->scoped();
