@@ -13,7 +13,7 @@ class Post extends Model
   use HasFactory, SoftDeletes;
 
   protected $fillable = [
-    'title', 'images'
+    'content', 'images'
   ];
 
   public function user(): BelongsTo

@@ -1,6 +1,8 @@
 import apiService from "@/api/apiService";
+import LoaderCircle from "@/components/LoaderCircle";
 import Post from "@/features/post/Post";
 import PostBox from "@/features/post/PostBox";
+import useAuth from "@/hooks/useAuth";
 import usePosts from "@/hooks/usePosts";
 import { ArrowLeft } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -23,32 +25,33 @@ function PostPage() {
     setComments,
   } = usePosts();
 
-  const [currentPost, setCurrentPost] = useState(state?.postData || null);
-  const [isFetching, setIsFetching] = useState(false);
+  const { user, getUser } = useAuth();
+
+  const [currentPost, setCurrentPost] = useState(state?.postData);
+  const [isFetching, setIsFetching] = useState(true);
   // const [comments, setComments] = useState([]);
   const [commentPage, setCommentPage] = useState(1);
   const [isFetchingComments, setIsFetchingComments] = useState(false);
 
   useEffect(() => {
+    if (!user) getUser();
     const fetchPostByUsernameAndId = async (username, post_id) => {
-      setIsFetching(true);
       try {
         const { data } = await apiService.get(
           `api/${username}/post/${post_id}`,
         );
+
         setCurrentPost(data);
+        setIsFetching(false);
+        console.log(data);
       } catch (error) {
         const responseData = error.response;
         console.error("Error fetching post", responseData);
-      } finally {
-        setIsFetching(false);
       }
     };
 
-    if (!currentPost) {
-      fetchPostByUsernameAndId(username, post_id);
-    }
-  }, [currentPost, post_id, setCurrentPost, username]);
+    fetchPostByUsernameAndId(username, post_id);
+  }, []);
 
   const fetchComments = useCallback(async (post_id, pageComment) => {
     if (pageComment === null) return;
@@ -75,7 +78,9 @@ function PostPage() {
     fetchComments(post_id, commentPage);
   }, []);
 
-  return (
+  return isFetching && !currentPost ? (
+    <LoaderCircle />
+  ) : (
     <div className="w-full">
       <header className="align-center  top-0 flex bg-opacity-80 px-4 py-2 text-3xl">
         <span
@@ -87,9 +92,7 @@ function PostPage() {
         Posts
       </header>
       {isFetching ? (
-        <div className="flex w-full items-center justify-center rounded-lg bg-slate-400 p-5">
-          <MoonLoader color="#ffffff" size={30} />
-        </div>
+        <LoaderCircle />
       ) : (
         <main>
           <section>

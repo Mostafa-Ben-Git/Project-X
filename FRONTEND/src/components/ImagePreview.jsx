@@ -16,7 +16,11 @@ export function ImagePreview({
         style={{ borderColor: borderColor, borderWidth: border + "px" }}
       >
         <img
-          src={URL.createObjectURL(image)}
+          src={
+            typeof image === "string" || image instanceof String
+              ? image
+              : URL.createObjectURL(image)
+          }
           alt="Post Image"
           className="aspect-square w-full object-cover"
         />

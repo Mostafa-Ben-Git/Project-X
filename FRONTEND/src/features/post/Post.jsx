@@ -1,11 +1,49 @@
 import usePosts from "@/hooks/usePosts";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-import { Dot } from "lucide-react";
+import { Dot, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ImagesCarousel } from "./ImagesCarousel";
 import PostInfo from "./PostInfo";
 import { UserHoverCart } from "./UserHoverCart";
+import { DropDownActions } from "@/components/DropDownActions";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { AlertDeleteDialog } from "@/components/AlertDeleteDialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+import { MoonLoader } from "react-spinners";
+import PostEditForm from "./PostEditForm";
+import useAuth from "@/hooks/useAuth";
 
 function Post({
   content,
@@ -22,6 +60,14 @@ function Post({
   extraInfo = false,
 }) {
   const nav = useNavigate();
+
+  const [showEditPanel, setShowEditPanel] = useState(true);
+  const [showPanelDelete, setShowPanelDelete] = useState(false);
+  const [showDropDown, setShowDropDown] = useState(false);
+
+  const { isDeleting, deletePost } = usePosts();
+  const { user: currentUser } = useAuth();
+
   const handelClick = (e) => {
     e.stopPropagation();
     nav(`/${user.username}/post/${post_id}`, {
@@ -31,8 +77,61 @@ function Post({
     });
   };
   return (
-    <li className={cn("w-full list-none p-4", className)} ref={innerRef}>
-      
+    <li
+      className={cn("relative w-full list-none p-4", className)}
+      ref={innerRef}
+    >
+      {currentUser.username === user.username && (
+        <div className="absolute right-0 -translate-x-1/2">
+          <AlertDialog>
+            <Dialog>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <Settings />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="flex flex-col gap-2 p-2">
+                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline">Delete Post</Button>
+                  </AlertDialogTrigger>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">Edit Post</Button>
+                  </DialogTrigger>
+                  <PostEditForm post_id={post_id} />
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    your Post and remove your data from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isDeleting}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={isDeleting}
+                    onClick={() => deletePost(post_id)}
+                  >
+                    {isDeleting ? (
+                      <MoonLoader color="#000000" size={24} />
+                    ) : (
+                      "Delete"
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </Dialog>
+          </AlertDialog>
+        </div>
+      )}
       <div className="flex items-center">
         <span>
           <Avatar className="h-20 w-20">
@@ -46,8 +145,8 @@ function Post({
             </AvatarFallback>
           </Avatar>
         </span>
-        <div className="ml-4 space-x-4">
-          <UserHoverCart {...user} />
+        <div className=" ml-4 space-x-4">
+          <UserHoverCart user={user} />
           <span className="text-sm text-gray-400">{dates.ago}</span>
         </div>
       </div>
@@ -66,7 +165,6 @@ function Post({
           <p>{dates.date}</p>
         </div>
       )}
-
       <PostInfo {...info} post_id={post_id} replay={type === "replay"} />
     </li>
   );

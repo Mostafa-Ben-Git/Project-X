@@ -13,6 +13,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
+use function PHPUnit\Framework\isInstanceOf;
+use function Symfony\Component\VarDumper\Dumper\esc;
+
 class PostController extends Controller
 {
   /**
@@ -47,7 +50,7 @@ class PostController extends Controller
       foreach ($request->images as $image) {
         $post_image = new Image();
 
-        $imageName = $user->username . '_' . time() . '_' . str_replace(' ', '_', $image->getClientOriginalName());
+        $imageName = time() . '.' . $image->getClientOriginalExtension();
 
         $image->move(public_path('images/posts'), $imageName);
         $post_image->image_path = asset('images/posts/' . $imageName);
@@ -63,25 +66,21 @@ class PostController extends Controller
   /**
    * Display the specified resource.
    */
-  public function show(Request $request, User $user, Post $post)
+  public function show(Post $post)
   {
     return new PostResource($post);
   }
-
-  /**
-   * Update the specified resource in storage.
-   */
-  public function update(Request $request, Post $post)
-  {
-  }
-
   /**
    * Remove the specified resource from storage.
    */
   public function destroy(Post $post)
   {
+    $post->delete();
+
+    return response()->json(["message" => "Post deleted successfully"], 200);
     //
   }
+
   public function getPostComments(Post $post)
   {
     if ($post->comments->count() > 0) {
@@ -99,5 +98,60 @@ class PostController extends Controller
     } else {
       return new PostResource($post);
     }
+  }
+
+  /**
+   * Update the specified resource in storage.
+   */
+
+  public function updatePost(Request $request, Post $post)
+  {
+
+    $trimmedText = nl2br(Str::of($request->input('content'))->trim());
+
+    $post->content = $trimmedText;
+
+    if ($request->hasAny('content')) {
+      # code...
+    }
+
+    if ($request->has("parent_id")) {
+      $post->parent_id = $request->parent_id;
+    } else {
+      $post->parent_id = null;
+    }
+    // Process images
+    if ($request->has('images')) {
+      $array_image_path = $post->images->pluck('image_path')->toArray();
+      foreach ($request->images as $image) {
+        if (is_string($image)) {
+          foreach ($array_image_path as $path) {
+            if ($path != $image) {
+              // Find the image in the database and delete
+              $postImage = $post->images()->where('image_path', $path)->first();
+              if ($postImage) {
+                $postImage->delete();
+              }
+            }
+          }
+        } else {
+          // Process the new uploaded image
+          $post_image = new Image();
+          $imageName = time() . '.' . $image->getClientOriginalExtension();
+          $image->move(public_path('images/posts'), $imageName);
+          $post_image->image_path = asset('images/posts/' . $imageName);
+
+          $post->images()->save($post_image);
+        }
+      }
+    } else {
+      $post->images()->delete();
+    }
+    $post->save();
+
+
+    $updated = Post::where('id', $post->id)->first();
+
+    return new PostResource($updated);
   }
 }

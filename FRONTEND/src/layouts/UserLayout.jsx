@@ -15,7 +15,7 @@ function UserLayout() {
     if (!user && isLoggedIn) {
       getUser();
     }
-  }, [user, getUser, isLoggedIn]);
+  }, [user]);
 
   useEffect(() => {
     fetchPosts();

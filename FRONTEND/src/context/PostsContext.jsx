@@ -2,6 +2,7 @@ import { createContext, useEffect, useRef, useState } from "react";
 
 import apiService from "@/api/apiService"; // Assuming you have an API service
 import useIntersectionObserver from "@/hooks/useIntersectionObserver";
+import toast from "react-hot-toast";
 
 export const PostsContext = createContext();
 
@@ -12,6 +13,8 @@ function PostsProvider({ children }) {
   const [hasNextPage, setHasNextPage] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
+
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [currentPost, setCurrentPost] = useState(null);
   const [comments, setComments] = useState([]);
@@ -64,13 +67,46 @@ function PostsProvider({ children }) {
   };
 
   const deletePost = async (post_id) => {
+    setIsDeleting(true);
     try {
       await apiService.delete(`api/posts/${post_id}`);
-      setPosts((prevPosts) => prevPosts.filter((post) => post.id !== post_id));
+
+      setPosts((prevPosts) =>
+        prevPosts.filter((post) => post.post_id !== post_id),
+      );
     } catch (error) {
       const responseData = error.response;
       console.error("Error deleting post", responseData);
       setErrors(responseData);
+    } finally {
+      setIsDeleting(false);
+      toast.success("Post deleted successfully");
+    }
+  };
+
+  const editPost = async (post_id, post) => {
+    const abort = new AbortController();
+    try {
+      const { data } = await apiService.post(
+        `api/post/${post_id}/update`,
+        post,
+        {
+          signal: abort.signal,
+        },
+      );
+
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.post_id === post_id ? { ...data } : post,
+        ),
+      );
+      toast.success("Post edited successfully");
+    } catch (error) {
+      const responseData = error.response;
+      console.error("Error editing post", responseData);
+      setErrors(responseData);
+    } finally {
+      abort.abort();
     }
   };
 
@@ -122,6 +158,9 @@ function PostsProvider({ children }) {
   };
 
   const value = {
+    isDeleting,
+    setIsDeleting,
+    editPost,
     deletePost,
     fetchComments,
     isFetchingComments,

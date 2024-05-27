@@ -22,7 +22,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           background: "hsl(var(--background))",
           color: "hsl(var(--foreground))",
           border: "hsl(var(--border))",
-          borderRadius: "hsl(var(--ring))",
+          borderRadius: "1rem",
         },
 
         // Default options for specific types

@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
       "last_name" => "postman",
     ]);
 
-    User::factory(20)->create()->each(function ($user) {
+    User::factory(30)->create()->each(function ($user) {
       $followers = User::where('id', '!=', $user->id)
         ->inRandomOrder()
         ->take(rand(1, 10))
@@ -47,7 +47,7 @@ class DatabaseSeeder extends Seeder
     // Follower::factory()->count(100)->create();
 
     Post::factory()
-      ->count(20)
+      ->count(50)
       ->postWithImages()
       ->create()
       ->each(function ($post) {

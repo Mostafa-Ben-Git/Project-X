@@ -18,7 +18,7 @@ function UserMiniProfile({ user }) {
       />
 
       <div className="flex flex-col gap-1 sm:text-left">
-        <UserHoverCart {...user} className={"text-sm font-bold"} />
+        <UserHoverCart user={user} className={"text-sm font-bold"} />
         <p className="text-gray-500">{user.username}</p>
       </div>
 

@@ -22,9 +22,11 @@ class PostResource extends JsonResource
       'post_id' => $this->id,
       'parent_id' => $this->parent_id,
       'content' => $this->content,
-      'images' => $this->when($this->images->isNotEmpty(), function () {
-        return $this->images->map(fn ($image) => $image->image_path);
-      }),
+      $this->mergeWhen($this->images->count() > 0, [
+        'images' => $this->images->map(function ($image) {
+          return $image->image_path;
+        })
+      ]),
       'dates' => [
         "created_at" => $this->created_at,
         "date" => $this->created_at->format('M d, Y'),

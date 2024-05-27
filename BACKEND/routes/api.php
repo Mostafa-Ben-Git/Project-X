@@ -55,6 +55,8 @@ Route::group(["middleware" => "auth:sanctum"], function () {
     "/posts/{post}/comments",
     [PostController::class, "getPostComments"]
   );
+  Route::post('/post/{post}/update', [PostController::class, 'updatePost']);
+
 
   Route::get(
     "/{username}/post/{post_id}",
