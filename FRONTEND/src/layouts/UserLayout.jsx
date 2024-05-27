@@ -24,7 +24,7 @@ function UserLayout() {
   if (!isLoggedIn && !user) return <Navigate to="/login" />;
 
   return (
-    <div className="flex h-screen pl-12 text-white 2xl:pl-40 overflow-hidden">
+    <div className="flex h-screen overflow-hidden pl-12 text-white 2xl:pl-40">
       <LeftBar className="flex-none" />
       <ScrollArea className="w-full">
         <Outlet />

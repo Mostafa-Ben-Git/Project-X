@@ -1,18 +1,28 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { MoonLoader } from "react-spinners";
 import useAuth from "../../hooks/useAuth";
+import InputPassWord from "@/components/InputPassWord";
+import { ImagePreview } from "@/components/ImagePreview";
 
 function Register() {
-  const { register, errors, isLoading } = useAuth();
+  const { register, errors, isLoading, clearErrors } = useAuth();
   const [signUpData, setSignUpData] = useState({
-    first_name: "john",
-    last_name: "doe",
-    email: "john@example.com",
-    password: "12345678",
-    password_confirmation: "12345678",
+    first_name: "",
+    last_name: "",
+    username: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
     avatar: null,
   });
+
+  useEffect(() => {
+    return () => {
+      clearErrors();
+    };
+  }, []);
+
   const avatarRef = useRef(null);
 
   const handleOnChange = (e) => {
@@ -36,6 +46,7 @@ function Register() {
     formData.append("email", signUpData.email);
     formData.append("password", signUpData.password);
     formData.append("password_confirmation", signUpData.password_confirmation);
+    formData.append("username", signUpData.username);
     formData.append("avatar", signUpData.avatar);
     register(formData);
   };
@@ -44,12 +55,14 @@ function Register() {
     <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
       <div className=" relative w-full max-w-md space-y-8 rounded-md bg-gray-800 p-8 shadow-md lg:max-w-xl">
         <h2 className="mb-4 text-center text-3xl font-extrabold">Register</h2>
-        <form className="  mt-8 space-y-6" onSubmit={handleSignUp}>
+        <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
           {signUpData.avatar !== null && (
-            <img
-              src={URL.createObjectURL(signUpData.avatar)}
-              alt="Post Image"
-              className="absolute right-0 top-0 aspect-square w-28 translate-x-[50%] rounded-full border-2 object-cover"
+            <ImagePreview
+              image={signUpData.avatar}
+              OnRemove={() => setSignUpData({ ...signUpData, avatar: null })}
+              className="absolute right-0 top-0 h-32 w-32 -translate-y-[20%] translate-x-1/2"
+              rounded="full"
+              border={4}
             />
           )}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -92,33 +105,51 @@ function Register() {
               )}
             </div>
           </div>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              value={signUpData.email}
-              onChange={handleOnChange}
-              className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
-            />
-            {errors?.email && (
-              <p className="mt-2 text-xs text-red-600">*{errors.email}</p>
-            )}
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={signUpData.email}
+                onChange={handleOnChange}
+                className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
+              />
+              {errors?.email && (
+                <p className="mt-2 text-xs text-red-600">*{errors.email}</p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium">
+                Username
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="username"
+                required
+                value={signUpData.username}
+                onChange={handleOnChange}
+                className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
+              />
+              {errors?.username && (
+                <p className="mt-2 text-xs text-red-600">*{errors.username}</p>
+              )}
+            </div>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label htmlFor="password" className="block text-sm font-medium">
                 Password
               </label>
-              <input
+              <InputPassWord
                 id="password"
                 name="password"
-                type="password"
-                autoComplete="current-password"
                 required
                 value={signUpData.password}
                 onChange={handleOnChange}
@@ -137,15 +168,13 @@ function Register() {
               >
                 Password Confirmation
               </label>
-              <input
+              <InputPassWord
                 id="password_confirmation"
                 name="password_confirmation"
-                type="password"
-                autoComplete="current-password"
                 required
                 value={signUpData.password_confirmation}
                 onChange={handleOnChange}
-                className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
+                className=" mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
               />
               {errors?.password && (
                 <p className="mt-2 text-xs text-red-600">
@@ -155,8 +184,11 @@ function Register() {
             </div>
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium">
-              Avatar
+            <label
+              htmlFor="avatar"
+              className="mx-auto flex max-w-max cursor-pointer items-center justify-center rounded-full bg-indigo-500 p-2 text-center text-sm text-white hover:bg-indigo-700 focus:border-indigo-700 focus:outline-none focus:ring"
+            >
+              Upload Your Avatar (Optional)
             </label>
             <input
               id="avatar"
@@ -165,7 +197,7 @@ function Register() {
               ref={avatarRef}
               accept="image/*"
               onChange={handleSetAvatar}
-              className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
+              className="hidden"
             />
             {errors?.avatar && (
               <p className="mt-2 text-xs text-red-600">*{errors.avatar}</p>

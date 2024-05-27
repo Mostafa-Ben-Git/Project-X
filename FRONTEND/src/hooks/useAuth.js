@@ -87,7 +87,10 @@ export default function useAuth() {
     }
   };
 
+  const clearErrors = () => dispatch(setErrors({}));
+
   return {
+    clearErrors,
     login,
     register,
     getUser,

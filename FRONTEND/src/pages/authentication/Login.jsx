@@ -1,16 +1,23 @@
 /* eslint-disable no-unused-vars */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { MoonLoader } from "react-spinners";
 import useAuth from "../../hooks/useAuth.js";
+import InputPassWord from "@/components/InputPassWord.jsx";
 
 const Login = () => {
-  const { login, errors, isLoading } = useAuth();
+  const { login, errors, isLoading, clearErrors } = useAuth();
   const [loginData, setLoginData] = useState({
     email: "test@example.com",
     password: "12345678",
     remember: false,
   });
+
+  useEffect(() => {
+    return () => {
+      clearErrors();
+    };
+  }, []);
 
   const handleOnChange = (e) => {
     const key = e.target.name;
@@ -25,10 +32,14 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-      <div className="max-w-md w-full space-y-8 p-8 bg-gray-800 shadow-md rounded-md lg:max-w-xl">
-        <h2 className="text-3xl font-extrabold text-center mb-4">Login</h2>
-        <form className="mt-8 space-y-4" onSubmit={handleLogin} encType="multipart/form-data">
+    <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
+      <div className="w-full max-w-md space-y-8 rounded-md bg-gray-800 p-8 shadow-md lg:max-w-xl">
+        <h2 className="mb-4 text-center text-3xl font-extrabold">Login</h2>
+        <form
+          className="mt-8 space-y-4"
+          onSubmit={handleLogin}
+          encType="multipart/form-data"
+        >
           <div>
             <label htmlFor="email" className="block text-sm font-medium">
               Email
@@ -41,31 +52,29 @@ const Login = () => {
               required
               value={loginData.email}
               onChange={handleOnChange}
-              className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
+              className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
             />
             {errors?.email && (
-              <p className="text-red-600 text-xs mt-2">*{errors.email}</p>
+              <p className="mt-2 text-xs text-red-600">*{errors.email}</p>
             )}
           </div>
           <div>
             <label htmlFor="password" className="block text-sm font-medium">
               Password
             </label>
-            <input
+            <InputPassWord
               id="password"
               name="password"
-              type="password"
-              autoComplete="current-password"
               required
               value={loginData.password}
               onChange={handleOnChange}
-              className="mt-1 p-3 w-full bg-gray-700 border rounded-md focus:outline-none focus:border-indigo-400"
+              className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
             />
             {errors?.password && (
-              <p className="text-red-600 text-xs mt-2">*{errors.password}</p>
+              <p className="mt-2 text-xs text-red-600">*{errors.password}</p>
             )}
           </div>
-          <div className="flex items-center gap-3 ml-2">
+          <div className="ml-2 flex items-center gap-3">
             <input
               type="checkbox"
               name="remember"
@@ -84,7 +93,7 @@ const Login = () => {
           <div>
             <button
               type="submit"
-              className="bg-indigo-600 text-white flex items-center justify-center w-full p-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:border-indigo-700 disabled:cursor-not-allowed"
+              className="flex w-full items-center justify-center rounded-md bg-indigo-600 p-4 text-white hover:bg-indigo-700 focus:border-indigo-700 focus:outline-none focus:ring disabled:cursor-not-allowed"
               onClick={handleLogin}
               disabled={isLoading}
             >
