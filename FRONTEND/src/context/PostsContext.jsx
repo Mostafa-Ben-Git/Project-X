@@ -63,6 +63,17 @@ function PostsProvider({ children }) {
     }
   };
 
+  const deletePost = async (post_id) => {
+    try {
+      await apiService.delete(`api/posts/${post_id}`);
+      setPosts((prevPosts) => prevPosts.filter((post) => post.id !== post_id));
+    } catch (error) {
+      const responseData = error.response;
+      console.error("Error deleting post", responseData);
+      setErrors(responseData);
+    }
+  };
+
   const fetchComments = async (post_id, pageComment) => {
     if (pageComment === null) return;
     try {
@@ -111,6 +122,7 @@ function PostsProvider({ children }) {
   };
 
   const value = {
+    deletePost,
     fetchComments,
     isFetchingComments,
     setScrollPosition,

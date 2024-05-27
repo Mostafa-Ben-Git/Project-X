@@ -1,7 +1,6 @@
 import apiService from "@/api/apiService";
 import Post from "@/features/post/Post";
 import PostBox from "@/features/post/PostBox";
-import ReplayBox from "@/features/post/ReplayBox";
 import usePosts from "@/hooks/usePosts";
 import { ArrowLeft } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";

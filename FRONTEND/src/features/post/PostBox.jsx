@@ -10,10 +10,11 @@ import useAuth from "@/hooks/useAuth";
 import usePosts from "@/hooks/usePosts";
 import { cn } from "@/lib/utils";
 import EmojiPicker from "emoji-picker-react";
-import { Image, PinIcon, SmilePlus, X } from "lucide-react";
+import { Image, PinIcon, SmilePlus } from "lucide-react";
 import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { MoonLoader } from "react-spinners";
+import { ImagePreview } from "../../components/ImagePreview";
 
 function PostBox({ className, parent_id, isReplay = false }) {
   const { addPost, isFetching, isPosting } = usePosts();
@@ -119,9 +120,10 @@ function PostBox({ className, parent_id, isReplay = false }) {
           {newPost.images.map((image, index) => (
             <ImagePreview
               key={index}
-              index={index}
               image={image}
-              handleRemoveImage={handleRemoveImage}
+              OnRemove={() => handleRemoveImage(index)}
+              rounded="md"
+              border={2}
             />
           ))}
         </div>
@@ -196,21 +198,4 @@ function PostBox({ className, parent_id, isReplay = false }) {
   );
 }
 
-export function ImagePreview({ image, handleRemoveImage, index }) {
-  return (
-    <div className="relative">
-      <img
-        src={URL.createObjectURL(image)}
-        alt="Post Image"
-        className="relative aspect-square w-full rounded-md border-2 object-cover"
-      />
-      <span
-        className="absolute right-2 top-2 grid cursor-pointer place-items-center rounded-full bg-slate-400 p-1"
-        onClick={() => handleRemoveImage(index)}
-      >
-        <X size={20} />
-      </span>
-    </div>
-  );
-}
 export default PostBox;
