@@ -30,6 +30,7 @@
     "@reduxjs/toolkit": "^2.2.4",
     "@uidotdev/usehooks": "^2.4.1",
     "axios": "^1.6.8",
+    "bootstrap": "^5.3.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.0.4",

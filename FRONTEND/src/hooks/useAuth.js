@@ -1,14 +1,22 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import apiService from "../api/apiService";
-import { setErrors, setIsLoading, setUser } from "../slices/authSlice";
+import {
+  setErrors,
+  setIsLoading,
+  setUser,
+  setPosts,
+  updateUser,
+  setSearchResults
+  
+} from "../slices/authSlice";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
 export default function useAuth() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, isLoading, errors } = useSelector((store) => store.auth);
+  const { user, posts, isLoading, errors,searchResults } = useSelector((store) => store.auth);
   const [isLoggedOut, setisLoggedOut] = useState(false);
 
   const SESSION_NAME = "userLogedIn";
@@ -33,6 +41,56 @@ export default function useAuth() {
       dispatch(setIsLoading(false));
     }
   };
+  const getUserPosts = async () => {
+    dispatch(setIsLoading(true));
+    try {
+      const { data } = await apiService.get("/api/user/posts");
+      dispatch(setPosts(data.data));
+    } catch (error) {
+      const response = error.response;
+      console.error("Error fetching user posts:", response);
+    } finally {
+      dispatch(setIsLoading(false));
+    }
+  };
+  const updateUserData = async (data) => {
+    dispatch(setIsLoading(true));
+    try {
+      await csrf();
+      const response = await apiService.put(`/api/users/${user.id}`, data);
+      dispatch(updateUser(response.data));
+    } catch (error) {
+      console.error("Error updating user data:", error.response);
+    } finally {
+      dispatch(setIsLoading(false));
+    }
+  };
+ const searchUsers = async (searchQuery) => {
+    try {
+      const response = await apiService.get('/api/users/search', {
+        params: {
+          q: searchQuery
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error searching users:', error);
+      throw error;
+    }
+  };
+  // const searchUsers = async (query) => {
+  //   dispatch(setIsLoading(true));
+  //   try {
+  //     const { data } = await apiService.get(`/api/users/search?query=${query}`);
+  //     dispatch(setSearchResults(data.data));
+  //   } catch (error) {
+  //     console.error("Error searching users:", error.response);
+  //   } finally {
+  //     dispatch(setIsLoading(false));
+  //   }
+  // };
+  
+ 
 
   const login = async (data) => {
     dispatch(setErrors({}));
@@ -94,10 +152,15 @@ export default function useAuth() {
     login,
     register,
     getUser,
+    updateUserData,
+    getUserPosts,
     logout,
+    searchResults,
     isLoggedIn,
     isLoggedOut,
     user,
+    posts,
+    searchUsers,
     errors,
     isLoading,
   };

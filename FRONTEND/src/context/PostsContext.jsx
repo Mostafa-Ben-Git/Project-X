@@ -31,6 +31,7 @@ function PostsProvider({ children }) {
     try {
       const { data: postes } = await apiService.get(
         `api/posts?page=${pageNumber}`,
+        {},
       );
       setPage((prevPage) => prevPage + 1);
       if (postes.meta.last_page <= page) setHasNextPage(false);

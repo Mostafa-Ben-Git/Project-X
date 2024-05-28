@@ -79,3 +79,36 @@
     @apply bg-background text-foreground;
   }
 }
+.location-selector-wrapper {
+  margin-left: 130px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  width: 80%;
+  height: 60%;
+  z-index: 999;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  border-radius: 8px;
+  background: #c0c0c0;
+}
+
+.location-selector-bg {
+  margin: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+  opacity: 0;
+}
+
+.location-selector-wrapper.open {
+  .location-selector-bg {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.my-element:hover {
+  background-color: #c0c0c0;
+}
