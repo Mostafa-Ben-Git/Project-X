@@ -2,43 +2,26 @@ import LoaderCircle from "@/components/LoaderCircle";
 import Post from "@/features/post/Post";
 import PostBox from "@/features/post/PostBox";
 import usePosts from "@/hooks/usePosts";
-import { useLocalStorage } from "@uidotdev/usehooks";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 
 function HomePage() {
   const { isFetching, posts, lastPostRef, hasNextPage } = usePosts();
-  // TODO: implement store scrolling
-  // const scrollRef = useRef(null);
 
-  // function getScrollPosition() {
-  //   return scrollRef.current?.clientHeight;
-  // }
+  function getScrollPosition() {
+    return window.scrollY;
+  }
 
-  // const [scrollYStorage, setScrollYStorage] = useLocalStorage(
-  //   "scrollYStorage",
-  //   0,
-  // );
-  // const [scrollY, setScrollY] = useState(0);
-
-  // useEffect(() => {
-  //   // if the setcondition is true (AKA everything in the DOM is loaded: fire off the scrollTo()!)
-  //   if (!isFetching) {
-  //     window.scrollTo(0, scrollYStorage);
-  //   }
-  // }, [isFetching, scrollYStorage]);
-
-  // useEffect(() => {
-  //   return () => {
-  //     console.log(window.scrollY);
-  //     // setScrollYStorage(scrollRef.current?.scrollTop);
-  //   };
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
+  useEffect(() => {
+    window.addEventListener("scroll", getScrollPosition);
+    return () => {
+      window.removeEventListener("scroll", getScrollPosition);
+    };
+  }, []);
 
   return (
-    <main className="p-8">
-      {!isFetching && <PostBox className="rounded-sm p-2" />}
+    <main className="p-2">
       <ul className="mt-4 flex flex-wrap justify-center gap-4">
+        {!isFetching && <PostBox className="rounded-sm p-2" />}
         {posts?.map((post, i, posts) => (
           <Post
             {...post}

@@ -1,12 +1,15 @@
+import useAuth from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import { User } from "lucide-react";
 
-function UserAvatar({ user, className }) {
+function UserAvatar({ className }) {
+  const { user } = useAuth();
   return (
     <Avatar className={cn("rounded-full", className)}>
-      <AvatarImage src={user?.avatar} alt="@shadcn" className="rounded-full w-20 h-20" />
-      <AvatarFallback className="rounded-full w-20 h-20">
-        {user?.first_name[0] + " " + user?.last_name[0]}
+      <AvatarImage src={user?.avatar} alt="@shadcn" className="rounded-full" />
+      <AvatarFallback className="rounded-full">
+        <User className="aspect-square w-full" />
       </AvatarFallback>
     </Avatar>
   );

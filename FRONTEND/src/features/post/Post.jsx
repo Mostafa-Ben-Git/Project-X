@@ -1,49 +1,40 @@
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import usePosts from "@/hooks/usePosts";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { Dot, Settings } from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { UserHoverCart } from "../../components/UserHoverCart";
 import { ImagesCarousel } from "./ImagesCarousel";
 import PostInfo from "./PostInfo";
-import { UserHoverCart } from "./UserHoverCart";
-import { DropDownActions } from "@/components/DropDownActions";
-import { useState } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { AlertDeleteDialog } from "@/components/AlertDeleteDialog";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogTrigger
 } from "@/components/ui/dialog";
 
+import useAuth from "@/hooks/useAuth";
 import { MoonLoader } from "react-spinners";
 import PostEditForm from "./PostEditForm";
-import useAuth from "@/hooks/useAuth";
 
 function Post({
   content,

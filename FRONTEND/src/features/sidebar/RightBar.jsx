@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
-import useAuth from "@/hooks/useAuth";
 import apiService from "@/api/apiService";
 import LoaderCircle from "@/components/LoaderCircle";
 import UserMiniProfile from "@/components/UserMiniProfile";
+import { useEffect, useState } from "react";
 
 function RightBar({ className }) {
   const [query, setQuery] = useState("");
@@ -78,7 +77,7 @@ function RightBar({ className }) {
   }, []);
 
   return (
-    <aside className={`rounded-lg p-4 shadow-md ${className}`}>
+    <aside className={`max-w-xs hidden h-screen fixed right-0 top-0 z-40 border-l p-4 2xl:block`}>
       <input
         type="text"
         value={query}

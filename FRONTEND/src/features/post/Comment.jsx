@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { UserHoverCart } from "./UserHoverCart";
+import { UserHoverCart } from "../../components/UserHoverCart";
 
 function Comment({
   className,

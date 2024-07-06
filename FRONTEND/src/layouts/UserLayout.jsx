@@ -1,6 +1,6 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
-import LeftBar from "@/features/sidebar/LeftBar";
 import RightBar from "@/features/sidebar/RightBar";
+import { Sidebar } from "@/features/sidebar/sidebar";
 import useAuth from "@/hooks/useAuth";
 import usePosts from "@/hooks/usePosts";
 
@@ -24,13 +24,13 @@ function UserLayout() {
   if (!isLoggedIn && !user) return <Navigate to="/login" />;
 
   return (
-    <div className="flex h-screen overflow-hidden pl-12 text-white 2xl:pl-40">
-      <LeftBar className="flex-none" />
-      <ScrollArea className="w-full">
+    <section className="relative mx-6">
+      <Sidebar />
+      <ScrollArea className="relative mt-6 md:ml-[300px] 2xl:mr-[340px]">
         <Outlet />
       </ScrollArea>
-      <RightBar className="hidden w-[28%] flex-none border-l lg:block" />
-    </div>
+      <RightBar />
+    </section>
   );
 }
 

@@ -101,7 +101,7 @@ function PostBox({ className, parent_id, isReplay = false }) {
     <form
       onSubmit={handleSubmit}
       encType="multipart/form-data"
-      className={cn("w-full border bg-popover", className)}
+      className={cn("w-full border", className)}
     >
       <div className="my-2 flex items-center justify-between gap-3 rounded-t-lg px-2">
         <UserAvatar user={user} />
@@ -129,7 +129,7 @@ function PostBox({ className, parent_id, isReplay = false }) {
         </div>
       )}
 
-      <div className="flex flex-row-reverse items-center justify-between border-t px-3 py-2 dark:border-gray-600">
+      <div className="flex flex-row-reverse items-center justify-between border-t px-3 py-2">
         <button
           type="submit"
           disabled={isEmpty || isPosting}

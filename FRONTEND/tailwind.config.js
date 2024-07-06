@@ -13,17 +13,6 @@ export default {
     container: {
       center: true,
       padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-        tablet: "640px",
-        // => @media (min-width: 640px) { ... }
-
-        laptop: "1024px",
-        // => @media (min-width: 1024px) { ... }
-
-        desktop: "1280px",
-        // => @media (min-width: 1280px) { ... }
-      },
     },
     extend: {
       colors: {
@@ -76,14 +65,15 @@ export default {
           to: { height: "0" },
         },
         heartbeat: {
-          "0%, 100%": { transform: "scale(1)" },
-          "50%": { transform: "scale(1.3)" },
+          "0%": { transform: "scale(0.5)" },
+          "50%": { transform: "scale(1.5)" },
+          "100%": { transform: "scale(1)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "beat-heart-once": "heartbeat 300ms ease-in-out",
+        "beat-heart-once": "heartbeat 400ms ease-out",
       },
     },
   },

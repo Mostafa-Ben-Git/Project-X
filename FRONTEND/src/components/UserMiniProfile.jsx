@@ -1,7 +1,7 @@
+import { UserHoverCart } from "@/components/UserHoverCart";
 import { useFollow } from "@/hooks/useFollow";
 import { useState } from "react";
 import LoaderCircle from "./LoaderCircle";
-import { UserHoverCart } from "@/features/post/UserHoverCart";
 
 function UserMiniProfile({ user }) {
   const { loading, handleFollow } = useFollow();
@@ -10,16 +10,16 @@ function UserMiniProfile({ user }) {
   return (
     <li
       key={user.id}
-      className="flex w-full items-center justify-around gap-1 rounded-xl border p-2 text-sm shadow-lg"
+      className="flex w-full items-center justify-around gap-1 rounded-xl border p-2 shadow-lg"
     >
       <img
         className="block h-12 rounded-full sm:mx-0 sm:shrink-0"
         src={user.avatar}
       />
 
-      <div className="flex flex-col gap-1 sm:text-left">
+      <div className="flex flex-col gap-1">
         <UserHoverCart user={user} className={"text-sm font-bold"} />
-        <p className="text-gray-500">{user.username}</p>
+        <p className="text-muted-foreground">{user.username}</p>
       </div>
 
       <button
