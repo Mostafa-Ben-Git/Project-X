@@ -7,10 +7,8 @@ import {
   setUser,
   setPosts,
   updateUser,
-  setSearchResults
-  
 } from "../slices/authSlice";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import toast from "react-hot-toast";
 
 export default function useAuth() {
@@ -18,6 +16,7 @@ export default function useAuth() {
   const navigate = useNavigate();
   const { user, posts, isLoading, errors,searchResults } = useSelector((store) => store.auth);
   const [isLoggedOut, setisLoggedOut] = useState(false);
+  const getUserPostsCalled = useRef(false);
 
   const SESSION_NAME = "userLogedIn";
   let isLoggedIn = localStorage.getItem(SESSION_NAME) == "true";
@@ -42,6 +41,8 @@ export default function useAuth() {
     }
   };
   const getUserPosts = async () => {
+    if (getUserPostsCalled.current) return;
+    getUserPostsCalled.current = true;
     dispatch(setIsLoading(true));
     try {
       const { data } = await apiService.get("/api/user/posts");
@@ -89,8 +90,8 @@ export default function useAuth() {
   //     dispatch(setIsLoading(false));
   //   }
   // };
-  
- 
+
+
 
   const login = async (data) => {
     dispatch(setErrors({}));

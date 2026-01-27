@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sheet";
 
 const ProfilePage = () => {
-  const { user, posts, isLoading, getUserPosts, updateUserData } = useAuth();
+  const { user, isLoading, getUserPosts, updateUserData } = useAuth();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -59,8 +59,10 @@ const ProfilePage = () => {
         avatar: "",
       });
     }
-    getUserPosts();
-  }, [user]);
+    if (user?.id) {
+      getUserPosts();
+    }
+  }, [user, user?.id, getUserPosts]);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
