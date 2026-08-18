@@ -1,58 +1,54 @@
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetClose,
   SheetContent,
   SheetHeader,
   SheetTrigger,
-} from '@/components/ui/sheet';
-import { Menu, X } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
-import { SidebarButtonSheet as SidebarButton } from './sidebar-button';
-import { UserBanner } from './UserBanner';
+} from "@/components/ui/sheet";
+import { Menu, X } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import { UserBanner } from "./UserBanner";
 
-
-export function SidebarMobile(props) {
-  const pathname = useLocation().pathname;
-
+export function SidebarMobile({ sidebarItems }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button size='icon' className='fixed z-[9] top-2 left-2'>
+        <Button size="icon" className="fixed left-2 top-2 z-[9]">
           <Menu size={20} />
         </Button>
       </SheetTrigger>
-      <SheetContent side='left' className='px-3 py-4' hideClose>
-        <SheetHeader className='flex flex-row justify-between items-center space-y-0'>
-          <span className='text-lg font-semibold text-foreground mx-3'>
+      <SheetContent side="left" className="w-[280px] px-3 py-4" hideClose>
+        <SheetHeader className="flex flex-row items-center justify-between space-y-0">
+          <span className="mx-3 text-lg font-semibold text-foreground">
             Project-X
           </span>
           <SheetClose asChild>
-            <Button className='h-7 w-7 p-0' variant='ghost'>
+            <Button className="h-7 w-7 p-0" variant="ghost" size="icon">
               <X size={15} />
             </Button>
           </SheetClose>
         </SheetHeader>
-        <div className='h-full'>
-          <div className='mt-5 flex flex-col w-full gap-1'>
-            {props.sidebarItems.links.map((link, idx) => (
-              <Link key={idx} to={link.href}>
-                <SidebarButton
-                  variant={pathname === link.href ? 'secondary' : 'ghost'}
-                  icon={link.icon}
-                  className='w-full'
-                >
-                  {link.label}
-                </SidebarButton>
-              </Link>
-            ))}
-            {props.sidebarItems.extras}
-          </div>
-          <div className='absolute w-full bottom-4 px-1 left-0'>
-            <Separator className='absolute -top-3 left-0 w-full' />
-            <UserBanner/>
-          </div>
+        <nav className="mt-5 flex flex-col gap-1">
+          {sidebarItems.links.map((link) => (
+            <NavLink
+              key={link.href}
+              to={link.href}
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-accent text-accent-foreground"
+                    : "text-foreground hover:bg-accent hover:text-accent-foreground"
+                }`
+              }
+            >
+              <link.icon className="h-5 w-5" />
+              {link.label}
+            </NavLink>
+          ))}
+        </nav>
+        <div className="absolute bottom-4 left-0 w-full px-3">
+          <UserBanner />
         </div>
       </SheetContent>
     </Sheet>
