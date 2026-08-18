@@ -21,6 +21,9 @@ class DatabaseSeeder extends Seeder
       'first_name' => 'Test',
       'last_name' => 'User',
       'username' => 'testuser',
+      'avatar' => 'https://ui-avatars.com/api/?name=Test+User&background=264653&color=fff&bold=true&size=128',
+      'cover_image' => 'https://picsum.photos/seed/testuser/800/300',
+      'bio' => 'This is the test user account for Project-X.',
     ]);
 
     $otherUser = User::factory()->create([
@@ -28,6 +31,9 @@ class DatabaseSeeder extends Seeder
       'first_name' => 'Other',
       'last_name' => 'Person',
       'username' => 'otherperson',
+      'avatar' => 'https://ui-avatars.com/api/?name=Other+Person&background=e76f51&color=fff&bold=true&size=128',
+      'cover_image' => 'https://picsum.photos/seed/otherperson/800/300',
+      'bio' => 'Another user for testing social features.',
     ]);
 
     // ── Create 20 more random users ──

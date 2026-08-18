@@ -6,35 +6,20 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
- */
 class UserFactory extends Factory
 {
-  /**
-   * The current password being used by the factory.
-   */
   protected static ?string $password;
 
-  /**
-   * Define the model's default state.
-   *
-   * @return array<string, mixed>
-   */
   public function definition(): array
   {
     $firstName = fake()->firstName;
     $lastName = fake()->lastName;
-
     $username = Str::lower($firstName[0] . $lastName) . rand(100, 999);
 
-    $colors = collect([
-      str_replace('#', '', $this->faker->hexColor),
-      str_replace('#', '', $this->faker->hexColor),
-      str_replace('#', '', $this->faker->hexColor)
-    ])->implode(',');
-
-    $avatar_type = fake()->randomElement(['beam', 'bauhaus', 'pixel']);
+    // UI Avatars: free PNG avatars, no key needed
+    $bgColors = ['264653','2a9d8f','e9c46a','f4a261','e76f51','606c38','283618','bc6c25','dda15e','6d6875','b5838d','e5989b'];
+    $bg = fake()->randomElement($bgColors);
+    $avatar = "https://ui-avatars.com/api/?name=" . urlencode($firstName . '+' . $lastName) . "&background={$bg}&color=fff&bold=true&size=128";
 
     return [
       'first_name' => $firstName,
@@ -43,9 +28,10 @@ class UserFactory extends Factory
       'email' => fake()->unique()->safeEmail(),
       'email_verified_at' => now(),
       'password' => static::$password ??= Hash::make('12345678'),
-      'avatar' => "https://source.boringavatars.com/{$avatar_type}/120/Stefan?colors={$colors}",
+      'avatar' => $avatar,
       'date_de_naissance' => $this->faker->date,
-      'cover_image' => $this->faker->imageUrl(),
+      // Unsplash: free random images, no key needed
+      'cover_image' => "https://picsum.photos/seed/{$username}/800/300",
       'bio' => $this->faker->paragraph,
       'derniere_connexion' => $this->faker->dateTimeThisYear,
       'statut' => $this->faker->randomElement(['en ligne', 'hors ligne']),
@@ -60,15 +46,10 @@ class UserFactory extends Factory
         'facebook' => 'https://facebook.com/' . $this->faker->userName,
         'twitter' => 'https://twitter.com/' . $this->faker->userName,
         'instagram' => 'https://instagram.com/' . $this->faker->userName,
-      ])
-
-      // 'remember_token' => Str::random(10),
+      ]),
     ];
   }
 
-  /**
-   * Indicate that the model's email address should be unverified.
-   */
   public function unverified(): static
   {
     return $this->state(fn (array $attributes) => [

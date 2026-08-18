@@ -14,7 +14,9 @@ import toast from "react-hot-toast";
 export default function useAuth() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, posts, isLoading, errors,searchResults } = useSelector((store) => store.auth);
+  const { user, posts, isLoading, errors, searchResults } = useSelector(
+    (store) => store.auth
+  );
   const [isLoggedOut, setisLoggedOut] = useState(false);
   const getUserPostsCalled = useRef(false);
 
@@ -31,15 +33,16 @@ export default function useAuth() {
       localStorage.setItem(SESSION_NAME, "true");
     } catch (e) {
       const res = e.response;
-      if (res.status === 401) {
+      if (res && res.status === 401) {
         localStorage.removeItem(SESSION_NAME);
+        localStorage.removeItem("token");
         navigate("/login");
       }
     } finally {
-      // setTimeout(() => dispatch(setIsLoading(false)), 2000);
       dispatch(setIsLoading(false));
     }
   };
+
   const getUserPosts = async () => {
     if (getUserPostsCalled.current) return;
     getUserPostsCalled.current = true;
@@ -48,16 +51,15 @@ export default function useAuth() {
       const { data } = await apiService.get("/api/user/posts");
       dispatch(setPosts(data.data));
     } catch (error) {
-      const response = error.response;
-      console.error("Error fetching user posts:", response);
+      console.error("Error fetching user posts:", error.response);
     } finally {
       dispatch(setIsLoading(false));
     }
   };
+
   const updateUserData = async (data) => {
     dispatch(setIsLoading(true));
     try {
-      await csrf();
       const response = await apiService.put(`/api/users/${user.id}`, data);
       dispatch(updateUser(response.data));
     } catch (error) {
@@ -66,78 +68,86 @@ export default function useAuth() {
       dispatch(setIsLoading(false));
     }
   };
- const searchUsers = async (searchQuery) => {
+
+  const searchUsers = async (searchQuery) => {
     try {
-      const response = await apiService.get('/api/users/search', {
-        params: {
-          q: searchQuery
-        }
+      const response = await apiService.get("/api/users/search", {
+        params: { q: searchQuery },
       });
       return response.data;
     } catch (error) {
-      console.error('Error searching users:', error);
+      console.error("Error searching users:", error);
       throw error;
     }
   };
-  // const searchUsers = async (query) => {
-  //   dispatch(setIsLoading(true));
-  //   try {
-  //     const { data } = await apiService.get(`/api/users/search?query=${query}`);
-  //     dispatch(setSearchResults(data.data));
-  //   } catch (error) {
-  //     console.error("Error searching users:", error.response);
-  //   } finally {
-  //     dispatch(setIsLoading(false));
-  //   }
-  // };
 
-
-
+  // Token-based login
   const login = async (data) => {
     dispatch(setErrors({}));
     dispatch(setIsLoading(true));
     try {
-      await csrf();
-      await apiService.post("/login", data);
+      const response = await apiService.post("/api/token-login", data);
+      const { token, user: userData } = response.data;
+
+      // Store token
+      localStorage.setItem("token", token);
+      localStorage.setItem(SESSION_NAME, "true");
+
+      // Set user in Redux
+      dispatch(setUser(userData));
+
       toast.success("Login successfully");
-      await getUser();
+      navigate("/home");
     } catch (error) {
       const response = error.response;
       if (response && response.status === 422) {
-        const { errors } = response.data;
-        dispatch(setErrors(errors));
+        dispatch(setErrors(response.data.errors || {}));
+      } else if (response && response.status === 401) {
+        dispatch(setErrors({ email: ["Invalid credentials"] }));
       }
     } finally {
-      // setTimeout(() => dispatch(setIsLoading(false)), 2000);
       dispatch(setIsLoading(false));
     }
   };
+
+  // Token-based register
   const register = async (data) => {
     dispatch(setErrors({}));
     dispatch(setIsLoading(true));
     try {
+      // Register via Breeze endpoint (session-based, works for registration)
       await csrf();
       await apiService.post("/register", data);
       toast.success("Registered successfully", { duration: 2000 });
-      await getUser();
+
+      // Auto-login after registration
+      const loginResponse = await apiService.post("/api/token-login", {
+        email: data.email,
+        password: data.password,
+      });
+      const { token, user: userData } = loginResponse.data;
+      localStorage.setItem("token", token);
+      localStorage.setItem(SESSION_NAME, "true");
+      dispatch(setUser(userData));
+      navigate("/home");
     } catch (error) {
       const response = error.response;
       if (response && response.status === 422) {
-        const { errors } = response.data;
-        // console.log(errors, message);
-        dispatch(setErrors(errors));
+        dispatch(setErrors(response.data.errors || {}));
       }
     } finally {
-      // setTimeout(() => dispatch(setIsLoading(false)), 2000);
       dispatch(setIsLoading(false));
     }
   };
+
   const logout = async () => {
     try {
       setisLoggedOut(true);
-      await apiService.post("/logout");
+      // Revoke token on server
+      await apiService.post("/api/logout").catch(() => {});
       dispatch(setUser(null));
       localStorage.removeItem(SESSION_NAME);
+      localStorage.removeItem("token");
       navigate("/login");
     } catch (e) {
       console.warn(e);
