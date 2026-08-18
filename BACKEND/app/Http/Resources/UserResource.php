@@ -30,7 +30,7 @@ class UserResource extends JsonResource
       'bio' => $this->bio,
       'followers_count' => $this->followers->count(),
       'following_count' => $this->followings->count(),
-      'is_following' => $this->isFollowing(auth()->user()),
+      'is_following' => auth()->check() ? $this->isFollowing(auth()->user()) : false,
       'posts_count' => $this->posts->count(),
       "age" => $dateOfBirth->diffInYears(now()),
       'date_de_naissance' => $this->date_de_naissance,

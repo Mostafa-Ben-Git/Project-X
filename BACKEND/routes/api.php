@@ -1,86 +1,62 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FollowerController;
 use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\TokenAuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Resources\PostResource;
 use App\Http\Resources\UserResource;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Hash;
 
-// ── Public: Token Login ──
-Route::post('/token-login', function (Request $request) {
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
+// ── Public: Token Auth ──
+Route::post('/token-login', [TokenAuthController::class, 'login'])
+    ->middleware('throttle:60,1')
+    ->name('token.login');
 
-    $user = User::where('email', $request->email)->first();
+// ── Protected (Bearer Token) ──
+Route::middleware('auth:sanctum')->group(function () {
 
-    if (!$user || !Hash::check($request->password, $user->password)) {
-        return response()->json(['message' => 'Invalid credentials'], 401);
-    }
+    // ── Auth ──
+    Route::get('/user', [TokenAuthController::class, 'me'])->name('user.me');
+    Route::post('/logout', [TokenAuthController::class, 'logout'])->name('logout');
+    Route::get('/user/posts', function (Request $request) {
+        return PostResource::collection($request->user()->posts->whereNull('parent_id'));
+    });
+    Route::get('/user/suggestions', function (Request $request) {
+        return UserResource::collection($request->user()->suggestions());
+    });
 
-    // Revoke old tokens
-    $user->tokens()->delete();
+    // ── Users ──
+    Route::get('/users/search', [UserController::class, 'search']);
+    Route::get('/users/{user}/followers', [UserController::class, 'followers']);
+    Route::get('/users/{user}/following', [UserController::class, 'following']);
+    Route::apiResource('/users', UserController::class);
 
-    // Create new token
-    $token = $user->createToken('auth-token')->plainTextToken;
+    // ── Posts ──
+    Route::apiResource('/posts', PostController::class);
+    Route::post('/post/{post}/update', [PostController::class, 'updatePost']);
+    Route::get('/posts/{post}/comments', [PostController::class, 'getPostComments']);
+    Route::get('/{username}/post/{post_id}', [PostController::class, 'getPostByUsernameAndId']);
 
-    return response()->json([
-        'user' => $user,
-        'token' => $token,
-    ]);
-});
+    // ── Follow ──
+    Route::post('/users/{user}/changeFollowStatus', [FollowerController::class, 'changeFollowStatus']);
 
-Route::group(["middleware" => "auth:sanctum"], function () {
+    // ── Likes ──
+    Route::post('/posts/{post}/changeLikeStatus', [LikeController::class, 'changeLikeStatus']);
 
-  // ── Auth ──
-  Route::get('/user', function (Request $request) {
-    return UserResource::make($request->user());
-  });
+    // ── Notifications ──
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
-  Route::get('/user/posts', function (Request $request) {
-    return PostResource::collection($request->user()->posts->whereNull('parent_id'));
-  });
-
-  Route::get('/user/suggestions', function (Request $request) {
-    return UserResource::collection($request->user()->suggestions());
-  });
-
-  // ── Users ──
-  Route::get('/users/search', [UserController::class, 'search']);
-  Route::get('/users/{user}/followers', [UserController::class, 'followers']);
-  Route::get('/users/{user}/following', [UserController::class, 'following']);
-  Route::apiResource('/users', UserController::class);
-
-  // ── Posts ──
-  Route::apiResource("/posts", PostController::class);
-  Route::post('/post/{post}/update', [PostController::class, 'updatePost']);
-  Route::get("/posts/{post}/comments", [PostController::class, "getPostComments"]);
-  Route::get("/{username}/post/{post_id}", [PostController::class, "getPostByUsernameAndId"]);
-
-  // ── Follow ──
-  Route::post('/users/{user}/changeFollowStatus', [FollowerController::class, 'changeFollowStatus']);
-
-  // ── Likes ──
-  Route::post('/posts/{post}/changeLikeStatus', [LikeController::class, 'changeLikeStatus']);
-
-  // ── Notifications ──
-  Route::get('/notifications', [NotificationController::class, 'index']);
-  Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
-  Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
-  Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
-
-  // ── Messages ──
-  Route::get('/conversations', [MessageController::class, 'conversations']);
-  Route::get('/messages/unread-count', [MessageController::class, 'unreadCount']);
-  Route::get('/messages/{user}', [MessageController::class, 'messagesWith']);
-  Route::post('/messages/{user}', [MessageController::class, 'send']);
+    // ── Messages ──
+    Route::get('/conversations', [MessageController::class, 'conversations']);
+    Route::get('/messages/unread-count', [MessageController::class, 'unreadCount']);
+    Route::get('/messages/{user}', [MessageController::class, 'messagesWith']);
+    Route::post('/messages/{user}', [MessageController::class, 'send']);
 });

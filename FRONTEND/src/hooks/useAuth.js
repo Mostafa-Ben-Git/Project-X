@@ -21,21 +21,19 @@ export default function useAuth() {
   const getUserPostsCalled = useRef(false);
 
   const SESSION_NAME = "userLogedIn";
-  let isLoggedIn = localStorage.getItem(SESSION_NAME) == "true";
-
-  const csrf = () => apiService.get("/sanctum/csrf-cookie");
+  let isLoggedIn = localStorage.getItem(SESSION_NAME) === "true" && !!localStorage.getItem("token");
 
   const getUser = async () => {
     dispatch(setIsLoading(true));
     try {
       const { data } = await apiService.get("/api/user");
-      dispatch(setUser(data));
+      dispatch(setUser(data.data || data));
       localStorage.setItem(SESSION_NAME, "true");
     } catch (e) {
-      const res = e.response;
-      if (res && res.status === 401) {
+      if (e.response && e.response.status === 401) {
         localStorage.removeItem(SESSION_NAME);
         localStorage.removeItem("token");
+        dispatch(setUser(null));
         navigate("/login");
       }
     } finally {
@@ -61,9 +59,11 @@ export default function useAuth() {
     dispatch(setIsLoading(true));
     try {
       const response = await apiService.put(`/api/users/${user.id}`, data);
-      dispatch(updateUser(response.data));
+      dispatch(updateUser(response.data.data || response.data));
+      toast.success("Profile updated");
     } catch (error) {
       console.error("Error updating user data:", error.response);
+      toast.error("Failed to update profile");
     } finally {
       dispatch(setIsLoading(false));
     }
@@ -81,7 +81,7 @@ export default function useAuth() {
     }
   };
 
-  // Token-based login
+  // Token-based login via controller
   const login = async (data) => {
     dispatch(setErrors({}));
     dispatch(setIsLoading(true));
@@ -89,14 +89,11 @@ export default function useAuth() {
       const response = await apiService.post("/api/token-login", data);
       const { token, user: userData } = response.data;
 
-      // Store token
       localStorage.setItem("token", token);
       localStorage.setItem(SESSION_NAME, "true");
+      dispatch(setUser(userData.data || userData));
 
-      // Set user in Redux
-      dispatch(setUser(userData));
-
-      toast.success("Login successfully");
+      toast.success("Login successful");
       navigate("/home");
     } catch (error) {
       const response = error.response;
@@ -104,21 +101,21 @@ export default function useAuth() {
         dispatch(setErrors(response.data.errors || {}));
       } else if (response && response.status === 401) {
         dispatch(setErrors({ email: ["Invalid credentials"] }));
+        toast.error("Invalid email or password");
+      } else {
+        toast.error("Login failed");
       }
     } finally {
       dispatch(setIsLoading(false));
     }
   };
 
-  // Token-based register
   const register = async (data) => {
     dispatch(setErrors({}));
     dispatch(setIsLoading(true));
     try {
-      // Register via Breeze endpoint (session-based, works for registration)
-      await csrf();
       await apiService.post("/register", data);
-      toast.success("Registered successfully", { duration: 2000 });
+      toast.success("Registered successfully");
 
       // Auto-login after registration
       const loginResponse = await apiService.post("/api/token-login", {
@@ -128,12 +125,14 @@ export default function useAuth() {
       const { token, user: userData } = loginResponse.data;
       localStorage.setItem("token", token);
       localStorage.setItem(SESSION_NAME, "true");
-      dispatch(setUser(userData));
+      dispatch(setUser(userData.data || userData));
       navigate("/home");
     } catch (error) {
       const response = error.response;
       if (response && response.status === 422) {
         dispatch(setErrors(response.data.errors || {}));
+      } else {
+        toast.error("Registration failed");
       }
     } finally {
       dispatch(setIsLoading(false));
@@ -143,16 +142,13 @@ export default function useAuth() {
   const logout = async () => {
     try {
       setisLoggedOut(true);
-      // Revoke token on server
       await apiService.post("/api/logout").catch(() => {});
+    } finally {
       dispatch(setUser(null));
       localStorage.removeItem(SESSION_NAME);
       localStorage.removeItem("token");
-      navigate("/login");
-    } catch (e) {
-      console.warn(e);
-    } finally {
       setisLoggedOut(false);
+      navigate("/login");
     }
   };
 
