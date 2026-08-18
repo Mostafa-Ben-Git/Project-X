@@ -61,7 +61,7 @@ function RightBar() {
         <LoaderCircle />
       ) : (
         <ul className="flex flex-col gap-2">
-          {users.map((user) => (
+          {users?.map((user) => (
             <UserMiniProfile key={user.id} user={user} />
           ))}
         </ul>
@@ -71,7 +71,7 @@ function RightBar() {
           Suggested for you
         </h2>
         <ul className="flex flex-col gap-2">
-          {suggestions.map((user) => (
+          {suggestions?.map((user) => (
             <UserMiniProfile key={user.id} user={user} />
           ))}
         </ul>

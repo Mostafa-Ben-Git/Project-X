@@ -81,7 +81,7 @@ function MessagesPage() {
           {isLoading ? (
             <LoaderCircle />
           ) : (
-            messages.map((msg) => {
+            messages?.map((msg) => {
               const isMine = msg.sender_id === user?.id;
               return (
                 <div
@@ -148,7 +148,7 @@ function MessagesPage() {
         </div>
       ) : (
         <ul className="space-y-1">
-          {conversations.map((conv) => {
+          {conversations?.map((conv) => {
             const partner = getChatPartner(conv);
             return (
               <li key={conv.id}>

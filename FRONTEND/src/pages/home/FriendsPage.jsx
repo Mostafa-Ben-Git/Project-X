@@ -64,7 +64,7 @@ function FriendsPage() {
             </p>
           ) : (
             <ul className="space-y-2">
-              {suggestions.map((u) => (
+              {suggestions?.map((u) => (
                 <UserMiniProfile key={u.id} user={u} />
               ))}
             </ul>
@@ -80,7 +80,7 @@ function FriendsPage() {
             </p>
           ) : (
             <ul className="space-y-2">
-              {followers.map((u) => (
+              {followers?.map((u) => (
                 <UserMiniProfile key={u.id} user={u} />
               ))}
             </ul>
@@ -96,7 +96,7 @@ function FriendsPage() {
             </p>
           ) : (
             <ul className="space-y-2">
-              {following.map((u) => (
+              {following?.map((u) => (
                 <UserMiniProfile key={u.id} user={u} />
               ))}
             </ul>

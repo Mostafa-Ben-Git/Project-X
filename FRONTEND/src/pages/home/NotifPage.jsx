@@ -56,7 +56,7 @@ function NotificationsPage() {
       ) : (
         <>
           <ul className="space-y-1">
-            {notifications.map((n) => (
+            {notifications?.map((n) => (
               <li key={n.id}>
                 <button
                   onClick={() => handleClick(n)}
