@@ -30,11 +30,11 @@ function PostsProvider({ children }) {
     setIsFetching(true);
     try {
       const { data: postes } = await apiService.get(
-        `api/posts?page=${pageNumber}`,
+        `/api/posts?page=${pageNumber}`,
         {},
       );
       setPage((prevPage) => prevPage + 1);
-      if (postes.meta.last_page <= page) setHasNextPage(false);
+      if (postes.meta.last_page <= pageNumber) setHasNextPage(false);
       else setPosts((prevPosts) => [...prevPosts, ...postes.data]);
     } catch (error) {
       const responseData = error.response;
@@ -52,7 +52,7 @@ function PostsProvider({ children }) {
   const addPost = async (post) => {
     try {
       setIsPosting(true);
-      const { data } = await apiService.post("api/posts", post);
+      const { data } = await apiService.post("/api/posts", post);
       if (data.parent_id) {
         setComments((prevPosts) => [data, ...prevPosts]);
       } else {
@@ -70,7 +70,7 @@ function PostsProvider({ children }) {
   const deletePost = async (post_id) => {
     setIsDeleting(true);
     try {
-      await apiService.delete(`api/posts/${post_id}`);
+      await apiService.delete(`/api/posts/${post_id}`);
 
       setPosts((prevPosts) =>
         prevPosts.filter((post) => post.post_id !== post_id),
@@ -89,7 +89,7 @@ function PostsProvider({ children }) {
     const abort = new AbortController();
     try {
       const { data } = await apiService.post(
-        `api/post/${post_id}/update`,
+        `/api/post/${post_id}/update`,
         post,
         {
           signal: abort.signal,
@@ -116,7 +116,7 @@ function PostsProvider({ children }) {
     try {
       setIsFetchingComments(true);
       const res = await apiService.get(
-        `api/posts/${post_id}/comments?page=${pageComment}`,
+        `/api/posts/${post_id}/comments?page=${pageComment}`,
       );
       if (res.status === 200) {
         const data = res.data;
@@ -150,7 +150,7 @@ function PostsProvider({ children }) {
 
   const likingHandler = async (post_id) => {
     try {
-      await apiService.post(`api/posts/${post_id}/changeLikeStatus`);
+      await apiService.post(`/api/posts/${post_id}/changeLikeStatus`);
     } catch (error) {
       const responseData = error.response;
       console.error("Error adding post", responseData);
