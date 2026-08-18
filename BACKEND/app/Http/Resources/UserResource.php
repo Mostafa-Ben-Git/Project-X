@@ -8,17 +8,16 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
 {
+  public static $wrap = null;
+
   /**
    * Transform the resource into an array.
    *
    * @return array<string, mixed>
-   *
    */
-  public static $wrap = null;
   public function toArray(Request $request): array
   {
-
-    $dateOfBirth = Carbon::parse($this->date_de_naissance);
+    $dateOfBirth = $this->date_de_naissance ? Carbon::parse($this->date_de_naissance) : null;
 
     return [
       'id' => $this->id,
@@ -27,20 +26,25 @@ class UserResource extends JsonResource
       'last_name' => $this->last_name,
       'email' => $this->email,
       'avatar' => $this->avatar,
+      'cover_image' => $this->cover_image,
       'bio' => $this->bio,
-      'followers_count' => $this->followers->count(),
-      'following_count' => $this->followings->count(),
-      'is_following' => auth()->check() ? $this->isFollowing(auth()->user()) : false,
-      'posts_count' => $this->posts->count(),
-      "age" => $dateOfBirth->diffInYears(now()),
-      'date_de_naissance' => $this->date_de_naissance,
+      'statut' => $this->statut,
+      'genre' => $this->genre,
+      'adresse' => $this->adresse,
+      'ville_origine' => $this->ville_origine,
       'ville_habituelle' => $this->ville_habituelle,
+      'situation_amoureuse' => $this->situation_amoureuse,
+      'interets' => $this->interets,
+      'followers_count' => $this->whenLoaded('followers', fn() => $this->followers->count(), 0),
+      'following_count' => $this->whenLoaded('followings', fn() => $this->followings->count(), 0),
+      'is_following' => auth()->check() ? $this->isFollowing(auth()->user()) : false,
+      'posts_count' => $this->whenLoaded('posts', fn() => $this->posts->count(), 0),
+      'age' => $dateOfBirth ? $dateOfBirth->diffInYears(now()) : null,
+      'date_de_naissance' => $this->date_de_naissance,
       'liens_sociaux' => $this->liens_sociaux,
       'education' => $this->education,
-      // 'followers' => UserResource::collection($this->followers),
-      // 'following' => UserResource::collection($this->following),
-      'created_at' => $this->created_at->toIso8601String(),
-      'updated_at' => $this->updated_at->toIso8601String(),
+      'created_at' => $this->created_at?->toIso8601String(),
+      'updated_at' => $this->updated_at?->toIso8601String(),
     ];
   }
 }

@@ -7,10 +7,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class PostResource extends JsonResource
 {
-
-
-
   public static $wrap = null;
+
   /**
    * Transform the resource into an array.
    *
@@ -18,45 +16,42 @@ class PostResource extends JsonResource
    */
   public function toArray(Request $request): array
   {
+    $user = $this->whenLoaded('user');
+
     return [
       'post_id' => $this->id,
       'parent_id' => $this->parent_id,
       'content' => $this->content,
-      $this->mergeWhen($this->images->count() > 0, [
-        'images' => $this->images->map(function ($image) {
+      'user_id' => $this->user_id,
+      'images' => $this->whenLoaded('images', function () {
+        return $this->images->map(function ($image) {
           return $image->image_path;
-        })
-      ]),
+        });
+      }, []),
       'dates' => [
-        "created_at" => $this->created_at,
-        "date" => $this->created_at->format('M d, Y'),
-        "time" => $this->created_at->format('H:i'),
-        "ago" => $this->created_at->diffForHumans(),
-
+        'created_at' => $this->created_at,
+        'date' => $this->created_at?->format('M d, Y'),
+        'time' => $this->created_at?->format('H:i'),
+        'ago' => $this->created_at?->diffForHumans(),
       ],
-      "info" => [
-        "is_liked" => $this->isLiked(),
-        'likes' => $this->likes->count(),
-        "comments_count" => $this->comments->count(),
-
+      'info' => [
+        'is_liked' => $this->isLiked(),
+        'likes' => $this->whenLoaded('likes', fn() => $this->likes->count(), 0),
+        'comments_count' => $this->whenLoaded('comments', fn() => $this->comments->count(), 0),
       ],
-      'user' => [
-        'id' => $this->user->id,
-        'first_name' => $this->user->first_name,
-        'last_name' => $this->user->last_name,
-        'username' => $this->user->username,
-        'email' => $this->user->email,
-        'avatar' => $this->user->avatar,
-        'bio' => $this->user->bio,
-        "joined_at" => $this->user->created_at->diffForHumans(),
-        'followers_count' => $this->user->followers->count(),
-        'following_count' => $this->user->followings->count(),
-        'posts_count' => $this->user->posts->count(),
-      ],
-      // $this->mergeWhen($this->comments->isNotEmpty() && $request->comments === 'true', [
-      //   'comments' => CommentResource::collection($this->comments)
-      // ])
-
+      'user' => $user ? [
+        'id' => $user->id,
+        'first_name' => $user->first_name,
+        'last_name' => $user->last_name,
+        'username' => $user->username,
+        'email' => $user->email,
+        'avatar' => $user->avatar,
+        'bio' => $user->bio,
+        'joined_at' => $user->created_at?->diffForHumans(),
+        'followers_count' => $user->followers_count ?? $user->followers->count(),
+        'following_count' => $user->followings_count ?? $user->followings->count(),
+        'posts_count' => $user->posts_count ?? $user->posts->count(),
+      ] : null,
     ];
   }
 }

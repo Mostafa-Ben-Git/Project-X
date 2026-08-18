@@ -14,21 +14,22 @@ class CommentResource extends JsonResource
    */
   public function toArray(Request $request): array
   {
+    $user = $this->whenLoaded('user');
+
     return [
       'commentId' => $this->id,
       'description' => $this->comment,
-      'longAgo' => $this->created_at->diffForHumans(),
-      'user' => [
-        'id' => $this->user->id,
-        'first_name' => $this->user->first_name,
-        'last_name' => $this->user->last_name,
-        'username' => $this->user->username,
-        'email' => $this->user->email,
-        'avatar' => $this->user->avatar,
-        'bio' => $this->user->bio,
-        'friends_count' => $this->user->friends->count(),
-        'posts_count' => $this->user->posts->count(),
-      ],
+      'longAgo' => $this->created_at?->diffForHumans(),
+      'user' => $user ? [
+        'id' => $user->id,
+        'first_name' => $user->first_name,
+        'last_name' => $user->last_name,
+        'username' => $user->username,
+        'email' => $user->email,
+        'avatar' => $user->avatar,
+        'bio' => $user->bio,
+        'posts_count' => $user->whenLoaded('posts', fn() => $user->posts->count(), 0),
+      ] : null,
     ];
   }
 }
