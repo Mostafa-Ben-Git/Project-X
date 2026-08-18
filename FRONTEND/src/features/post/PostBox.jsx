@@ -9,12 +9,14 @@ import { Textarea } from "@/components/ui/textarea";
 import useAuth from "@/hooks/useAuth";
 import usePosts from "@/hooks/usePosts";
 import { cn } from "@/lib/utils";
-import EmojiPicker from "emoji-picker-react";
 import { Image, PinIcon, SmilePlus } from "lucide-react";
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { MoonLoader } from "react-spinners";
 import { ImagePreview } from "../../components/ImagePreview";
+
+// Lazy-load the heavy emoji picker only when the dropdown opens
+const EmojiPicker = lazy(() => import("emoji-picker-react"));
 
 function PostBox({ className, parent_id, isReplay = false }) {
   const { addPost, isFetching, isPosting } = usePosts();
@@ -162,19 +164,21 @@ function PostBox({ className, parent_id, isReplay = false }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <EmojiPicker
-                theme="dark"
-                emojiStyle="native"
-                onEmojiClick={handleEmojiClick}
-                rows={4}
-                perRow={8}
-                emojiSize={32}
-                pickerStyle={{
-                  position: "absolute",
-                  bottom: "20px",
-                  right: "20px",
-                }}
-              />
+              <Suspense fallback={<div className="w-64 p-2 text-sm">Loading…</div>}>
+                <EmojiPicker
+                  theme="dark"
+                  emojiStyle="native"
+                  onEmojiClick={handleEmojiClick}
+                  rows={4}
+                  perRow={8}
+                  emojiSize={32}
+                  pickerStyle={{
+                    position: "absolute",
+                    bottom: "20px",
+                    right: "20px",
+                  }}
+                />
+              </Suspense>
             </DropdownMenuContent>
           </DropdownMenu>
           <button
