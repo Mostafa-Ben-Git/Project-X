@@ -9,41 +9,27 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-  /**
-   * Display a listing of the resource.
-   */
   public function index()
   {
     return UserResource::collection(User::all());
   }
 
-  /**
-   * Store a newly created resource in storage.
-   */
   public function store(Request $request)
   {
     $user = User::create($request->all());
     return response()->json($user, 201);
   }
 
-  /**
-   * Display the specified resource.
-   */
   public function show(User $user)
   {
     return new UserResource($user);
   }
 
-  /**
-   * Update the specified resource in storage.
-   */
   public function update(Request $request, User $user)
   {
-    $user->update($request->all());
-
+    $user->update($request->except(['avatar', 'cover_image']));
 
     if ($request->hasFile('avatar')) {
-      dd('here');
       if ($user->avatar) {
         $oldAvatarPath = public_path('images/profiles/' . basename($user->avatar));
         if (file_exists($oldAvatarPath)) {
@@ -51,15 +37,14 @@ class UserController extends Controller
         }
       }
 
-
       $image = $request->file('avatar');
       $imageName = $user->username . '_' . time() . '_' . str_replace(' ', '_', $image->getClientOriginalName());
       $image->move(public_path('images/profiles'), $imageName);
       $user->avatar = asset('images/profiles/' . $imageName);
       $user->save();
     }
-    if ($request->hasFile('cover_image')) {
 
+    if ($request->hasFile('cover_image')) {
       if ($user->cover_image) {
         $oldCoverImagePath = public_path('images/profiles/' . basename($user->cover_image));
         if (file_exists($oldCoverImagePath)) {
@@ -67,31 +52,25 @@ class UserController extends Controller
         }
       }
 
-
       $image = $request->file('cover_image');
       $imageName = $user->username . '_' . time() . '_' . str_replace(' ', '_', $image->getClientOriginalName());
       $image->move(public_path('images/profiles'), $imageName);
       $user->cover_image = asset('images/profiles/' . $imageName);
       $user->save();
     }
-    return new UserResource($user);
-    dd($user);
+
+    return new UserResource($user->fresh());
   }
 
-  /**
-   * Remove the specified resource from storage.
-   */
   public function destroy(User $user)
   {
     $user->delete();
-
     return response()->json(null, 204);
   }
+
   public function search(Request $request)
   {
     $query = $request->input('q');
-
-    // dd($query);
 
     $users = User::where('username', 'like', '%' . $query . '%')
       ->orwhere('first_name', 'like', '%' . $query . '%')
@@ -99,5 +78,23 @@ class UserController extends Controller
       ->limit(5)->get();
 
     return UserResource::collection($users);
+  }
+
+  /**
+   * Get followers of a user.
+   */
+  public function followers(User $user)
+  {
+    $followers = $user->followers()->withCount('followers')->get();
+    return UserResource::collection($followers);
+  }
+
+  /**
+   * Get users that a user is following.
+   */
+  public function following(User $user)
+  {
+    $following = $user->followings()->withCount('followers')->get();
+    return UserResource::collection($following);
   }
 }

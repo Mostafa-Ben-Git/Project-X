@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -13,38 +12,36 @@ class User extends Authenticatable
 {
   use HasApiTokens, HasFactory, Notifiable;
 
-  /**
-   * The attributes that are mass assignable.
-   *
-   * @var array<int, string>
-   */
   protected $fillable = [
     'first_name',
     'last_name',
     'avatar',
+    'cover_image',
     'username',
     'email',
     'password',
+    'bio',
+    'date_de_naissance',
+    'statut',
+    'genre',
+    'adresse',
+    'ville_origine',
+    'ville_habituelle',
+    'situation_amoureuse',
+    'interets',
+    'education',
+    'liens_sociaux',
   ];
 
-  /**
-   * The attributes that should be hidden for serialization.
-   *
-   * @var array<int, string>
-   */
   protected $hidden = [
     'password',
     'remember_token',
   ];
 
-  /**
-   * The attributes that should be cast.
-   *
-   * @var array<string, string>
-   */
   protected $casts = [
     'email_verified_at' => 'datetime',
     'password' => 'hashed',
+    'liens_sociaux' => 'array',
   ];
 
   public function followers()
@@ -63,6 +60,22 @@ class User extends Authenticatable
   {
     return $this->hasMany(Post::class);
   }
+
+  public function notifications(): HasMany
+  {
+    return $this->hasMany(Notification::class);
+  }
+
+  public function sentMessages(): HasMany
+  {
+    return $this->hasMany(Message::class, 'sender_id');
+  }
+
+  public function receivedMessages(): HasMany
+  {
+    return $this->hasMany(Message::class, 'receiver_id');
+  }
+
   public function isFollowing(User $user): bool
   {
     return $this->followers()->where('users.id', $user->id)->exists();
@@ -70,7 +83,6 @@ class User extends Authenticatable
 
   public function suggestions()
   {
-    // Get the IDs of the users the current user is following
     $followingIds = $this->followings()->pluck('users.id');
 
     $suggestedUsers = User::whereNotIn('users.id', $followingIds)

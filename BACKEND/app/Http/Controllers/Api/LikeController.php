@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
 use App\Models\Post;
 use Illuminate\Http\Request;
 
@@ -12,9 +13,9 @@ class LikeController extends Controller
   {
     $this->middleware('auth:sanctum');
   }
+
   public function changeLikeStatus(Request $request, Post $post)
   {
-
     $like = $post->likes()->where('user_id', $request->user()->id)->first();
     if ($like) {
       $like->delete();
@@ -23,6 +24,18 @@ class LikeController extends Controller
       $post->likes()->create([
         'user_id' => $request->user()->id
       ]);
+
+      // Create notification (don't notify yourself)
+      if ($post->user_id !== $request->user()->id) {
+        Notification::create([
+          'user_id' => $post->user_id,
+          'from_user_id' => $request->user()->id,
+          'type' => 'like',
+          'content' => $request->user()->first_name . ' ' . $request->user()->last_name . ' liked your post',
+          'post_id' => $post->id,
+        ]);
+      }
+
       return response()->json(['post' => 'liked'], 200);
     }
   }

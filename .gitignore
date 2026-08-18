@@ -1,0 +1,23 @@
+# Dependencies
+/node_modules
+/vendor
+
+# Environment
+.env
+.env.backup
+
+# Build artifacts
+/public/build
+/dist
+/out
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# E2E test artifacts
+e2e-screenshots/
