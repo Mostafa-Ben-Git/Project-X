@@ -138,7 +138,7 @@ function Post({
         </span>
         <div className=" ml-4 space-x-4">
           <UserHoverCart user={user} />
-          <span className="text-sm text-gray-400">{dates.ago}</span>
+          <span className="text-sm text-muted-foreground">{dates.ago}</span>
         </div>
       </div>
       <p

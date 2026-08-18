@@ -22,7 +22,7 @@ function Comment({
         </span>
         <div className="ml-4">
           <UserHoverCart {...user} />
-          <span className="text-sm text-gray-400">{longAgo}</span>
+          <span className="text-sm text-muted-foreground">{longAgo}</span>
         </div>
       </div>
       <p

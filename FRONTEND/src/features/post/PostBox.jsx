@@ -131,34 +131,39 @@ function PostBox({ className, parent_id, isReplay = false }) {
         </div>
       )}
 
-      <div className="flex flex-row-reverse items-center justify-between border-t px-3 py-2">
-        <button
+      <div className="flex flex-row-reverse items-center justify-between gap-2 border-t px-3 py-2">
+        <Button
           type="submit"
+          size="sm"
           disabled={isEmpty || isPosting}
-          className="inline-flex items-center rounded-lg bg-blue-700 px-4 py-2.5 text-center text-xs font-medium  hover:bg-blue-800 focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-50 dark:focus:ring-blue-900"
+          className="text-xs font-medium"
         >
           {isPosting ? (
-            <MoonLoader color="white" size={20} />
+            <MoonLoader color="hsl(var(--primary-foreground))" size={20} />
           ) : isReplay ? (
             "Reply"
           ) : (
             "Post"
           )}
-        </button>
+        </Button>
         <div className="flex space-x-1 ps-0 sm:ps-2 rtl:space-x-reverse">
-          <button
+          <Button
             type="button"
-            className="inline-flex cursor-pointer items-center justify-center rounded p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white"
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 text-muted-foreground"
           >
             <PinIcon />
             <span className="sr-only">Attach file</span>
-          </button>
+          </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 type="button"
-                className="bg-transparent p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white"
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-muted-foreground"
               >
                 <SmilePlus />
               </Button>
@@ -181,10 +186,12 @@ function PostBox({ className, parent_id, isReplay = false }) {
               </Suspense>
             </DropdownMenuContent>
           </DropdownMenu>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 text-muted-foreground"
             onClick={handleUpload}
-            className="inline-flex cursor-pointer items-center justify-center rounded p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-white"
           >
             <Image />
             <input
@@ -195,7 +202,7 @@ function PostBox({ className, parent_id, isReplay = false }) {
               style={{ display: "none" }}
             />
             <span className="sr-only">Upload image</span>
-          </button>
+          </Button>
         </div>
       </div>
     </form>

@@ -1,36 +1,42 @@
 import { UserHoverCart } from "@/components/UserHoverCart";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useFollow } from "@/hooks/useFollow";
 import { useState } from "react";
 import LoaderCircle from "./LoaderCircle";
 
 function UserMiniProfile({ user }) {
   const { loading, handleFollow } = useFollow();
-  const [User, setUser] = useState(user);
+  const [isFollowing, setIsFollowing] = useState(user.is_following);
 
   return (
-    <li
-      key={user.id}
-      className="flex w-full items-center justify-around gap-1 rounded-xl border p-2 shadow-lg"
-    >
-      <img
-        className="block h-12 rounded-full sm:mx-0 sm:shrink-0"
-        src={user.avatar}
-      />
-
-      <div className="flex flex-col gap-1">
-        <UserHoverCart user={user} className={"text-sm font-bold"} />
-        <p className="text-muted-foreground">{user.username}</p>
+    <li className="flex w-full items-center justify-between gap-3 rounded-xl border border-border p-2">
+      <div className="flex min-w-0 items-center gap-3">
+        <Avatar className="h-12 w-12 shrink-0">
+          <AvatarImage src={user.avatar} alt={`${user.first_name} ${user.last_name}`} />
+          <AvatarFallback>
+            {user.first_name?.[0]}
+            {user.last_name?.[0]}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex min-w-0 flex-col">
+          <UserHoverCart user={user} className="text-sm font-bold" />
+          <p className="truncate text-xs text-muted-foreground">@{user.username}</p>
+        </div>
       </div>
-
       <button
-        className="rounded-full border border-purple-200 px-4 py-1 text-sm font-semibold hover:border-transparent hover:bg-purple-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+        className="shrink-0 rounded-full border border-border px-3 py-1 text-xs font-semibold text-foreground transition-colors hover:border-transparent hover:bg-primary hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         onClick={() => {
           handleFollow(user.id);
-          setUser({ ...User, is_following: !User.is_following });
+          setIsFollowing((prev) => !prev);
         }}
       >
-        {loading && <LoaderCircle size={15} />}
-        {!loading ? (User.is_following ? "Unfollow" : "Follow") : null}
+        {loading ? (
+          <LoaderCircle size={14} />
+        ) : isFollowing ? (
+          "Unfollow"
+        ) : (
+          "Follow"
+        )}
       </button>
     </li>
   );

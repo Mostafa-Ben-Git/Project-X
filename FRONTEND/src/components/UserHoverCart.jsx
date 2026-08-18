@@ -45,7 +45,7 @@ export function UserHoverCart({ user, className }) {
           </div>
           {currentUser?.username !== user.username && (
             <button
-              className="rounded-full border border-purple-200 px-4 py-1 text-sm font-semibold hover:border-transparent hover:bg-purple-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
+              className="rounded-full border border-border px-4 py-1 text-sm font-semibold text-foreground transition-colors hover:border-transparent hover:bg-primary hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               onClick={() => {
                 handleFollow(user.id);
                 setIsFollowing(!isFollowing);
