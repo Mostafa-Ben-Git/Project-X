@@ -44,3 +44,8 @@ export async function getUserById(userId) {
   const { data } = await apiService.get(`/api/users/${userId}`);
   return data.data;
 }
+
+export async function changePassword(payload) {
+  const { data } = await apiService.post("/api/users/change-password", payload);
+  return data;
+}

@@ -69,7 +69,7 @@ function Post({
   };
   return (
     <li
-      className={cn("relative w-full list-none p-4", className)}
+      className={cn("relative w-full list-none overflow-hidden p-4", className)}
       ref={innerRef}
     >
       {currentUser.username === user.username && (
@@ -142,7 +142,7 @@ function Post({
         </div>
       </div>
       <p
-        className="mt-6 p-1 text-lg hover:bg-slate-100 hover:bg-opacity-10"
+        className="mt-6 p-1 text-lg break-words overflow-hidden hover:bg-slate-100 hover:bg-opacity-10"
         dangerouslySetInnerHTML={{ __html: content }}
         {...(clickable && { onClick: handelClick })}
       ></p>
@@ -156,7 +156,7 @@ function Post({
           <p>{dates.date}</p>
         </div>
       )}
-      <PostInfo {...info} post_id={post_id} replay={type === "replay"} />
+      <PostInfo {...info} post_id={post_id} postData={postData} replay={type === "replay"} />
     </li>
   );
 }
