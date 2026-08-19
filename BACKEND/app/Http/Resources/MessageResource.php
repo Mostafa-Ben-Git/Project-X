@@ -19,6 +19,7 @@ class MessageResource extends JsonResource
       'read_at' => $this->read_at,
       'created_at' => $this->created_at,
       'ago' => $this->created_at->diffForHumans(),
+      'unread_count' => (int) ($this->unread_count ?? 0),
       'sender' => [
         'id' => $this->sender?->id,
         'first_name' => $this->sender?->first_name,

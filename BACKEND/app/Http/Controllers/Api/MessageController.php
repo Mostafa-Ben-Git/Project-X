@@ -31,8 +31,16 @@ class MessageController extends Controller
           ? $message->receiver_id
           : $message->sender_id;
       })
-      ->map(function ($messages) {
-        return $messages->first();
+      ->map(function ($messages) use ($userId) {
+        $last = $messages->first();
+        // Count unread messages from this partner
+        $partnerId = $last->sender_id === $userId ? $last->receiver_id : $last->sender_id;
+        $unread = Message::where('sender_id', $partnerId)
+          ->where('receiver_id', $userId)
+          ->whereNull('read_at')
+          ->count();
+        $last->unread_count = $unread;
+        return $last;
       })
       ->values();
 

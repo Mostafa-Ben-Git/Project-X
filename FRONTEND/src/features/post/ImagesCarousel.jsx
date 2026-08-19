@@ -1,4 +1,3 @@
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,
   CarouselContent,
@@ -9,33 +8,40 @@ import {
 
 export function ImagesCarousel({ images }) {
   if (!images) return;
-  return (
-    <div className="my-6">
-      {images.length <= 1 ? (
-        <Image image={images[0]} />
-      ) : (
-        <Carousel className="w-full">
-          <CarouselContent>
-            {images?.map((image, index) => (
-              <CarouselItem key={index}>
-                <Image image={image} />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-2 scale-125" />
-          <CarouselNext className="right-2 scale-125" />
-        </Carousel>
-      )}
-    </div>
-  );
-}
 
-function Image({ image }) {
+  // Single image: fill container, no carousel controls
+  if (images.length === 1) {
+    return (
+      <div className="my-2 -mx-4 md:-mx-6 overflow-hidden">
+        <img
+          src={images[0]}
+          alt=""
+          className="w-full max-h-[520px] object-cover"
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  // Multiple images: swipeable carousel, no gaps, no card wrapper
   return (
-    <Card className="rounded-sm">
-      <CardContent className={`flex aspect-square items-center justify-center`}>
-        <img src={image} alt="" className="w-full rounded-sm" loading="lazy" />
-      </CardContent>
-    </Card>
+    <Carousel className="w-full">
+      <CarouselContent className="ml-0 pl-0">
+        {images.map((image, index) => (
+          <CarouselItem key={index} className="pl-0">
+            <div className="w-full overflow-hidden">
+              <img
+                src={image}
+                alt=""
+                className="w-full max-h-[520px] object-cover"
+                loading="lazy"
+              />
+            </div>
+          </CarouselItem>
+        ))}
+      </CarouselContent>
+      <CarouselPrevious className="left-2 scale-125" />
+      <CarouselNext className="right-2 scale-125" />
+    </Carousel>
   );
 }

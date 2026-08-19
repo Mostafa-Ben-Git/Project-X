@@ -158,15 +158,18 @@ function MessagesPage() {
           <p className="text-sm">Visit a user&apos;s profile to start chatting</p>
         </div>
       ) : (
-        <ul className="space-y-1">
+        <ul className="space-y-px">
           {conversations?.map((conv) => {
             const partner = getChatPartner(conv);
             if (!partner) return null;
+            const hasUnread = conv.unread_count > 0;
             return (
               <li key={conv.id}>
                 <button
                   onClick={() => navigate(`/messages/${partner.id}`)}
-                  className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted"
+                  className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted ${
+                    hasUnread ? "bg-accent/50" : ""
+                  }`}
                 >
                   <Avatar className="h-12 w-12 shrink-0">
                     <AvatarImage src={partner?.avatar} />
@@ -177,17 +180,22 @@ function MessagesPage() {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="font-semibold">
+                      <p className={hasUnread ? "font-bold" : "font-semibold"}>
                         {partner?.first_name} {partner?.last_name}
                       </p>
-                      <span className="text-xs text-muted-foreground">
+                      <span className={`text-xs ${hasUnread ? "font-medium text-foreground" : "text-muted-foreground"}`}>
                         {conv.ago}
                       </span>
                     </div>
-                    <p className="truncate text-sm text-muted-foreground">
+                    <p className={`truncate text-sm ${hasUnread ? "font-medium text-foreground" : "text-muted-foreground"}`}>
                       {conv.content}
                     </p>
                   </div>
+                  {hasUnread && (
+                    <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                      {conv.unread_count > 99 ? "99+" : conv.unread_count}
+                    </span>
+                  )}
                 </button>
                 <Separator />
               </li>
