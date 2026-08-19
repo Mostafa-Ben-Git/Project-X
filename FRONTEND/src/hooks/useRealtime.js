@@ -1,10 +1,19 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { connectEcho, disconnectEcho } from "@/lib/echo";
+import { useNavigate } from "react-router-dom";
+import { connectEcho } from "@/lib/echo";
 import { toast } from "sonner";
+
+const TYPE_LABELS = {
+  follow: "started following you",
+  like: "liked your post",
+  comment: "commented on your post",
+  message: "sent you a message",
+};
 
 export function useRealtime(userId) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
@@ -20,21 +29,38 @@ export function useRealtime(userId) {
       channel.listen(".notification.created", (payload) => {
         qc.invalidateQueries({ queryKey: ["notifications"] });
         qc.invalidateQueries({ queryKey: ["notifications", "unread"] });
-        if (payload?.from_user?.username) {
-          toast(`${payload.from_user.first_name} ${payload.from_user.last_name} — ${payload.content}`);
-        }
+        const from = payload?.from_user;
+        if (!from?.first_name) return;
+        // Messages are surfaced by the .message.sent handler; skip here to avoid duplicates.
+        if (payload.type === "message") return;
+        const label = TYPE_LABELS[payload.type] || "notified you";
+        toast(`${from.first_name} ${from.last_name} ${label}`, {
+          action: {
+            label: "View",
+            onClick: () => navigate("/home"),
+          },
+        });
       });
 
       channel.listen(".message.sent", (payload) => {
-        // Refresh conversations list, unread badge, and the open chat room.
         qc.invalidateQueries({ queryKey: ["conversations"] });
         qc.invalidateQueries({ queryKey: ["messages"] });
         qc.invalidateQueries({ queryKey: ["messages", "unread"] });
-        // If this is an incoming message (from someone else), notify.
         if (payload && payload.sender_id !== userId) {
           qc.invalidateQueries({ queryKey: ["user", payload.sender_id] });
+          const from = payload?.sender;
+          // Mark incoming message delivered/unread via stale invalidation
+          const name = from
+            ? `${from.first_name} ${from.last_name}`
+            : "Someone";
+          toast("New message", {
+            description: `${name}: ${payload.content}`,
+            action: {
+              label: "Open chat",
+              onClick: () => navigate(`/messages/${payload.sender_id}`),
+            },
+          });
         } else if (payload && payload.sender_id === userId) {
-          // Own echo — just make sure the sent message appears; refetch the target chat.
           qc.invalidateQueries({ queryKey: ["messages", payload.receiver_id] });
         }
       });
@@ -52,7 +78,7 @@ export function useRealtime(userId) {
         /* noop */
       }
     };
-  }, [userId, qc]);
+  }, [userId, qc, navigate]);
 
   return { connected };
 }

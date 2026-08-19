@@ -164,10 +164,20 @@ async def main():
 
         # ── 7. Settings page ──
         print("\n[7] Edit profile page")
-        await page.goto(f"{BASE}/settings/profile", wait_until="load")
-        await page.wait_for_timeout(2500)
+        settings_ok = False
+        for attempt in range(4):
+            await page.goto(f"{BASE}/settings/profile", wait_until="load")
+            try:
+                await page.wait_for_selector("h1", timeout=5000)
+                # wait for the edit form to hydrate (user must load first)
+                await page.get_by_text("Edit profile", exact=True).first.wait_for(timeout=15000)
+                settings_ok = True
+                break
+            except Exception:
+                await page.wait_for_timeout(1000)
+        await page.wait_for_timeout(800)
         body = await page.evaluate("() => document.body.innerText")
-        report("Settings page renders", "Edit profile" in body)
+        report("Settings page renders", settings_ok and "Edit profile" in body)
         report("Form fields present", await page.locator("input, textarea, select").count() >= 5)
         await page.screenshot(path=f"{SHOT_DIR}/settings_profile.png")
 

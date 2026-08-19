@@ -37,7 +37,11 @@ function NotificationsPage() {
 
   const handleClick = (n) => {
     if (!n.read_at) markRead(n.id);
-    if (n.post_id) navigate("/home");
+    if (n.type === "message") {
+      navigate(`/messages/${n.from_user?.id}`);
+    } else if (n.post_id) {
+      navigate("/home");
+    }
   };
 
   return (
