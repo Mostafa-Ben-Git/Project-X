@@ -33,17 +33,7 @@ apiService.interceptors.response.use(
       window.location.href = "/login";
     }
 
-    // 429: back off and retry once
-    if (status === 429) {
-      const retryAfter = error.response?.headers?.["retry-after"] || 2;
-      const delay = Math.min(Number(retryAfter) * 1000, 5000);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-      const config = { ...error.config, _retried: true };
-      if (!config._retried) {
-        return apiService.request(config);
-      }
-    }
-
+    // 429: don't retry — let the query fail gracefully, avoid cascading loops
     throw error;
   }
 );

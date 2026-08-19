@@ -36,12 +36,15 @@ export default function useAuth() {
       dispatch(setUser(data.data || data));
       localStorage.setItem(SESSION_NAME, "true");
     } catch (e) {
-      if (e.response && e.response.status === 401) {
+      const status = e.response?.status;
+      // Only clear session on401 —429 is just rate limiting, don't logout
+      if (status === 401) {
         localStorage.removeItem(SESSION_NAME);
         localStorage.removeItem("token");
         dispatch(setUser(null));
         navigate("/login");
       }
+      //429 or other errors: leave user as-is, don't logout
     } finally {
       dispatch(setIsLoading(false));
       getUserRunning.current = false;
