@@ -3,12 +3,14 @@ import RightBar from "@/features/sidebar/RightBar";
 import { Sidebar } from "@/features/sidebar/sidebar";
 import useAuth from "@/hooks/useAuth";
 import usePosts from "@/hooks/usePosts";
+import { useRealtime } from "@/hooks/useRealtime";
 import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
 function UserLayout() {
   const { getUser, user, isLoggedIn } = useAuth();
   const { fetchPosts } = usePosts();
+  useRealtime(user?.id);
 
   useEffect(() => {
     if (!user && isLoggedIn) {

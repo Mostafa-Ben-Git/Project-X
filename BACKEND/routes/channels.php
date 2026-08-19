@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Broadcast;
 |
 */
 
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
+Broadcast::channel('user.{id}', function ($user, $id) {
+    // Only the owner of the account can join their private channel.
     return (int) $user->id === (int) $id;
 });

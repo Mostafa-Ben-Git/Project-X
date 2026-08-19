@@ -9,6 +9,14 @@ class Notification extends Model
 {
   use HasFactory;
 
+  protected static function booted(): void
+  {
+    // Broadcast every newly-created notification in realtime.
+    static::created(function (Notification $notification) {
+      \App\Support\Broadcast::safe(new \App\Events\NotificationCreated($notification));
+    });
+  }
+
   protected $fillable = [
     'user_id',
     'from_user_id',

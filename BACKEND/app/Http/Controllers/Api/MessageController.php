@@ -87,7 +87,10 @@ class MessageController extends Controller
       'content' => $request->content,
     ]);
 
-    // Create notification for the receiver
+    // Broadcast the new message in realtime to both participants.
+    \App\Support\Broadcast::safe(new \App\Events\MessageSent($message));
+
+    // Create notification for the receiver (model triggers realtime broadcast)
     Notification::create([
       'user_id' => $user->id,
       'from_user_id' => $sender->id,
