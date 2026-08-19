@@ -8,11 +8,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import useAuth from "@/hooks/useAuth";
 import usePosts from "@/hooks/usePosts";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { Image, PinIcon, SmilePlus } from "lucide-react";
+import { Image, Loader2, PinIcon, SmilePlus } from "lucide-react";
 import { lazy, Suspense, useRef, useState } from "react";
-import toast from "react-hot-toast";
-import { MoonLoader } from "react-spinners";
+import { toast } from "sonner";
 import { ImagePreview } from "../../components/ImagePreview";
 
 // Lazy-load the heavy emoji picker only when the dropdown opens
@@ -20,6 +20,7 @@ const EmojiPicker = lazy(() => import("emoji-picker-react"));
 
 function PostBox({ className, parent_id, isReplay = false }) {
   const { addPost, isFetching, isPosting } = usePosts();
+  const qc = useQueryClient();
 
   const { user, isLoading } = useAuth();
   const [newPost, setNewPost] = useState({
@@ -85,16 +86,10 @@ function PostBox({ className, parent_id, isReplay = false }) {
         images: [],
       });
 
-      toast(`Your ${isReplay ? "reply" : "post"} has been saved.`, {
-        icon: "✅",
-        position: "bottom-right",
-        style: {
-          background: "hsl(var(--background))",
-          color: "hsl(var(--foreground))",
-          border: "hsl(var(--border))",
-          borderRadius: "hsl(var(--ring))",
-        },
-      });
+      // Refresh TanStack feed so HomePage shows the new post immediately
+      qc.invalidateQueries({ queryKey: ["posts"] });
+
+      toast.success(`Your ${isReplay ? "reply" : "post"} has been saved.`);
       // Reset the for,
     }
   };
@@ -139,7 +134,7 @@ function PostBox({ className, parent_id, isReplay = false }) {
           className="text-xs font-medium"
         >
           {isPosting ? (
-            <MoonLoader color="hsl(var(--primary-foreground))" size={20} />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : isReplay ? (
             "Reply"
           ) : (
