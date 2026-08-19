@@ -8,6 +8,20 @@ import { useMessages } from "@/hooks/useMessages";
 import { ArrowLeft, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
+
+const STATUS_COLORS = {
+  online: "bg-green-500",
+  away: "bg-yellow-500",
+  offline: "bg-gray-400",
+  dnd: "bg-red-500",
+  hidden: "bg-gray-400",
+};
+
+function formatLastActive(lastActiveAt) {
+  if (!lastActiveAt) return "";
+  return formatDistanceToNow(new Date(lastActiveAt), { addSuffix: true });
+}
 
 function MessagesPage() {
   const { userId } = useParams();
@@ -72,18 +86,30 @@ function MessagesPage() {
           <Button variant="ghost" size="icon" onClick={goToList}>
             <ArrowLeft size={20} />
           </Button>
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={partner?.avatar} />
-            <AvatarFallback>
-              {partner?.first_name?.[0]}
-              {partner?.last_name?.[0]}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={partner?.avatar} />
+              <AvatarFallback>
+                {partner?.first_name?.[0]}
+                {partner?.last_name?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            {partner?.status !== "hidden" && (
+              <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${STATUS_COLORS[partner?.status] || STATUS_COLORS.offline}`} />
+            )}
+          </div>
           <div>
             <p className="font-semibold">
               {partner?.first_name} {partner?.last_name}
             </p>
-            <p className="text-xs text-muted-foreground">@{partner?.username}</p>
+            <p className="text-xs text-muted-foreground">
+              {partner?.status === "online" && <span className="text-green-500">Online</span>}
+              {partner?.status === "away" && <span className="text-yellow-500">Away</span>}
+              {partner?.status === "dnd" && <span className="text-red-500">Do not disturb</span>}
+              {(!partner?.status || partner?.status === "offline" || partner?.status === "hidden") && (
+                <span>Last seen {formatLastActive(partner?.last_active_at) || "recently"}</span>
+              )}
+            </p>
           </div>
         </div>
 
@@ -171,13 +197,18 @@ function MessagesPage() {
                     hasUnread ? "bg-accent/50" : ""
                   }`}
                 >
-                  <Avatar className="h-12 w-12 shrink-0">
-                    <AvatarImage src={partner?.avatar} />
-                    <AvatarFallback>
-                      {partner?.first_name?.[0]}
-                      {partner?.last_name?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative shrink-0">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={partner?.avatar} />
+                      <AvatarFallback>
+                        {partner?.first_name?.[0]}
+                        {partner?.last_name?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    {partner?.status !== "hidden" && (
+                      <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${STATUS_COLORS[partner?.status] || STATUS_COLORS.offline}`} />
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <p className={hasUnread ? "font-bold" : "font-semibold"}>

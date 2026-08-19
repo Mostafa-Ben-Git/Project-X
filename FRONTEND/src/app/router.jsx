@@ -15,7 +15,11 @@ const HomePage = lazy(() => import("@/pages/home/HomePage"));
 const MessagesPage = lazy(() => import("@/pages/home/MessagesPage"));
 const NotifPage = lazy(() => import("@/pages/home/NotifPage"));
 const ProfilePage = lazy(() => import("@/pages/home/ProfilePage"));
-const EditProfilePage = lazy(() => import("@/pages/settings/EditProfilePage"));
+const SettingsLayout = lazy(() => import("@/pages/settings/SettingsLayout"));
+const ProfileTab = lazy(() => import("@/pages/settings/tabs/ProfileTab"));
+const PasswordTab = lazy(() => import("@/pages/settings/tabs/PasswordTab"));
+const PrivacyTab = lazy(() => import("@/pages/settings/tabs/PrivacyTab"));
+const AccountTab = lazy(() => import("@/pages/settings/tabs/AccountTab"));
 
 function PageLoader({ children }) {
   return (
@@ -77,12 +81,19 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "settings/profile",
+        path: "settings",
         element: (
           <PageLoader>
-            <EditProfilePage />
+            <SettingsLayout />
           </PageLoader>
         ),
+        children: [
+          { index: true, element: <Navigate to="profile" replace /> },
+          { path: "profile", element: <PageLoader><ProfileTab /></PageLoader> },
+          { path: "password", element: <PageLoader><PasswordTab /></PageLoader> },
+          { path: "privacy", element: <PageLoader><PrivacyTab /></PageLoader> },
+          { path: "account", element: <PageLoader><AccountTab /></PageLoader> },
+        ],
       },
       {
         path: "messages",

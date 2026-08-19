@@ -58,8 +58,9 @@ class TokenAuthController extends Controller
      */
     public function me(Request $request): UserResource
     {
-        $user = $request->user()
-            ->loadCount(['followers', 'followings', 'posts']);
+        $user = $request->user();
+        $user->update(['last_active_at' => now()]);
+        $user->loadCount(['followers', 'followings', 'posts']);
         return new UserResource($user);
     }
 }

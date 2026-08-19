@@ -37,6 +37,7 @@ class User extends Authenticatable
     'is_private',
     'language',
     'status',
+    'last_active_at',
   ];
 
   protected $hidden = [

@@ -49,6 +49,7 @@ class UserResource extends JsonResource
       'is_private' => (bool) $this->is_private,
       'language' => $this->language,
       'status' => $this->status,
+      'last_active_at' => $this->last_active_at?->toIso8601String(),
       'created_at' => $this->created_at?->toIso8601String(),
       'updated_at' => $this->updated_at?->toIso8601String(),
     ];
