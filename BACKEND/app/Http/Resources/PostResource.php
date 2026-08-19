@@ -10,6 +10,25 @@ class PostResource extends JsonResource
   public static $wrap = null;
 
   /**
+   * Eager-load everything the resource serializes as aggregate counts
+   * (avoids N+1 queries: one query per relation instead of per row).
+   */
+  public static function prepare($query)
+  {
+    $userId = auth()->id();
+
+    return $query
+      ->with([
+        'user' => fn($q) => $q->withCount(['followers', 'followings', 'posts']),
+      ])
+      ->withCount([
+        'likes',
+        'comments',
+        'likes as liked_by_current_user' => fn($q) => $q->where('user_id', $userId),
+      ]);
+  }
+
+  /**
    * Transform the resource into an array.
    *
    * @return array<string, mixed>
@@ -35,9 +54,9 @@ class PostResource extends JsonResource
         'ago' => $this->created_at?->diffForHumans(),
       ],
       'info' => [
-        'is_liked' => $this->isLiked(),
-        'likes' => $this->whenLoaded('likes', fn() => $this->likes->count(), 0),
-        'comments_count' => $this->whenLoaded('comments', fn() => $this->comments->count(), 0),
+        'is_liked' => (bool) ($this->liked_by_current_user ?? 0),
+        'likes' => (int) ($this->likes_count ?? 0),
+        'comments_count' => (int) ($this->comments_count ?? 0),
       ],
       'user' => $user ? [
         'id' => $user->id,
@@ -48,9 +67,9 @@ class PostResource extends JsonResource
         'avatar' => $user->avatar,
         'bio' => $user->bio,
         'joined_at' => $user->created_at?->diffForHumans(),
-        'followers_count' => $user->followers_count ?? $user->followers->count(),
-        'following_count' => $user->followings_count ?? $user->followings->count(),
-        'posts_count' => $user->posts_count ?? $user->posts->count(),
+        'followers_count' => (int) ($user->followers_count ?? 0),
+        'following_count' => (int) ($user->followings_count ?? 0),
+        'posts_count' => (int) ($user->posts_count ?? 0),
       ] : null,
     ];
   }

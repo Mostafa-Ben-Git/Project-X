@@ -21,7 +21,9 @@ class PostController extends Controller
   public function index()
   {
     return PostResource::collection(
-      Post::whereNull('parent_id')->latest()->paginate(6)
+      PostResource::prepare(
+        Post::whereNull('parent_id')->latest()
+      )->paginate(6)
     );
   }
 
@@ -59,7 +61,7 @@ class PostController extends Controller
    */
   public function show(Post $post)
   {
-    return new PostResource($post);
+    return new PostResource(PostResource::prepare($post->newQuery()->whereKey($post->id))->first());
   }
 
   /**
@@ -157,7 +159,11 @@ class PostController extends Controller
       return response()->json(['message' => 'No comments found'], 404);
     }
 
-    return PostResource::collection($post->comments()->latest()->paginate(5));
+    return PostResource::collection(
+      PostResource::prepare(
+        $post->comments()->latest()
+      )->paginate(5)
+    );
   }
 
   /**
@@ -177,6 +183,6 @@ class PostController extends Controller
       return response()->json(['message' => 'Post not found.'], 404);
     }
 
-    return new PostResource($post);
+    return new PostResource(PostResource::prepare($post->newQuery()->whereKey($post->id))->first());
   }
 }
