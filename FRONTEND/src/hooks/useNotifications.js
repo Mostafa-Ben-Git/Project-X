@@ -1,81 +1,91 @@
-import { useEffect, useState } from "react";
-import apiService from "@/api/apiService";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { toast } from "sonner";
+import * as api from "@/api/notifications";
 
-export default function useNotifications() {
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+export function useNotifications() {
+  const qc = useQueryClient();
+  const KEY = ["notifications"];
 
-  const fetchNotifications = async (pageNum = 1) => {
-    setIsLoading(true);
-    try {
-      const { data } = await apiService.get("/api/notifications", {
-        params: { page: pageNum },
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: KEY });
+    qc.invalidateQueries({ queryKey: [KEY[0], "unread"] });
+  };
+
+  const notifications = useInfiniteQuery({
+    queryKey: KEY,
+    queryFn: ({ pageParam }) => api.fetchNotifications({ pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last.meta.current_page < last.meta.last_page
+        ? last.meta.current_page + 1
+        : undefined,
+  });
+
+  const unreadCount = useQuery({
+    queryKey: [KEY[0], "unread"],
+    queryFn: api.getUnreadCount,
+    staleTime: 15_000,
+  });
+
+  const markRead = useMutation({
+    mutationFn: api.markNotificationRead,
+    onMutate: (id) => {
+      // optimistic cache write
+      qc.setQueryData(KEY, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            data: page.data.map((n) =>
+              n.id === id ? { ...n, read_at: n.read_at ?? new Date().toISOString() } : n,
+            ),
+          })),
+        };
       });
-      if (pageNum === 1) {
-        setNotifications(data.data);
-      } else {
-        setNotifications((prev) => [...prev, ...data.data]);
-      }
-      setHasMore(data.meta.current_page < data.meta.last_page);
-      setPage(data.meta.current_page + 1);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      qc.setQueryData([KEY[0], "unread"], (c) => Math.max(0, (c ?? 1) - 1));
+    },
+    onSettled: refresh,
+  });
 
-  const fetchUnreadCount = async () => {
-    try {
-      const { data } = await apiService.get("/api/notifications/unread-count");
-      setUnreadCount(data.count);
-    } catch (error) {
-      console.error("Error fetching unread count:", error);
-    }
-  };
+  const markAllRead = useMutation({
+    mutationFn: api.markAllNotificationsRead,
+    onMutate: () => {
+      qc.setQueryData([KEY[0], "unread"], 0);
+      qc.setQueryData(KEY, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            data: page.data.map((n) => ({
+              ...n,
+              read_at: n.read_at ?? new Date().toISOString(),
+            })),
+          })),
+        };
+      });
+    },
+    onSuccess: () => toast.success("All notifications marked as read"),
+    onSettled: refresh,
+  });
 
-  const markAsRead = async (notificationId) => {
-    try {
-      await apiService.post(`/api/notifications/${notificationId}/read`);
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, read_at: new Date().toISOString() } : n
-        )
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-    }
-  };
-
-  const markAllAsRead = async () => {
-    try {
-      await apiService.post("/api/notifications/read-all");
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, read_at: n.read_at || new Date().toISOString() }))
-      );
-      setUnreadCount(0);
-    } catch (error) {
-      console.error("Error marking all as read:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-    fetchUnreadCount();
-  }, []);
+  const all = notifications.data?.pages.flatMap((p) => p.data) ?? [];
 
   return {
-    notifications,
-    unreadCount,
-    isLoading,
-    hasMore,
-    fetchNotifications,
-    fetchUnreadCount,
-    markAsRead,
-    markAllAsRead,
+    notifications: all,
+    unreadCount: unreadCount.data ?? 0,
+    isLoading: notifications.isLoading,
+    isError: notifications.isError,
+    fetchNextPage: notifications.fetchNextPage,
+    hasNextPage: notifications.hasNextPage,
+    isFetchingNextPage: notifications.isFetchingNextPage,
+    markRead: (id) => markRead.mutate(id),
+    markAllRead: () => markAllRead.mutate(),
   };
 }
