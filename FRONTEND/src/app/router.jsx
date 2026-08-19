@@ -15,6 +15,7 @@ const HomePage = lazy(() => import("@/pages/home/HomePage"));
 const MessagesPage = lazy(() => import("@/pages/home/MessagesPage"));
 const NotifPage = lazy(() => import("@/pages/home/NotifPage"));
 const ProfilePage = lazy(() => import("@/pages/home/ProfilePage"));
+const EditProfilePage = lazy(() => import("@/pages/settings/EditProfilePage"));
 
 function PageLoader({ children }) {
   return (
@@ -64,6 +65,14 @@ const router = createBrowserRouter([
         element: (
           <PageLoader>
             <ProfilePage />
+          </PageLoader>
+        ),
+      },
+      {
+        path: "settings/profile",
+        element: (
+          <PageLoader>
+            <EditProfilePage />
           </PageLoader>
         ),
       },
