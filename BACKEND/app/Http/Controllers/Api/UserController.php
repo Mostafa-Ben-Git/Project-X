@@ -22,6 +22,7 @@ class UserController extends Controller
 
   public function show(User $user)
   {
+    $user->loadCount(['followers', 'followings', 'posts']);
     return new UserResource($user);
   }
 

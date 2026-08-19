@@ -27,13 +27,14 @@ apiService.interceptors.response.use(
   async (error) => {
     const status = error?.response?.status;
 
-    if (status === 401) {
+    // Only force-logout on 401 from the /api/user endpoint (real auth check).
+    // Other 401s may be transient (deploy, server restart) — don't wipe the session.
+    if (status === 401 && error?.config?.url?.includes("/api/user")) {
       localStorage.removeItem("token");
       localStorage.removeItem("userLogedIn");
       window.location.href = "/login";
     }
 
-    // 429: don't retry — let the query fail gracefully, avoid cascading loops
     throw error;
   }
 );
