@@ -26,8 +26,17 @@ export function useRealtime(userId) {
       });
 
       channel.listen(".message.sent", (payload) => {
+        // Refresh conversations list, unread badge, and the open chat room.
         qc.invalidateQueries({ queryKey: ["conversations"] });
         qc.invalidateQueries({ queryKey: ["messages"] });
+        qc.invalidateQueries({ queryKey: ["messages", "unread"] });
+        // If this is an incoming message (from someone else), notify.
+        if (payload && payload.sender_id !== userId) {
+          qc.invalidateQueries({ queryKey: ["user", payload.sender_id] });
+        } else if (payload && payload.sender_id === userId) {
+          // Own echo — just make sure the sent message appears; refetch the target chat.
+          qc.invalidateQueries({ queryKey: ["messages", payload.receiver_id] });
+        }
       });
 
       setConnected(true);

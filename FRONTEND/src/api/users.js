@@ -39,3 +39,8 @@ export async function getUserLikes(userId, { pageParam = 1 } = {}) {
   const { data } = await apiService.get(`/api/users/${userId}/likes?page=${pageParam}`);
   return data;
 }
+
+export async function getUserById(userId) {
+  const { data } = await apiService.get(`/api/users/${userId}`);
+  return data.data;
+}

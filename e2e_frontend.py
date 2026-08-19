@@ -125,6 +125,24 @@ async def main():
         report("Messages page renders", "Message" in (await page.evaluate("() => document.body.innerText")))
         await page.screenshot(path=f"{SHOT_DIR}/messages.png")
 
+        # message room: open a chat by direct URL, then refresh → stays in room
+        await page.goto(f"{BASE}/messages/2", wait_until="load")
+        await page.wait_for_timeout(3000)
+        room_input = await page.locator("input, textarea").count()
+        report("Message room opens with input", room_input > 0)
+        await page.reload(wait_until="load")
+        await page.wait_for_timeout(3000)
+        room_input2 = await page.locator("input[type=text], input:not([type])").count()
+        body_room = await page.evaluate("() => document.body.innerText")
+        report("Refresh keeps you in the room", "Type a message" in body_room or room_input2 > 0)
+        await page.screenshot(path=f"{SHOT_DIR}/message_room.png")
+
+        # sidebar unread badges (messages + notifications)
+        await page.goto(f"{BASE}/home", wait_until="load")
+        await page.wait_for_timeout(2500)
+        badges = await page.locator("aside a [class*=rounded-full], nav a [class*=rounded-full]").all_text_contents()
+        report("Sidebar shows unread badges", len(badges) > 0, f"({badges})")
+
         # ── 6. Profile ──
         print("\n[6] Profile")
         await page.goto(f"{BASE}/profile", wait_until="load")

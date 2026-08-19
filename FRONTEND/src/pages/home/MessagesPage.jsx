@@ -7,28 +7,33 @@ import useAuth from "@/hooks/useAuth";
 import { useMessages } from "@/hooks/useMessages";
 import { ArrowLeft, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 function MessagesPage() {
+  const { userId } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const chatId = userId ? Number(userId) : null;
+
   const {
     conversations,
     messages,
     currentChat,
     isLoading,
+    isChatLoading,
     isSending,
     messagesEndRef,
     fetchConversations,
     sendMessage,
     openChat,
-    closeChat,
-  } = useMessages();
+  } = useMessages(chatId);
 
   const [newMessage, setNewMessage] = useState("");
   const inputRef = useRef(null);
 
   useEffect(() => {
     fetchConversations();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -36,9 +41,9 @@ function MessagesPage() {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !currentChat) return;
+    if (!newMessage.trim() || !chatId) return;
     try {
-      await sendMessage(currentChat.id, newMessage.trim());
+      await sendMessage(chatId, newMessage.trim());
       setNewMessage("");
       inputRef.current?.focus();
     } catch (error) {
@@ -52,33 +57,39 @@ function MessagesPage() {
       : conversation.sender;
   };
 
-  // ── Chat View ──
-  if (currentChat) {
+  const goToList = () => {
+    openChat(null);
+    navigate("/messages");
+  };
+
+  // ── Chat Room (URL-driven so refresh keeps you in the room) ──
+  if (chatId) {
+    const partner = currentChat;
     return (
       <main className="flex h-[calc(100vh-3rem)] flex-col p-4">
         {/* Header */}
         <div className="flex items-center gap-3 border-b pb-3">
-          <Button variant="ghost" size="icon" onClick={closeChat}>
+          <Button variant="ghost" size="icon" onClick={goToList}>
             <ArrowLeft size={20} />
           </Button>
           <Avatar className="h-10 w-10">
-            <AvatarImage src={currentChat.avatar} />
+            <AvatarImage src={partner?.avatar} />
             <AvatarFallback>
-              {currentChat.first_name?.[0]}
-              {currentChat.last_name?.[0]}
+              {partner?.first_name?.[0]}
+              {partner?.last_name?.[0]}
             </AvatarFallback>
           </Avatar>
           <div>
             <p className="font-semibold">
-              {currentChat.first_name} {currentChat.last_name}
+              {partner?.first_name} {partner?.last_name}
             </p>
-            <p className="text-xs text-muted-foreground">@{currentChat.username}</p>
+            <p className="text-xs text-muted-foreground">@{partner?.username}</p>
           </div>
         </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto py-4 space-y-3">
-          {isLoading ? (
+          {isChatLoading ? (
             <LoaderCircle />
           ) : (
             messages?.map((msg) => {
@@ -150,10 +161,11 @@ function MessagesPage() {
         <ul className="space-y-1">
           {conversations?.map((conv) => {
             const partner = getChatPartner(conv);
+            if (!partner) return null;
             return (
               <li key={conv.id}>
                 <button
-                  onClick={() => openChat(partner)}
+                  onClick={() => navigate(`/messages/${partner.id}`)}
                   className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted"
                 >
                   <Avatar className="h-12 w-12 shrink-0">

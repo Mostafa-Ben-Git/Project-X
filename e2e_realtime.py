@@ -37,6 +37,7 @@ async def main():
     async with async_playwright() as pw:
         b = await pw.chromium.launch(headless=True)
         ctx = await b.new_context()
+        page = await ctx.new_page()
         
         conv_calls = []
         page.on("response", lambda r: conv_calls.append(r.url) if "/api/conversations" in r.url else None)

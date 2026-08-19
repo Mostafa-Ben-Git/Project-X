@@ -93,6 +93,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "messages/:userId",
+        element: (
+          <PageLoader>
+            <MessagesPage />
+          </PageLoader>
+        ),
+      },
+      {
         path: "notifications",
         element: (
           <PageLoader>
