@@ -9,8 +9,8 @@ import os
 import sys
 import requests as req
 
-os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "D:/Me/.cache/patchright")
-from patchright.async_api import async_playwright
+
+from playwright.async_api import async_playwright
 
 FRONTEND_URL = "http://localhost:5174"
 BACKEND_URL = "http://localhost:8000"

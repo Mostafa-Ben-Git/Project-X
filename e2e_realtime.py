@@ -6,8 +6,8 @@ Flow: browser logged in as testuser -> send a message from otherperson via API
 """
 
 import asyncio, os, json, requests, sys
-os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "D:/Me/.cache/patchright")
-from patchright.async_api import async_playwright
+
+from playwright.async_api import async_playwright
 
 BASE = "http://localhost:8000"
 passed = failed = 0
@@ -37,7 +37,7 @@ async def main():
     async with async_playwright() as pw:
         b = await pw.chromium.launch(headless=True)
         ctx = await b.new_context()
-        page = await ctx.new_page()
+        
         conv_calls = []
         page.on("response", lambda r: conv_calls.append(r.url) if "/api/conversations" in r.url else None)
         errs = []

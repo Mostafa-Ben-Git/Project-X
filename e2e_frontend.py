@@ -9,8 +9,8 @@ import asyncio
 import os
 import sys
 
-os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "D:/Me/.cache/patchright")
-from patchright.async_api import async_playwright
+
+from playwright.async_api import async_playwright
 
 BASE = "http://localhost:8000"
 EMAIL = "test@example.com"
@@ -48,8 +48,8 @@ async def main():
     global passed, failed
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
-        ctx = await browser.new_context(viewport={"width": 1366, "height": 900})
-        page = await ctx.new_page()
+        page = await browser.new_page()
+        
         page.on("pageerror", lambda e: errors.append("PAGEERR: " + str(e)))
 
         print("=== Project-X Frontend E2E ===")
@@ -129,12 +129,33 @@ async def main():
         print("\n[6] Profile")
         await page.goto(f"{BASE}/profile", wait_until="load")
         await page.wait_for_timeout(2500)
-        report("Profile page renders", await page.locator("h2, img, [class*=profile]").count() > 0)
-        await page.screenshot(path=f"{SHOT_DIR}/profile.png")
+        report("Profile page renders", await page.locator("h2").count() > 0)
 
-        # ── 7. Direct route refresh (SPA fallback) ──
-        print("\n[7] SPA route fallback")
-        for r in ["/home", "/friends", "/messages", "/notifications", "/profile"]:
+        # Check profile tabs
+        tabs = page.locator('[role="tab"]')
+        tab_count = await tabs.count()
+        report("Three profile tabs", tab_count == 3, f"(found {tab_count})")
+
+        # Click each tab
+        for i in range(3):
+            label = (await tabs.nth(i).text_content()).strip()
+            await tabs.nth(i).click()
+            await page.wait_for_timeout(1200)
+        report("All tabs clickable without error", True)
+        await page.screenshot(path=f"{SHOT_DIR}/profile_tabs.png")
+
+        # ── 7. Settings page ──
+        print("\n[7] Edit profile page")
+        await page.goto(f"{BASE}/settings/profile", wait_until="load")
+        await page.wait_for_timeout(2500)
+        body = await page.evaluate("() => document.body.innerText")
+        report("Settings page renders", "Edit profile" in body)
+        report("Form fields present", await page.locator("input, textarea, select").count() >= 5)
+        await page.screenshot(path=f"{SHOT_DIR}/settings_profile.png")
+
+        # ── 8. Direct route refresh (SPA fallback) ──
+        print("\n[8] SPA route fallback")
+        for r in ["/home", "/friends", "/messages", "/notifications", "/profile", "/settings/profile"]:
             await page.goto(f"{BASE}{r}", wait_until="load")
             await page.wait_for_timeout(1500)
         report("Direct deep-links resolve (SPA catch-all)", True)

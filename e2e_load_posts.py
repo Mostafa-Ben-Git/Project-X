@@ -8,8 +8,8 @@ import asyncio
 import os
 import sys
 
-os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "D:/Me/.cache/patchright")
-from patchright.async_api import async_playwright
+
+from playwright.async_api import async_playwright
 
 BASE = "http://localhost:8000"
 EMAIL = "test@example.com"
@@ -33,7 +33,7 @@ async def main():
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
         ctx = await browser.new_context(viewport={"width": 1280, "height": 800})
-        page = await ctx.new_page()
+        
 
         errors = []
         posts_responses = []
