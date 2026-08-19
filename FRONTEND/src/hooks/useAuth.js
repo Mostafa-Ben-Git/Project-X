@@ -9,7 +9,7 @@ import {
   updateUser,
 } from "../slices/authSlice";
 import { useState, useRef } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export default function useAuth() {
   const dispatch = useDispatch();
@@ -93,18 +93,10 @@ export default function useAuth() {
       localStorage.setItem(SESSION_NAME, "true");
       dispatch(setUser(userData.data || userData));
 
-      toast.success("Login successful");
       navigate("/home");
     } catch (error) {
-      const response = error.response;
-      if (response && response.status === 422) {
-        dispatch(setErrors(response.data.errors || {}));
-      } else if (response && response.status === 401) {
-        dispatch(setErrors({ email: ["Invalid credentials"] }));
-        toast.error("Invalid email or password");
-      } else {
-        toast.error("Login failed");
-      }
+      // Rethrow so the form layer can map field errors / show a toast
+      throw error;
     } finally {
       dispatch(setIsLoading(false));
     }
