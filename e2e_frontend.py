@@ -98,7 +98,8 @@ async def main():
         # ── 3. Friends tabs ──
         print("\n[3] Friends")
         await page.goto(f"{BASE}/friends", wait_until="load")
-        await page.wait_for_timeout(2500)
+        await page.locator('[role="tab"]').first.wait_for(timeout=15000)
+        await page.wait_for_timeout(1500)
         tabs = await page.locator('[role="tab"]').count()
         report("Three tabs render", tabs == 3, f"(found {tabs})")
         for i in range(3):

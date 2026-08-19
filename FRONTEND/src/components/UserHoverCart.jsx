@@ -1,12 +1,6 @@
 import { DotIcon } from "lucide-react";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 import useAuth from "@/hooks/useAuth";
 import { useFollow } from "@/hooks/useFollow";
@@ -14,12 +8,28 @@ import { useState } from "react";
 import LoaderCircle from "@/components/LoaderCircle";
 
 export function UserHoverCart({ user, className }) {
-  const { loading, handleFollow } = useFollow();
+  const { handleFollow, isPending } = useFollow();
   const { user: currentUser } = useAuth();
   const [isFollowing, setIsFollowing] = useState(user.is_following);
+  const [pending, setPending] = useState(false);
 
-  const bioText =
-    user.bio.length > 50 ? user.bio.slice(0, 50) + "..." : user.bio;
+  const bioText = user.bio
+    ? user.bio.length > 50
+      ? user.bio.slice(0, 50) + "..."
+      : user.bio
+    : "";
+
+  const onFollow = async () => {
+    setPending(true);
+    setIsFollowing((prev) => !prev);
+    try {
+      await handleFollow(user.id);
+    } catch {
+      setIsFollowing((prev) => !prev);
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <HoverCard>
@@ -33,31 +43,28 @@ export function UserHoverCart({ user, className }) {
           <Avatar>
             <AvatarImage src={user.avatar} />
             <AvatarFallback>
-              {user.first_name[0]}
-              {user.last_name[0]}
+              {user.first_name?.[0]}
+              {user.last_name?.[0]}
             </AvatarFallback>
           </Avatar>
           <div className="space-y-1">
-            <h4 className=" text-lg font-bold">
+            <h4 className="text-lg font-bold">
               {user.first_name} {user.last_name}
             </h4>
-            <p className="text-sm text-muted-foreground">{user.username}</p>
+            <p className="text-sm text-muted-foreground">@{user.username}</p>
           </div>
           {currentUser?.username !== user.username && (
             <button
               className="rounded-full border border-border px-4 py-1 text-sm font-semibold text-foreground transition-colors hover:border-transparent hover:bg-primary hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              onClick={() => {
-                handleFollow(user.id);
-                setIsFollowing(!isFollowing);
-              }}
+              onClick={onFollow}
             >
-              {loading && <LoaderCircle size={15} />}
-              {!loading ? (isFollowing ? "Unfollow" : "Follow") : null}
+              {pending && <LoaderCircle size={15} />}
+              {!pending ? (isFollowing ? "Unfollow" : "Follow") : null}
             </button>
           )}
         </div>
         <div className="space-y-2">
-          <p className="text-sm">T{bioText}</p>
+          {bioText && <p className="text-sm">{bioText}</p>}
           <div className="flex items-center space-x-1">
             <p className="text-sm text-muted-foreground">
               <span className="mr-2 font-black text-secondary-foreground">

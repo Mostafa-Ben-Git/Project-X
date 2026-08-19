@@ -5,14 +5,31 @@ import { useState } from "react";
 import LoaderCircle from "./LoaderCircle";
 
 function UserMiniProfile({ user }) {
-  const { loading, handleFollow } = useFollow();
+  const { handleFollow, isPending } = useFollow();
   const [isFollowing, setIsFollowing] = useState(user.is_following);
+  const [pendingId, setPendingId] = useState(null);
+
+  const onFollow = async () => {
+    if (isFollowing === null) return;
+    setIsFollowing((prev) => !prev);
+    const targetId = user.id;
+    setPendingId(targetId);
+    try {
+      await handleFollow(targetId);
+    } catch {
+      setIsFollowing((prev) => !prev); // rollback
+    } finally {
+      setPendingId(null);
+    }
+  };
+
+  const loading = isPending && pendingId === user.id;
 
   return (
     <li className="flex w-full items-center justify-between gap-3 rounded-xl border border-border p-2">
       <div className="flex min-w-0 items-center gap-3">
         <Avatar className="h-12 w-12 shrink-0">
-          <AvatarImage src={user.avatar} alt={`${user.first_name} ${user.last_name}`} />
+          <AvatarImage src={user.avatar} alt={`${user.first_name} ${user.last_name}`} loading="lazy" />
           <AvatarFallback>
             {user.first_name?.[0]}
             {user.last_name?.[0]}
@@ -25,10 +42,7 @@ function UserMiniProfile({ user }) {
       </div>
       <button
         className="shrink-0 rounded-full border border-border px-3 py-1 text-xs font-semibold text-foreground transition-colors hover:border-transparent hover:bg-primary hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-        onClick={() => {
-          handleFollow(user.id);
-          setIsFollowing((prev) => !prev);
-        }}
+        onClick={onFollow}
       >
         {loading ? (
           <LoaderCircle size={14} />
