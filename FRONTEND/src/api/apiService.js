@@ -21,15 +21,29 @@ apiService.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor: handle auth errors
+// Response interceptor: handle auth errors and 429 rate limiting
 apiService.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
+  async (error) => {
+    const status = error?.response?.status;
+
+    if (status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("userLogedIn");
       window.location.href = "/login";
     }
+
+    // 429: back off and retry once
+    if (status === 429) {
+      const retryAfter = error.response?.headers?.["retry-after"] || 2;
+      const delay = Math.min(Number(retryAfter) * 1000, 5000);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      const config = { ...error.config, _retried: true };
+      if (!config._retried) {
+        return apiService.request(config);
+      }
+    }
+
     throw error;
   }
 );

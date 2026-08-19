@@ -16,8 +16,12 @@ function UserLayout() {
     if (!user && isLoggedIn) {
       getUser();
     }
-    fetchPosts();
-  }, [user, isLoggedIn, getUser, fetchPosts]);
+  }, [user, isLoggedIn, getUser]);
+
+  // Only fetch first page of posts once, not on every render
+  useEffect(() => {
+    fetchPosts(1);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isLoggedIn) return <Navigate to="/login" />;
 

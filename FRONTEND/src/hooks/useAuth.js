@@ -8,7 +8,7 @@ import {
   setPosts,
   updateUser,
 } from "../slices/authSlice";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { toast } from "sonner";
 
 export default function useAuth() {
@@ -19,11 +19,17 @@ export default function useAuth() {
   );
   const [isLoggedOut, setisLoggedOut] = useState(false);
   const getUserPostsCalled = useRef(false);
+  const getUserRunning = useRef(false);
 
   const SESSION_NAME = "userLogedIn";
-  let isLoggedIn = localStorage.getItem(SESSION_NAME) === "true" && !!localStorage.getItem("token");
+  let isLoggedIn =
+    localStorage.getItem(SESSION_NAME) === "true" &&
+    !!localStorage.getItem("token");
 
-  const getUser = async () => {
+  // Memoize getUser — stable reference, guarded against double-fire
+  const getUser = useCallback(async () => {
+    if (getUserRunning.current) return;
+    getUserRunning.current = true;
     dispatch(setIsLoading(true));
     try {
       const { data } = await apiService.get("/api/user");
@@ -38,8 +44,9 @@ export default function useAuth() {
       }
     } finally {
       dispatch(setIsLoading(false));
+      getUserRunning.current = false;
     }
-  };
+  }, [dispatch, navigate]);
 
   const getUserPosts = async () => {
     if (getUserPostsCalled.current) return;
