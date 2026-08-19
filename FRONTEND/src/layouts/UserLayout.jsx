@@ -6,11 +6,20 @@ import usePosts from "@/hooks/usePosts";
 import { useRealtime } from "@/hooks/useRealtime";
 import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
+import { startHeartbeat, stopHeartbeat } from "@/api/apiService";
 
 function UserLayout() {
   const { getUser, user, isLoggedIn } = useAuth();
   const { fetchPosts } = usePosts();
   useRealtime(user?.id);
+
+  // Start heartbeat for online status
+  useEffect(() => {
+    if (user) {
+      startHeartbeat();
+      return () => stopHeartbeat();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user && isLoggedIn) {

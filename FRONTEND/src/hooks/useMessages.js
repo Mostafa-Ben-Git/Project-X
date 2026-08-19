@@ -14,11 +14,13 @@ export function useMessages(chatId = null) {
   const activeUserId = chatId ?? localChat?.id ?? null;
 
   // When a chat is driven by the URL (refreshed room), fetch the partner profile.
+  // Refetch every 15s to get realtime status updates.
   const partner = useQuery({
     queryKey: ["user", activeUserId],
     queryFn: () => getUserById(activeUserId),
     enabled: !!chatId && !!activeUserId,
-    staleTime: 60_000,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
   });
 
   const currentChat = chatId

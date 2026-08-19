@@ -23,6 +23,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Auth ──
     Route::get('/user', [TokenAuthController::class, 'me'])->name('user.me');
     Route::post('/logout', [TokenAuthController::class, 'logout'])->name('logout');
+    Route::post('/heartbeat', function (Request $request) {
+        $user = $request->user();
+        $user->update(['last_active_at' => now()]);
+        \App\Support\Broadcast::safe(new \App\Events\UserStatusUpdated($user));
+        return response()->json(['ok' => true]);
+    });
     Route::get('/user/posts', function (Request $request) {
         return PostResource::collection($request->user()->posts->whereNull('parent_id'));
     });

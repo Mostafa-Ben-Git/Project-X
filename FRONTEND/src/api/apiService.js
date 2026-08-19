@@ -39,4 +39,21 @@ apiService.interceptors.response.use(
   }
 );
 
+// Heartbeat: update last_active_at periodically
+let heartbeatInterval = null;
+
+export function startHeartbeat() {
+  if (heartbeatInterval) return;
+  heartbeatInterval = setInterval(() => {
+    apiService.post("/api/heartbeat").catch(() => {});
+  }, 30_000); // every 30s
+}
+
+export function stopHeartbeat() {
+  if (heartbeatInterval) {
+    clearInterval(heartbeatInterval);
+    heartbeatInterval = null;
+  }
+}
+
 export default apiService;

@@ -26,12 +26,12 @@ export function useRealtime(userId) {
 
       channel = echo.private(`user.${userId}`);
 
+      // Listen for notification events
       channel.listen(".notification.created", (payload) => {
         qc.invalidateQueries({ queryKey: ["notifications"] });
         qc.invalidateQueries({ queryKey: ["notifications", "unread"] });
         const from = payload?.from_user;
         if (!from?.first_name) return;
-        // Messages are surfaced by the .message.sent handler; skip here to avoid duplicates.
         if (payload.type === "message") return;
         const label = TYPE_LABELS[payload.type] || "notified you";
         toast(`${from.first_name} ${from.last_name} ${label}`, {
@@ -42,6 +42,7 @@ export function useRealtime(userId) {
         });
       });
 
+      // Listen for message events
       channel.listen(".message.sent", (payload) => {
         qc.invalidateQueries({ queryKey: ["conversations"] });
         qc.invalidateQueries({ queryKey: ["messages"] });
@@ -49,7 +50,6 @@ export function useRealtime(userId) {
         if (payload && payload.sender_id !== userId) {
           qc.invalidateQueries({ queryKey: ["user", payload.sender_id] });
           const from = payload?.sender;
-          // Mark incoming message delivered/unread via stale invalidation
           const name = from
             ? `${from.first_name} ${from.last_name}`
             : "Someone";
@@ -65,6 +65,21 @@ export function useRealtime(userId) {
         }
       });
 
+      // Listen for status updates from other users
+      channel.listen(".user.status.updated", (payload) => {
+        // Update the partner's cached data with new status
+        qc.setQueryData(["user", payload.user_id], (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            status: payload.status,
+            last_active_at: payload.last_active_at,
+          };
+        });
+        // Also invalidate conversations to refresh status dots
+        qc.invalidateQueries({ queryKey: ["conversations"] });
+      });
+
       setConnected(true);
     } catch (e) {
       console.warn("Realtime connection failed:", e);
@@ -74,6 +89,7 @@ export function useRealtime(userId) {
       try {
         channel?.stopListening(".notification.created");
         channel?.stopListening(".message.sent");
+        channel?.stopListening(".user.status.updated");
       } catch {
         /* noop */
       }
