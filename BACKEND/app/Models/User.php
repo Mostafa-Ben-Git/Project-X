@@ -49,6 +49,8 @@ class User extends Authenticatable
     'email_verified_at' => 'datetime',
     'password' => 'hashed',
     'liens_sociaux' => 'array',
+    'last_active_at' => 'datetime',
+    'is_private' => 'boolean',
   ];
 
   public function followers()
