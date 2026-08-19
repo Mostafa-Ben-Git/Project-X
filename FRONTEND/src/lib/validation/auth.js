@@ -3,6 +3,7 @@ import { z } from "zod";
 export const loginSchema = z.object({
   email: z.string().email("Enter a valid email address"),
   password: z.string().min(1, "Password is required"),
+  remember: z.boolean().optional(),
 });
 
 export const registerSchema = z
@@ -22,7 +23,7 @@ export const registerSchema = z
     path: ["password_confirmation"],
   });
 
-export const loginDefaults = { email: "", password: "" };
+export const loginDefaults = { email: "", password: "", remember: false };
 export const registerDefaults = {
   first_name: "",
   last_name: "",

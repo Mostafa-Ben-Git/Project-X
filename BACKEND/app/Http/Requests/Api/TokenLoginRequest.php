@@ -16,6 +16,7 @@ class TokenLoginRequest extends FormRequest
         return [
             'email' => 'required|email|max:255',
             'password' => 'required|string|min:1|max:128',
+            'remember' => 'sometimes|boolean',
         ];
     }
 

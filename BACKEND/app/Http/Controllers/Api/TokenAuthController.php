@@ -30,8 +30,12 @@ class TokenAuthController extends Controller
         // Revoke old tokens for clean session
         $user->tokens()->delete();
 
-        // Create new token with 7-day expiry
-        $token = $user->createToken('auth-token', ['*'], now()->addDays(7))->plainTextToken;
+        // "Remember me" = long-lived token, otherwise a short one.
+        $remember = $request->boolean('remember');
+        $expiry = $remember ? now()->addDays(30) : now()->addDay();
+
+        // Create new token
+        $token = $user->createToken('auth-token', ['*'], $expiry)->plainTextToken;
 
         return response()->json([
             'user' => new UserResource($user),
