@@ -42,7 +42,7 @@ export async function getUserLikes(userId, { pageParam = 1 } = {}) {
 
 export async function getUserById(userId) {
   const { data } = await apiService.get(`/api/users/${userId}`);
-  return data.data;
+  return data;
 }
 
 export async function changePassword(payload) {
