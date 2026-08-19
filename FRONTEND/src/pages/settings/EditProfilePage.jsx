@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, ArrowLeft, Lock, User, Shield, LogOut } from "lucide-react";
+import { Loader2, ArrowLeft, Lock, User, Shield, LogOut, Phone, Globe, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "@/hooks/useAuth";
@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FieldError } from "@/components/form-field-error";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { changePassword } from "@/api/users";
 import { useState } from "react";
 
@@ -25,6 +26,7 @@ function EditProfilePage() {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(profileSchema),
@@ -44,6 +46,12 @@ function EditProfilePage() {
       education: user?.education || "",
       liens_sociaux: user?.liens_sociaux || "",
       date_de_naissance: user?.date_de_naissance || "",
+      phone: user?.phone || "",
+      website: user?.website || "",
+      location: user?.location || "",
+      is_private: user?.is_private || false,
+      language: user?.language || "en",
+      status: user?.status || "online",
     },
   });
 
@@ -53,6 +61,8 @@ function EditProfilePage() {
       Object.entries(values).forEach(([key, val]) => {
         if (key === "avatar" || key === "cover_image") {
           if (val instanceof File) formData.append(key, val);
+        } else if (key === "is_private") {
+          formData.append(key, val ? "1" : "0");
         } else {
           formData.append(key, val ?? "");
         }
@@ -196,6 +206,73 @@ function EditProfilePage() {
               {isSubmitting ? "Saving..." : "Save changes"}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Contact & Links */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Globe size={18} /> Contact & links
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <FieldGroup label="Phone" id="phone" error={errors.phone?.message}>
+            <Input id="phone" type="tel" placeholder="+1 234 567 890" {...register("phone")} />
+          </FieldGroup>
+
+          <FieldGroup label="Website" id="website" error={errors.website?.message}>
+            <Input id="website" type="url" placeholder="https://yoursite.com" {...register("website")} />
+          </FieldGroup>
+
+          <FieldGroup label="Location" id="location" error={errors.location?.message}>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input id="location" placeholder="City, Country" className="pl-9" {...register("location")} />
+            </div>
+          </FieldGroup>
+        </CardContent>
+      </Card>
+
+      {/* Privacy & Preferences */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Shield size={18} /> Privacy & preferences
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Private account</p>
+              <p className="text-sm text-muted-foreground">Only followers can see your posts</p>
+            </div>
+            <Switch
+              checked={watch("is_private")}
+              onCheckedChange={(val) => setValue("is_private", val)}
+            />
+          </div>
+          <Separator />
+
+          <FieldGroup label="Status" id="status" error={errors.status?.message}>
+            <select id="status" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" {...register("status")}>
+              <option value="online">🟢 Online</option>
+              <option value="away">🟡 Away</option>
+              <option value="offline">⚫ Offline</option>
+              <option value="dnd">🔴 Do not disturb</option>
+            </select>
+          </FieldGroup>
+
+          <FieldGroup label="Language" id="language" error={errors.language?.message}>
+            <select id="language" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" {...register("language")}>
+              <option value="en">English</option>
+              <option value="fr">Français</option>
+              <option value="es">Español</option>
+              <option value="ar">العربية</option>
+              <option value="de">Deutsch</option>
+              <option value="pt">Português</option>
+            </select>
+          </FieldGroup>
         </CardContent>
       </Card>
 

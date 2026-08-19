@@ -31,6 +31,12 @@ class User extends Authenticatable
     'interets',
     'education',
     'liens_sociaux',
+    'phone',
+    'website',
+    'location',
+    'is_private',
+    'language',
+    'status',
   ];
 
   protected $hidden = [

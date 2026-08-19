@@ -43,6 +43,12 @@ class UserResource extends JsonResource
       'date_de_naissance' => $this->date_de_naissance,
       'liens_sociaux' => $this->liens_sociaux,
       'education' => $this->education,
+      'phone' => $this->phone,
+      'website' => $this->website,
+      'location' => $this->location,
+      'is_private' => (bool) $this->is_private,
+      'language' => $this->language,
+      'status' => $this->status,
       'created_at' => $this->created_at?->toIso8601String(),
       'updated_at' => $this->updated_at?->toIso8601String(),
     ];

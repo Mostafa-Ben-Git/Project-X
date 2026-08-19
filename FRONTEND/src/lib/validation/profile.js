@@ -19,6 +19,12 @@ export const profileSchema = z.object({
   education: z.string().optional().or(z.literal("")),
   liens_sociaux: z.string().optional().or(z.literal("")),
   date_de_naissance: z.string().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  website: z.string().url("Enter a valid URL").optional().or(z.literal("")),
+  location: z.string().optional().or(z.literal("")),
+  is_private: z.boolean().default(false),
+  language: z.string().default("en"),
+  status: z.string().default("online"),
   avatar: z.any().optional(),
   cover_image: z.any().optional(),
 });
