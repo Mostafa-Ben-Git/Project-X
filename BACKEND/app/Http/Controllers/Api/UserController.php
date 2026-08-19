@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateProfileRequest;
+use App\Http\Resources\PostResource;
 use App\Http\Resources\UserResource;
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -125,5 +127,72 @@ class UserController extends Controller
   {
     $following = $user->followings()->withCount('followers')->get();
     return UserResource::collection($following);
+  }
+
+  /**
+   * Get top-level posts created by a user (no replies).
+   */
+  public function userPosts(User $user)
+  {
+    $userId = auth()->id();
+
+    $posts = $user->posts()
+      ->whereNull('parent_id')
+      ->withCount(['likes', 'comments'])
+      ->with([
+        'user' => fn($q) => $q->withCount(['followers', 'followings', 'posts']),
+        'images',
+      ])
+      ->withCount([
+        'likes as liked_by_current_user' => fn($q) => $q->where('user_id', $userId),
+      ])
+      ->latest()
+      ->paginate(10);
+
+    return PostResource::collection($posts);
+  }
+
+  /**
+   * Get replies (comments) made by a user.
+   */
+  public function userReplies(User $user)
+  {
+    $userId = auth()->id();
+
+    $replies = $user->posts()
+      ->whereNotNull('parent_id')
+      ->with('parent.user', 'images')
+      ->withCount(['likes', 'comments'])
+      ->with([
+        'user' => fn($q) => $q->withCount(['followers', 'followings', 'posts']),
+      ])
+      ->withCount([
+        'likes as liked_by_current_user' => fn($q) => $q->where('user_id', $userId),
+      ])
+      ->latest()
+      ->paginate(10);
+
+    return PostResource::collection($replies);
+  }
+
+  /**
+   * Get posts liked by a user.
+   */
+  public function userLikes(User $user)
+  {
+    $userId = auth()->id();
+    $likedPostIds = $user->likes()->pluck('post_id');
+
+    $posts = Post::whereIn('id', $likedPostIds)
+      ->whereNull('parent_id')
+      ->with('user', 'images')
+      ->withCount(['likes', 'comments'])
+      ->withCount([
+        'likes as liked_by_current_user' => fn($q) => $q->where('user_id', $userId),
+      ])
+      ->latest()
+      ->paginate(10);
+
+    return PostResource::collection($posts);
   }
 }

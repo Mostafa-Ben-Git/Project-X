@@ -34,6 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/search', [UserController::class, 'search']);
     Route::get('/users/{user}/followers', [UserController::class, 'followers']);
     Route::get('/users/{user}/following', [UserController::class, 'following']);
+    Route::get('/users/{user}/posts', [UserController::class, 'userPosts']);
+    Route::get('/users/{user}/replies', [UserController::class, 'userReplies']);
+    Route::get('/users/{user}/likes', [UserController::class, 'userLikes']);
     Route::apiResource('/users', UserController::class);
 
     // ── Posts ──
