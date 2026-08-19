@@ -29,6 +29,16 @@ Route::middleware('auth:sanctum')->group(function () {
         \App\Support\Broadcast::safe(new \App\Events\UserStatusUpdated($user));
         return response()->json(['ok' => true]);
     });
+    Route::post('/status', function (Request $request) {
+        $request->validate(['status' => 'required|string|in:online,away,offline,dnd,hidden']);
+        $user = $request->user();
+        $user->update([
+            'status' => $request->status,
+            'last_active_at' => $request->status === 'offline' ? now() : $user->last_active_at,
+        ]);
+        \App\Support\Broadcast::safe(new \App\Events\UserStatusUpdated($user));
+        return response()->json(['ok' => true]);
+    });
     Route::get('/user/posts', function (Request $request) {
         return PostResource::collection($request->user()->posts->whereNull('parent_id'));
     });

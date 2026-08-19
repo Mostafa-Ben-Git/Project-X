@@ -26,6 +26,8 @@ class MessageResource extends JsonResource
         'last_name' => $this->sender?->last_name,
         'username' => $this->sender?->username,
         'avatar' => $this->sender?->avatar,
+        'status' => $this->sender?->status,
+        'last_active_at' => $this->sender?->last_active_at?->toIso8601String(),
       ],
       'receiver' => [
         'id' => $this->receiver?->id,
@@ -33,6 +35,8 @@ class MessageResource extends JsonResource
         'last_name' => $this->receiver?->last_name,
         'username' => $this->receiver?->username,
         'avatar' => $this->receiver?->avatar,
+        'status' => $this->receiver?->status,
+        'last_active_at' => $this->receiver?->last_active_at?->toIso8601String(),
       ],
     ];
   }

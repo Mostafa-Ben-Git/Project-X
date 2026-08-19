@@ -22,8 +22,8 @@ class MessageController extends Controller
     // Get the latest message for each unique partner
     $conversations = Message::where('sender_id', $userId)
       ->orWhere('receiver_id', $userId)
-      ->with('sender:id,first_name,last_name,username,avatar')
-      ->with('receiver:id,first_name,last_name,username,avatar')
+      ->with('sender:id,first_name,last_name,username,avatar,status,last_active_at')
+      ->with('receiver:id,first_name,last_name,username,avatar,status,last_active_at')
       ->latest('created_at')
       ->get()
       ->groupBy(function ($message) use ($userId) {
@@ -60,8 +60,8 @@ class MessageController extends Controller
       ->orWhere(function ($query) use ($userId, $user) {
         $query->where('sender_id', $user->id)->where('receiver_id', $userId);
       })
-      ->with('sender:id,first_name,last_name,username,avatar')
-      ->with('receiver:id,first_name,last_name,username,avatar')
+      ->with('sender:id,first_name,last_name,username,avatar,status,last_active_at')
+      ->with('receiver:id,first_name,last_name,username,avatar,status,last_active_at')
       ->orderBy('created_at', 'asc')
       ->paginate(50);
 

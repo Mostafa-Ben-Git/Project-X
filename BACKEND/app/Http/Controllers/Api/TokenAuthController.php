@@ -59,7 +59,8 @@ class TokenAuthController extends Controller
     public function me(Request $request): UserResource
     {
         $user = $request->user();
-        $user->update(['last_active_at' => now()]);
+        // Set online on every page load / refresh
+        $user->update(['last_active_at' => now(), 'status' => 'online']);
         $user->loadCount(['followers', 'followings', 'posts']);
         return new UserResource($user);
     }

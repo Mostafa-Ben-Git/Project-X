@@ -47,6 +47,9 @@ export function startHeartbeat() {
   heartbeatInterval = setInterval(() => {
     apiService.post("/api/heartbeat").catch(() => {});
   }, 30_000); // every 30s
+
+  // Set offline on browser close / tab close
+  window.addEventListener("beforeunload", setOffline);
 }
 
 export function stopHeartbeat() {
@@ -54,6 +57,25 @@ export function stopHeartbeat() {
     clearInterval(heartbeatInterval);
     heartbeatInterval = null;
   }
+  window.removeEventListener("beforeunload", setOffline);
+}
+
+// Set user offline immediately (best-effort via sendBeacon)
+function setOffline() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+  const blob = new Blob([JSON.stringify({ status: "offline" })], { type: "application/json" });
+  navigator.sendBeacon?.(
+    `${window.location.origin}/api/status`,
+    new Request("/api/status", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: blob,
+    })
+  );
 }
 
 export default apiService;
