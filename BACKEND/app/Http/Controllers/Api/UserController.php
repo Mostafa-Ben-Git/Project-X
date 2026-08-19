@@ -130,6 +130,18 @@ class UserController extends Controller
   }
 
   /**
+   * Get a user's profile by username.
+   */
+  public function showByUsername(string $username)
+  {
+    $user = User::where('username', $username)
+      ->withCount(['followers', 'followings', 'posts'])
+      ->firstOrFail();
+
+    return new UserResource($user);
+  }
+
+  /**
    * Get top-level posts created by a user (no replies).
    */
   public function userPosts(User $user)
