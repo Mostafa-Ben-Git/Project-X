@@ -2,7 +2,7 @@ import { createContext, useEffect, useRef, useState } from "react";
 
 import apiService from "@/api/apiService"; // Assuming you have an API service
 import useIntersectionObserver from "@/hooks/useIntersectionObserver";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export const PostsContext = createContext();
 

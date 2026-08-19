@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dialog";
 
 import useAuth from "@/hooks/useAuth";
-import { MoonLoader } from "react-spinners";
+import { Loader2 } from "lucide-react";
 import PostEditForm from "./PostEditForm";
 
 function Post({
@@ -112,7 +112,7 @@ function Post({
                     onClick={() => deletePost(post_id)}
                   >
                     {isDeleting ? (
-                      <MoonLoader color="#000000" size={24} />
+                      <Loader2 className="animate-spin h-5 w-5" />
                     ) : (
                       "Delete"
                     )}
