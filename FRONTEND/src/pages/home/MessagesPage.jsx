@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import useAuth from "@/hooks/useAuth";
-import useMessages from "@/hooks/useMessages";
+import { useMessages } from "@/hooks/useMessages";
 import { ArrowLeft, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 

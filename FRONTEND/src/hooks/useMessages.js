@@ -1,105 +1,68 @@
 import { useCallback, useRef, useState } from "react";
-import apiService from "@/api/apiService";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import * as api from "@/api/messages";
 
-export default function useMessages() {
-  const [conversations, setConversations] = useState([]);
-  const [messages, setMessages] = useState([]);
+export function useMessages() {
+  const qc = useQueryClient();
   const [currentChat, setCurrentChat] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef(null);
 
-  const fetchConversations = async () => {
-    setIsLoading(true);
-    try {
-      const { data } = await apiService.get("/api/conversations");
-      setConversations(data.data);
-    } catch (error) {
-      console.error("Error fetching conversations:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const conversations = useQuery({
+    queryKey: ["conversations"],
+    queryFn: api.fetchConversations,
+    staleTime: 20_000,
+  });
 
-  const fetchMessages = useCallback(async (userId) => {
-    setIsLoading(true);
-    try {
-      const { data } = await apiService.get(`/api/messages/${userId}`);
-      setMessages(data.data);
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const chatMessages = useQuery({
+    queryKey: ["messages", currentChat?.id],
+    queryFn: () => api.fetchMessagesWith(currentChat.id),
+    enabled: !!currentChat,
+    staleTime: 10_000,
+  });
 
-  const sendMessage = async (userId, content) => {
-    setIsSending(true);
-    try {
-      const { data } = await apiService.post(`/api/messages/${userId}`, {
-        content,
-      });
-      setMessages((prev) => [...prev, data]);
-      // Update conversations list
-      setConversations((prev) => {
-        const existing = prev.find(
-          (c) =>
-            c.sender_id === data.sender_id || c.receiver_id === data.sender_id
-        );
-        if (existing) {
-          return prev.map((c) =>
-            c.sender_id === data.sender_id ||
-            c.receiver_id === data.sender_id
-              ? data
-              : c
-          );
-        }
-        return [data, ...prev];
-      });
-      return data;
-    } catch (error) {
-      console.error("Error sending message:", error);
-      throw error;
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const fetchUnreadCount = async () => {
-    try {
-      const { data } = await apiService.get("/api/messages/unread-count");
-      setUnreadCount(data.count);
-    } catch (error) {
-      console.error("Error fetching unread count:", error);
-    }
-  };
+  const send = useMutation({
+    mutationFn: ({ userId, content }) => api.sendMessage(userId, content),
+    onSuccess: (newMsg) => {
+      qc.setQueryData(["messages", newMsg.receiver_id === currentChat?.id ? newMsg.receiver_id : newMsg.sender_id], (old) =>
+        old ? [...old, newMsg] : [newMsg],
+      );
+      qc.invalidateQueries({ queryKey: ["conversations"] });
+    },
+    onError: () => toast.error("Could not send message"),
+  });
 
   const openChat = useCallback(
     (user) => {
       setCurrentChat(user);
-      fetchMessages(user.id);
     },
-    [fetchMessages]
+    [],
   );
 
   const closeChat = useCallback(() => {
     setCurrentChat(null);
-    setMessages([]);
-  }, []);
+    qc.invalidateQueries({ queryKey: ["messages"] });
+    qc.invalidateQueries({ queryKey: ["conversations"] });
+  }, [qc]);
+
+  const sendMessage = useCallback(
+    async (userId, content) => {
+      await send.mutateAsync({ userId, content });
+    },
+    [send],
+  );
 
   return {
-    conversations,
-    messages,
+    conversations: conversations.data ?? [],
+    messages: chatMessages.data ?? [],
     currentChat,
-    isLoading,
-    isSending,
-    unreadCount,
+    isLoading: conversations.isLoading,
+    isError: conversations.isError,
+    isSending: send.isPending,
+    unreadCount: 0,
     messagesEndRef,
-    fetchConversations,
-    fetchMessages,
+    fetchConversations: conversations.refetch,
     sendMessage,
-    fetchUnreadCount,
     openChat,
     closeChat,
   };
