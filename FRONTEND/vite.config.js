@@ -12,23 +12,32 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Split vendor libs into stable, long-cached chunks
+        // Split vendor libs into stable, long-cached chunks.
+        // NOTE: match react *core* packages only — a naive id.includes("react")
+        // also catches @tanstack/react-query, react-hot-toast, etc. and creates
+        // circular vendor<->react-vendor chunks (TDZ at runtime: "Cannot access
+        // 'i' before initialization").
         manualChunks(id) {
-          if (id.includes("node_modules")) {
-            if (id.includes("react") || id.includes("react-dom") || id.includes("react-router")) {
-              return "react-vendor";
-            }
-            if (id.includes("redux") || id.includes("@reduxjs")) {
-              return "redux-vendor";
-            }
-            if (id.includes("axios") || id.includes("react-hot-toast") || id.includes("react-spinners") || id.includes("react-loader-spinner")) {
-              return "ui-vendor";
-            }
-            if (id.includes("lucide")) {
-              return "icons";
-            }
-            return "vendor";
+          if (!id.includes("node_modules")) return;
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) {
+            return "react-vendor";
           }
+          if (
+            /[\\/]node_modules[\\/](redux|@reduxjs)[\\/]/.test(id)
+          ) {
+            return "redux-vendor";
+          }
+          if (
+            /[\\/]node_modules[\\/](axios|react-hot-toast|react-spinners|react-loader-spinner)[\\/]/.test(
+              id
+            )
+          ) {
+            return "ui-vendor";
+          }
+          if (/[\\/]node_modules[\\/]lucide-react[\\/]/.test(id)) {
+            return "icons";
+          }
+          return "vendor";
         },
       },
     },
