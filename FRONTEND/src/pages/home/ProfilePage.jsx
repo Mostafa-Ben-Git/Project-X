@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
@@ -16,15 +16,20 @@ function ProfilePage() {
   const { user: currentUser } = useAuth();
   const { handleFollow, isPending } = useFollow();
   const [activeTab, setActiveTab] = useState("posts");
-  const [isFollowing, setIsFollowing] = useState(
-    () => profileUser?.is_following ?? displayUser?.is_following ?? false
-  );
-  const [followPending, setFollowPending] = useState(false);
 
-  // If username param exists, fetch that user's profile; otherwise use current user
   const { data: profileUser, isLoading: profileLoading } = useUserProfile(username);
   const displayUser = username ? profileUser : currentUser;
   const userId = displayUser?.id;
+
+  // isFollowing: start false, sync from server once profile loads
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followPending, setFollowPending] = useState(false);
+
+  useEffect(() => {
+    if (displayUser?.is_following != null) {
+      setIsFollowing(displayUser.is_following);
+    }
+  }, [displayUser?.is_following]);
 
   const onFollow = async () => {
     if (isPending || !userId) return;
