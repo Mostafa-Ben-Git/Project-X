@@ -11,11 +11,13 @@ import useAuth from "@/hooks/useAuth";
 import { useFollow } from "@/hooks/useFollow";
 import { formatLastActive, statusDotClass } from "@/lib/status";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 export function UserHoverCart({ user, className }) {
   const { user: currentUser } = useAuth();
   const { handleFollow, isPending } = useFollow();
+  const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(user.is_following ?? false);
   const [pending, setPending] = useState(false);
 
@@ -23,6 +25,10 @@ export function UserHoverCart({ user, className }) {
   const bio =
     user.bio && user.bio.length > 90 ? user.bio.slice(0, 90) + "…" : user.bio;
   const dot = statusDotClass(user.status);
+
+  const goToProfile = () => {
+    if (user.username) navigate(`/profile/${user.username}`);
+  };
 
   const onFollow = async () => {
     if (isPending) return;
@@ -42,8 +48,9 @@ export function UserHoverCart({ user, className }) {
       <HoverCardTrigger asChild>
         <button
           type="button"
+          onClick={goToProfile}
           className={cn(
-            "inline-flex items-center gap-1 text-xl font-bold hover:underline",
+            "inline-flex max-w-full items-center gap-1 truncate text-xl font-bold hover:underline",
             className,
           )}
         >
@@ -52,7 +59,12 @@ export function UserHoverCart({ user, className }) {
       </HoverCardTrigger>
       <HoverCardContent className="w-80" sideOffset={8}>
         <div className="flex items-start gap-3">
-          <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={goToProfile}
+            className="relative shrink-0 rounded-full"
+            aria-label={`View ${user.first_name} ${user.last_name}'s profile`}
+          >
             <Avatar className="h-14 w-14">
               <AvatarImage
                 src={user.avatar}
@@ -72,15 +84,23 @@ export function UserHoverCart({ user, className }) {
                 )}
               />
             )}
-          </div>
+          </button>
 
           <div className="min-w-0 flex-1">
-            <p className="truncate text-lg font-bold leading-tight">
+            <button
+              type="button"
+              onClick={goToProfile}
+              className="block max-w-full truncate text-left text-lg font-bold leading-tight hover:underline"
+            >
               {user.first_name} {user.last_name}
-            </p>
-            <p className="truncate text-sm text-muted-foreground">
+            </button>
+            <button
+              type="button"
+              onClick={goToProfile}
+              className="block max-w-full truncate text-left text-sm text-muted-foreground hover:underline"
+            >
               @{user.username}
-            </p>
+            </button>
             {dot && (
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {user.status === "online" ? (
@@ -115,7 +135,11 @@ export function UserHoverCart({ user, className }) {
           )}
         </div>
 
-        {bio && <p className="mt-3 text-sm text-foreground/90">{bio}</p>}
+        {bio && (
+          <p className="mt-3 line-clamp-4 break-words text-sm text-foreground/90">
+            {bio}
+          </p>
+        )}
 
         <div className="mt-3 flex items-center gap-1 text-sm text-muted-foreground">
           <span>

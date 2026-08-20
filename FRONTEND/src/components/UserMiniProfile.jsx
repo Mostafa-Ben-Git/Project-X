@@ -6,16 +6,22 @@ import useAuth from "@/hooks/useAuth";
 import { useFollow } from "@/hooks/useFollow";
 import { formatLastActive, statusDotClass } from "@/lib/status";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 function UserMiniProfile({ user }) {
   const { user: currentUser } = useAuth();
   const { handleFollow, isPending } = useFollow();
+  const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(user.is_following ?? false);
   const [pending, setPending] = useState(false);
 
   const isSelf = currentUser?.id === user.id;
   const dot = statusDotClass(user.status);
+
+  const goToProfile = () => {
+    if (user.username) navigate(`/profile/${user.username}`);
+  };
 
   const onFollow = async () => {
     if (isPending) return;
@@ -32,8 +38,13 @@ function UserMiniProfile({ user }) {
 
   return (
     <li className="flex w-full items-center justify-between gap-3 rounded-xl border border-border p-2">
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="relative shrink-0">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <button
+          type="button"
+          onClick={goToProfile}
+          className="relative shrink-0 rounded-full"
+          aria-label={`View ${user.first_name} ${user.last_name}'s profile`}
+        >
           <Avatar className="h-12 w-12">
             <AvatarImage
               src={user.avatar}
@@ -53,7 +64,7 @@ function UserMiniProfile({ user }) {
               )}
             />
           )}
-        </div>
+        </button>
         <div className="flex min-w-0 flex-col">
           <UserHoverCart user={user} className="text-sm font-bold" />
           <p className="truncate text-xs text-muted-foreground">@{user.username}</p>
