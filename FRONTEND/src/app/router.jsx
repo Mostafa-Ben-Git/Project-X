@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { lazy, Suspense } from "react";
 import { PostsProvider } from "@/context/PostsContext";
 import GuestLayout from "@/layouts/GuestLayout";

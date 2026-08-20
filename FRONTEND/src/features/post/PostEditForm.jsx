@@ -33,6 +33,7 @@ function PostEditForm({ post_id }) {
     }
 
     getPost();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleRemoveImage = (index) => {

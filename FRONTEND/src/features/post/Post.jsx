@@ -21,7 +21,6 @@ import usePosts from "@/hooks/usePosts";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { Dot, Settings } from "lucide-react";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserHoverCart } from "../../components/UserHoverCart";
 import { ImagesCarousel } from "./ImagesCarousel";
@@ -52,10 +51,6 @@ function Post({
 }) {
   const nav = useNavigate();
 
-  const [showEditPanel, setShowEditPanel] = useState(true);
-  const [showPanelDelete, setShowPanelDelete] = useState(false);
-  const [showDropDown, setShowDropDown] = useState(false);
-
   const { isDeleting, deletePost } = usePosts();
   const { user: currentUser } = useAuth();
 
@@ -69,11 +64,14 @@ function Post({
   };
   return (
     <li
-      className={cn("relative w-full list-none overflow-hidden p-4", className)}
+      className={cn(
+        "relative w-full list-none overflow-hidden border-b border-border p-4",
+        className,
+      )}
       ref={innerRef}
     >
       {currentUser.username === user.username && (
-        <div className="absolute right-0 -translate-x-1/2">
+        <div className="absolute right-3 top-3">
           <AlertDialog>
             <Dialog>
               <DropdownMenu>
@@ -125,11 +123,11 @@ function Post({
       )}
       <div className="flex items-center">
         <span>
-          <Avatar className="h-20 w-20">
-            <AvatarImage
-              src={user.avatar}
-              className="aspect-square max-w-[50px] rounded-full"
-            />
+          <Avatar className="h-12 w-12">
+              <AvatarImage
+                src={user.avatar}
+                className="aspect-square h-full w-full rounded-full object-cover"
+              />
             <AvatarFallback>
               {user.first_name[0]}
               {user.last_name[0]}
@@ -142,7 +140,10 @@ function Post({
         </div>
       </div>
       <p
-        className="mt-6 p-1 text-lg break-words overflow-hidden hover:bg-slate-100 hover:bg-opacity-10"
+        className={cn(
+          "mt-4 cursor-pointer whitespace-pre-wrap break-words text-base leading-relaxed text-foreground",
+          clickable && "transition-opacity hover:opacity-90",
+        )}
         dangerouslySetInnerHTML={{ __html: content }}
         {...(clickable && { onClick: handelClick })}
       ></p>

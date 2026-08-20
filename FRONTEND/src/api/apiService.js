@@ -67,6 +67,9 @@ export function startHeartbeat() {
 
   // Set offline on browser close / tab close
   window.addEventListener("beforeunload", setOffline);
+
+  // Set offline when user switches tabs (hidden), online when they come back (visible)
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 }
 
 export function stopHeartbeat() {
@@ -75,6 +78,16 @@ export function stopHeartbeat() {
     heartbeatInterval = null;
   }
   window.removeEventListener("beforeunload", setOffline);
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+}
+
+function handleVisibilityChange() {
+  if (document.hidden) {
+    setOffline();
+  } else {
+    // Tab became visible again — immediately ping online
+    apiService.post("/api/heartbeat").catch(() => {});
+  }
 }
 
 // Set user offline immediately (best-effort via sendBeacon)

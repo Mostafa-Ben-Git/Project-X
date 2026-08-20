@@ -1,4 +1,5 @@
-import { createContext, useEffect, useRef, useState } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useRef, useState } from "react";
 
 import apiService from "@/api/apiService"; // Assuming you have an API service
 import useIntersectionObserver from "@/hooks/useIntersectionObserver";

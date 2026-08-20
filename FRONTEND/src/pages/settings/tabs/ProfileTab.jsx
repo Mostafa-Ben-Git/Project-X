@@ -1,6 +1,7 @@
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Camera, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
 import { profileSchema } from "@/lib/validation/profile";
@@ -17,6 +18,11 @@ export default function ProfileTab() {
   const { user, updateUserData } = useAuth();
   const navigate = useNavigate();
 
+  const avatarInputRef = useRef(null);
+  const coverInputRef = useRef(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(null);
+
   const {
     register,
     handleSubmit,
@@ -30,19 +36,6 @@ export default function ProfileTab() {
       username: user?.username || "",
       email: user?.email || "",
       bio: user?.bio || "",
-      genre: user?.genre || "",
-      statut: user?.statut || "",
-      adresse: user?.adresse || "",
-      ville_origine: user?.ville_origine || "",
-      ville_habituelle: user?.ville_habituelle || "",
-      situation_amoureuse: user?.situation_amoureuse || "",
-      interets: user?.interets || "",
-      education: user?.education || "",
-      liens_sociaux: user?.liens_sociaux || "",
-      date_de_naissance: user?.date_de_naissance || "",
-      phone: user?.phone || "",
-      website: user?.website || "",
-      location: user?.location || "",
     },
   });
 
@@ -66,113 +59,133 @@ export default function ProfileTab() {
 
   if (!user) return null;
 
+  const onAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarPreview(URL.createObjectURL(file));
+      setValue("avatar", file);
+    }
+  };
+
+  const onCoverChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCoverPreview(URL.createObjectURL(file));
+      setValue("cover_image", file);
+    }
+  };
+
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Edit profile</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="mb-4 flex items-center gap-4">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={user.avatar} loading="lazy" />
-            <AvatarFallback>{user.first_name?.[0]}{user.last_name?.[0]}</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="font-medium">{user.first_name} {user.last_name}</p>
-            <p className="text-sm text-muted-foreground">@{user.username}</p>
-          </div>
+      <CardContent className="p-0">
+        {/* Cover image */}
+        <div className="relative h-40 w-full bg-muted">
+          {coverPreview || user.cover_image ? (
+            <img
+              src={coverPreview || user.cover_image}
+              alt="Cover"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+              No cover image
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => coverInputRef.current?.click()}
+            className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-md bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition hover:bg-black/75"
+          >
+            <Camera className="h-3.5 w-3.5" />
+            Change cover
+          </button>
+          <input
+            ref={coverInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={onCoverChange}
+          />
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" encType="multipart/form-data">
-          <FieldGroup label="Username" id="username" error={errors.username?.message}>
-            <Input id="username" {...register("username")} />
-          </FieldGroup>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6 p-6"
+          encType="multipart/form-data"
+        >
+          {/* Avatar */}
+          <div className="flex flex-col items-center">
+            <div className="relative -mt-16">
+              <Avatar className="h-24 w-24 border-4 border-card shadow">
+                <AvatarImage src={avatarPreview || user.avatar} loading="lazy" />
+                <AvatarFallback className="text-lg">
+                  {user.first_name?.[0]}
+                  {user.last_name?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition hover:opacity-100"
+                aria-label="Change avatar"
+              >
+                <Camera className="h-6 w-6" />
+              </button>
+            </div>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={onAvatarChange}
+            />
+            <p className="mt-2 text-sm font-medium">{user.first_name} {user.last_name}</p>
+            <p className="text-sm text-muted-foreground">@{user.username}</p>
+          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <FieldGroup label="First name" id="first_name" error={errors.first_name?.message}>
-              <Input id="first_name" {...register("first_name")} />
+          {/* Basic info */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FieldGroup label="First name" id="first_name" error={errors.first_name?.message}>
+                <Input id="first_name" {...register("first_name")} />
+              </FieldGroup>
+              <FieldGroup label="Last name" id="last_name" error={errors.last_name?.message}>
+                <Input id="last_name" {...register("last_name")} />
+              </FieldGroup>
+            </div>
+
+            <FieldGroup label="Username" id="username" error={errors.username?.message}>
+              <Input id="username" {...register("username")} />
             </FieldGroup>
-            <FieldGroup label="Last name" id="last_name" error={errors.last_name?.message}>
-              <Input id="last_name" {...register("last_name")} />
+
+            <FieldGroup label="Email" id="email" error={errors.email?.message}>
+              <Input id="email" type="email" {...register("email")} />
+            </FieldGroup>
+
+            <FieldGroup label="Bio" id="bio" error={errors.bio?.message}>
+              <Textarea id="bio" rows={3} {...register("bio")} />
             </FieldGroup>
           </div>
 
-          <FieldGroup label="Email" id="email" error={errors.email?.message}>
-            <Input id="email" type="email" {...register("email")} />
-          </FieldGroup>
-
-          <FieldGroup label="Bio" id="bio" error={errors.bio?.message}>
-            <Textarea id="bio" rows={3} {...register("bio")} />
-          </FieldGroup>
-
-          <div className="grid grid-cols-2 gap-4">
-            <FieldGroup label="Gender" id="genre" error={errors.genre?.message}>
-              <select id="genre" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" {...register("genre")}>
-                <option value="">—</option>
-                <option value="masculin">Male</option>
-                <option value="feminin">Female</option>
-                <option value="autre">Other</option>
-              </select>
-            </FieldGroup>
-            <FieldGroup label="Date of birth" id="date_de_naissance" error={errors.date_de_naissance?.message}>
-              <Input id="date_de_naissance" type="date" {...register("date_de_naissance")} />
-            </FieldGroup>
+          {/* Actions */}
+          <div className="sticky bottom-0 -mx-6 flex items-center justify-end gap-3 border-t bg-card/95 px-6 py-4 backdrop-blur">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => navigate("/profile")}
+              disabled={isSubmitting}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting ? "Saving..." : "Save changes"}
+            </Button>
           </div>
-
-          <FieldGroup label="Phone" id="phone" error={errors.phone?.message}>
-            <Input id="phone" type="tel" placeholder="+1 234 567 890" {...register("phone")} />
-          </FieldGroup>
-
-          <FieldGroup label="Website" id="website" error={errors.website?.message}>
-            <Input id="website" type="url" placeholder="https://yoursite.com" {...register("website")} />
-          </FieldGroup>
-
-          <FieldGroup label="Location" id="location" error={errors.location?.message}>
-            <Input id="location" placeholder="City, Country" {...register("location")} />
-          </FieldGroup>
-
-          <FieldGroup label="City (origin)" id="ville_origine" error={errors.ville_origine?.message}>
-            <Input id="ville_origine" {...register("ville_origine")} />
-          </FieldGroup>
-
-          <FieldGroup label="City (current)" id="ville_habituelle" error={errors.ville_habituelle?.message}>
-            <Input id="ville_habituelle" {...register("ville_habituelle")} />
-          </FieldGroup>
-
-          <FieldGroup label="Relationship status" id="situation_amoureuse" error={errors.situation_amoureuse?.message}>
-            <Input id="situation_amoureuse" {...register("situation_amoureuse")} />
-          </FieldGroup>
-
-          <FieldGroup label="Interests" id="interets" error={errors.interets?.message}>
-            <Textarea id="interets" rows={2} {...register("interets")} />
-          </FieldGroup>
-
-          <FieldGroup label="Education" id="education" error={errors.education?.message}>
-            <Input id="education" {...register("education")} />
-          </FieldGroup>
-
-          <FieldGroup label="Address" id="adresse" error={errors.adresse?.message}>
-            <Input id="adresse" {...register("adresse")} />
-          </FieldGroup>
-
-          <FieldGroup label="Social links" id="liens_sociaux" error={errors.liens_sociaux?.message}>
-            <Input id="liens_sociaux" {...register("liens_sociaux")} />
-          </FieldGroup>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="avatar">Avatar</Label>
-            <Input id="avatar" type="file" accept="image/*" onChange={(e) => setValue("avatar", e.target.files?.[0])} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="cover_image">Cover image</Label>
-            <Input id="cover_image" type="file" accept="image/*" onChange={(e) => setValue("cover_image", e.target.files?.[0])} />
-          </div>
-
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSubmitting ? "Saving..." : "Save changes"}
-          </Button>
         </form>
       </CardContent>
     </Card>

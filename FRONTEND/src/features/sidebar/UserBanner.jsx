@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { LogOut, MoreHorizontal, Settings, User as UserIcon, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export const UserBanner = () => {
+export const UserBanner = ({ compact = false }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -33,6 +33,49 @@ export const UserBanner = () => {
       onClick: () => navigate("/settings"),
     },
   ];
+
+  if (compact) {
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full p-0"
+            aria-label="Account menu"
+          >
+            <UserAvatar className="h-9 w-9" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-56 p-2" side="top" align="start">
+          <div className="flex flex-col gap-1">
+            {items.map(({ label, icon: Icon, onClick }) => (
+              <Button
+                key={label}
+                variant="ghost"
+                className="w-full justify-start gap-2"
+                size="sm"
+                onClick={onClick}
+              >
+                <Icon size={16} />
+                {label}
+              </Button>
+            ))}
+            <div className="my-1 h-px bg-border" />
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+              size="sm"
+              onClick={logout}
+            >
+              <LogOut size={16} />
+              Log Out
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  }
 
   return (
     <Popover>

@@ -54,7 +54,7 @@ export default function PrivacyTab() {
           <Separator />
           <div className="space-y-1.5">
             <Label>Show online status</Label>
-            <p className="text-sm text-muted-foreground">Others can see when you're active</p>
+            <p className="text-sm text-muted-foreground">Others can see when you&apos;re active</p>
             <Select
               defaultValue={user.status || "online"}
               onValueChange={(val) => handleSelect("status", val)}

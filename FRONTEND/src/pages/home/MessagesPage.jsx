@@ -7,7 +7,7 @@ import useAuth from "@/hooks/useAuth";
 import { useMessages } from "@/hooks/useMessages";
 import { ArrowLeft, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { formatLastActive, statusDotClass } from "@/lib/status";
 
 function MessagesPage() {
@@ -73,7 +73,7 @@ function MessagesPage() {
           <Button variant="ghost" size="icon" onClick={goToList}>
             <ArrowLeft size={20} />
           </Button>
-          <div className="relative">
+          <Link to={`/profile/${partner?.username}`} className="relative cursor-pointer">
             <Avatar className="h-10 w-10">
               <AvatarImage src={partner?.avatar} />
               <AvatarFallback>
@@ -84,11 +84,13 @@ function MessagesPage() {
             {partner?.status !== "hidden" && (
               <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${statusDotClass(partner?.status) || "bg-gray-400"}`} />
             )}
-          </div>
+          </Link>
           <div>
-            <p className="font-semibold">
-              {partner?.first_name} {partner?.last_name}
-            </p>
+            <Link to={`/profile/${partner?.username}`} className="cursor-pointer">
+              <p className="font-semibold">
+                {partner?.first_name} {partner?.last_name}
+              </p>
+            </Link>
             <p className="text-xs text-muted-foreground">
               {partner?.status === "online" && <span className="text-green-500">Online</span>}
               {partner?.status === "away" && <span className="text-yellow-500">Away</span>}

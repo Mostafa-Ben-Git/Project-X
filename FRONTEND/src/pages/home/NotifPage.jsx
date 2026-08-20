@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useNavigate } from "react-router-dom";
-import { Bell, Check, CheckCheck, Heart, MessageSquare, UserPlus } from "lucide-react";
+import { Bell, CheckCheck, Heart, MessageSquare, UserPlus } from "lucide-react";
 
 const notificationIcons = {
   follow: <UserPlus size={18} className="text-blue-500" />,
@@ -110,7 +110,7 @@ function NotificationsPage() {
       )}
 
       {!hasNextPage && notifications.length > 0 && (
-        <p className="mt-4 text-center text-sm text-muted-foreground">You're all caught up</p>
+        <p className="mt-4 text-center text-sm text-muted-foreground">You&apos;re all caught up</p>
       )}
     </main>
   );

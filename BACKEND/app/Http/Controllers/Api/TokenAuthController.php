@@ -37,6 +37,10 @@ class TokenAuthController extends Controller
         // Create new token
         $token = $user->createToken('auth-token', ['*'], $expiry)->plainTextToken;
 
+        // Mark user online on login
+        $user->update(['status' => 'online', 'last_active_at' => now()]);
+        \App\Support\Broadcast::safe(new \App\Events\UserStatusBroadcast($user));
+
         return response()->json([
             'user' => new UserResource($user),
             'token' => $token,
@@ -48,7 +52,11 @@ class TokenAuthController extends Controller
      */
     public function logout(Request $request): Response
     {
-        $request->user()->currentAccessToken()->delete();
+        // Mark user offline on logout
+        $user = $request->user();
+        $user->update(['status' => 'offline']);
+        \App\Support\Broadcast::safe(new \App\Events\UserStatusBroadcast($user));
+        $user->currentAccessToken()->delete();
 
         return response()->noContent();
     }
@@ -59,8 +67,10 @@ class TokenAuthController extends Controller
     public function me(Request $request): UserResource
     {
         $user = $request->user();
-        // Set online on every page load / refresh
+        // Set online on every page load / refresh.
+        // The scheduler (users:mark-offline) handles marking stale users offline.
         $user->update(['last_active_at' => now(), 'status' => 'online']);
+        \App\Support\Broadcast::safe(new \App\Events\UserStatusBroadcast($user));
         $user->loadCount(['followers', 'followings', 'posts']);
         return new UserResource($user);
     }

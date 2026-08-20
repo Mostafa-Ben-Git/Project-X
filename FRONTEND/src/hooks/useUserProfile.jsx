@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useQuery } from "@tanstack/react-query";
 import apiService from "@/api/apiService";
 import { EmptyState } from "@/components/empty-state";

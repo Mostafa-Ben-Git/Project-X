@@ -4,6 +4,7 @@ import { Sidebar } from "@/features/sidebar/sidebar";
 import useAuth from "@/hooks/useAuth";
 import usePosts from "@/hooks/usePosts";
 import { useRealtime } from "@/hooks/useRealtime";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { startHeartbeat, stopHeartbeat } from "@/api/apiService";
@@ -12,6 +13,7 @@ function UserLayout() {
   const { getUser, user, isLoggedIn } = useAuth();
   const { fetchPosts } = usePosts();
   useRealtime(user?.id);
+  useOnlineStatus();
 
   // Start heartbeat for online status
   useEffect(() => {
@@ -35,10 +37,12 @@ function UserLayout() {
   if (!isLoggedIn) return <Navigate to="/login" />;
 
   return (
-    <section className="relative mx-6 md:ml-[280px] 2xl:mr-[340px]">
+    <section className="relative px-4 pb-16 md:pb-0 md:ml-[70px] 2xl:mr-[340px]">
       <Sidebar />
       <ScrollArea className="mt-6">
-        <Outlet />
+        <div className="mx-auto w-full max-w-[600px]">
+          <Outlet />
+        </div>
       </ScrollArea>
       <RightBar />
     </section>

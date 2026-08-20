@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, ArrowLeft, Lock, User, Shield, LogOut, Phone, Globe, MapPin } from "lucide-react";
+import { Loader2, ArrowLeft, Lock, User, Shield, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "@/hooks/useAuth";
@@ -36,19 +36,6 @@ function EditProfilePage() {
       username: user?.username || "",
       email: user?.email || "",
       bio: user?.bio || "",
-      genre: user?.genre || "",
-      statut: user?.statut || "",
-      adresse: user?.adresse || "",
-      ville_origine: user?.ville_origine || "",
-      ville_habituelle: user?.ville_habituelle || "",
-      situation_amoureuse: user?.situation_amoureuse || "",
-      interets: user?.interets || "",
-      education: user?.education || "",
-      liens_sociaux: user?.liens_sociaux || "",
-      date_de_naissance: user?.date_de_naissance || "",
-      phone: user?.phone || "",
-      website: user?.website || "",
-      location: user?.location || "",
       is_private: user?.is_private || false,
       language: user?.language || "en",
       status: user?.status || "online",
@@ -149,48 +136,6 @@ function EditProfilePage() {
               <Textarea id="bio" rows={3} {...register("bio")} />
             </FieldGroup>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FieldGroup label="Gender" id="genre" error={errors.genre?.message}>
-                <select id="genre" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" {...register("genre")}>
-                  <option value="">—</option>
-                  <option value="masculin">Male</option>
-                  <option value="feminin">Female</option>
-                  <option value="autre">Other</option>
-                </select>
-              </FieldGroup>
-              <FieldGroup label="Date of birth" id="date_de_naissance" error={errors.date_de_naissance?.message}>
-                <Input id="date_de_naissance" type="date" {...register("date_de_naissance")} />
-              </FieldGroup>
-            </div>
-
-            <FieldGroup label="City (origin)" id="ville_origine" error={errors.ville_origine?.message}>
-              <Input id="ville_origine" {...register("ville_origine")} />
-            </FieldGroup>
-
-            <FieldGroup label="City (current)" id="ville_habituelle" error={errors.ville_habituelle?.message}>
-              <Input id="ville_habituelle" {...register("ville_habituelle")} />
-            </FieldGroup>
-
-            <FieldGroup label="Relationship status" id="situation_amoureuse" error={errors.situation_amoureuse?.message}>
-              <Input id="situation_amoureuse" {...register("situation_amoureuse")} />
-            </FieldGroup>
-
-            <FieldGroup label="Interests" id="interets" error={errors.interets?.message}>
-              <Textarea id="interets" rows={2} {...register("interets")} />
-            </FieldGroup>
-
-            <FieldGroup label="Education" id="education" error={errors.education?.message}>
-              <Input id="education" {...register("education")} />
-            </FieldGroup>
-
-            <FieldGroup label="Address" id="adresse" error={errors.adresse?.message}>
-              <Input id="adresse" {...register("adresse")} />
-            </FieldGroup>
-
-            <FieldGroup label="Social links" id="liens_sociaux" error={errors.liens_sociaux?.message}>
-              <Input id="liens_sociaux" {...register("liens_sociaux")} />
-            </FieldGroup>
-
             <div className="space-y-1.5">
               <Label htmlFor="avatar">Avatar</Label>
               <Input id="avatar" type="file" accept="image/*" onChange={(e) => setValue("avatar", e.target.files?.[0])} />
@@ -206,31 +151,6 @@ function EditProfilePage() {
               {isSubmitting ? "Saving..." : "Save changes"}
             </Button>
           </form>
-        </CardContent>
-      </Card>
-
-      {/* Contact & Links */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Globe size={18} /> Contact & links
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <FieldGroup label="Phone" id="phone" error={errors.phone?.message}>
-            <Input id="phone" type="tel" placeholder="+1 234 567 890" {...register("phone")} />
-          </FieldGroup>
-
-          <FieldGroup label="Website" id="website" error={errors.website?.message}>
-            <Input id="website" type="url" placeholder="https://yoursite.com" {...register("website")} />
-          </FieldGroup>
-
-          <FieldGroup label="Location" id="location" error={errors.location?.message}>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="location" placeholder="City, Country" className="pl-9" {...register("location")} />
-            </div>
-          </FieldGroup>
         </CardContent>
       </Card>
 
@@ -345,7 +265,7 @@ function EditProfilePage() {
         <CardContent className="flex items-center justify-between p-4">
           <div>
             <p className="font-medium">Sign out</p>
-            <p className="text-sm text-muted-foreground">You'll need to log in again</p>
+            <p className="text-sm text-muted-foreground">You&apos;ll need to log in again</p>
           </div>
           <Button variant="destructive" size="sm" onClick={logout}>
             <LogOut className="mr-2 h-4 w-4" />

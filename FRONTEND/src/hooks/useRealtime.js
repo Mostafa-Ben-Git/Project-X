@@ -65,20 +65,7 @@ export function useRealtime(userId) {
         }
       });
 
-      // Listen for status updates from other users
-      channel.listen(".user.status.updated", (payload) => {
-        // Update the partner's cached data with new status
-        qc.setQueryData(["user", payload.user_id], (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            status: payload.status,
-            last_active_at: payload.last_active_at,
-          };
-        });
-        // Also invalidate conversations to refresh status dots
-        qc.invalidateQueries({ queryKey: ["conversations"] });
-      });
+      // Status updates are now handled by useOnlineStatus (presence channel)
 
       setConnected(true);
     } catch (e) {
@@ -89,7 +76,6 @@ export function useRealtime(userId) {
       try {
         channel?.stopListening(".notification.created");
         channel?.stopListening(".message.sent");
-        channel?.stopListening(".user.status.updated");
       } catch {
         /* noop */
       }

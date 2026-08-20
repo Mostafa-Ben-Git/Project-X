@@ -19,10 +19,10 @@ import { ImagePreview } from "../../components/ImagePreview";
 const EmojiPicker = lazy(() => import("emoji-picker-react"));
 
 function PostBox({ className, parent_id, isReplay = false }) {
-  const { addPost, isFetching, isPosting } = usePosts();
+  const { addPost, isPosting } = usePosts();
   const qc = useQueryClient();
 
-  const { user, isLoading } = useAuth();
+  const { user } = useAuth();
   const [newPost, setNewPost] = useState({
     text: "",
     images: [],

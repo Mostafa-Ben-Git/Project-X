@@ -1,6 +1,5 @@
 import { useSelector } from "react-redux";
 import { NavLink } from "react-router-dom";
-import useAuth from "@/hooks/useAuth";
 import { UserBanner } from "./UserBanner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -13,7 +12,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LeftBar({ className }) {
-  const { user, isLoading } = useSelector((store) => store.auth);
+  const { isLoading } = useSelector((store) => store.auth);
 
   return (
     <aside className={className}>

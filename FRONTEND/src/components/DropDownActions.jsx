@@ -6,15 +6,12 @@ import {
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Settings } from "lucide-react";
-import { useState } from "react";
 import { AlertDeleteDialog } from "./AlertDeleteDialog";
 
 export function DropDownActions({
   post_id,
-  user_id,
   open,
   setShowDropDown,
   showPanelDelete,

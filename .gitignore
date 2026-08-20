@@ -10,6 +10,9 @@
 /public/build
 /dist
 /out
+BACKEND/public/assets/
+BACKEND/public/index.html
+FRONTEND/dist/
 
 # IDE
 .vscode

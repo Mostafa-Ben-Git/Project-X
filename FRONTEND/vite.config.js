@@ -12,35 +12,20 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Split vendor libs into stable, long-cached chunks.
-        // NOTE: match react *core* packages only — a naive id.includes("react")
-        // also catches @tanstack/react-query, react-hot-toast, etc. and creates
-        // circular vendor<->react-vendor chunks (TDZ at runtime: "Cannot access
-        // 'i' before initialization").
+        // Keep all node_modules in a single vendor chunk on purpose.
+        // Splitting react / redux / axios / lucide into separate chunks creates
+        // circular vendor<->react-vendor references; when a lazy route chunk
+        // (e.g. ProfilePage) loads, a binding in react-vendor is accessed before
+        // that chunk finishes initializing -> runtime TDZ ("Cannot access 'i'
+        // before initialization"). A single vendor chunk removes the cross-chunk
+        // cycle (Rollup orders intra-chunk deps correctly).
         manualChunks(id) {
-          if (!id.includes("node_modules")) return;
-          if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) {
-            return "react-vendor";
+          if (id.includes("node_modules")) {
+            return "vendor";
           }
-          if (
-            /[\\/]node_modules[\\/](redux|@reduxjs)[\\/]/.test(id)
-          ) {
-            return "redux-vendor";
-          }
-          if (
-            /[\\/]node_modules[\\/](axios|react-hot-toast|react-spinners|react-loader-spinner)[\\/]/.test(
-              id
-            )
-          ) {
-            return "ui-vendor";
-          }
-          if (/[\\/]node_modules[\\/]lucide-react[\\/]/.test(id)) {
-            return "icons";
-          }
-          return "vendor";
         },
       },
     },
-    chunkSizeWarningLimit: 700,
+    chunkSizeWarningLimit: 1200,
   },
 });

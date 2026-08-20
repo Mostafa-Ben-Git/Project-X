@@ -7,6 +7,7 @@ use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\PostResource;
 use App\Models\Image;
+use App\Models\Notification;
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -18,12 +19,23 @@ class PostController extends Controller
   /**
    * Display a listing of posts (top-level only).
    */
-  public function index()
+  public function index(Request $request)
   {
+    $viewer = $request->user();
+    $followingIds = $viewer->followings()->pluck('users.id');
+
+    // Hide posts from private authors unless the viewer follows them or owns the post.
+    $posts = Post::whereNull('parent_id')
+      ->where(function ($query) use ($viewer, $followingIds) {
+        $query
+          ->whereHas('user', fn($q) => $q->where('is_private', false))
+          ->orWhere('user_id', $viewer->id)
+          ->orWhereIn('user_id', $followingIds);
+      })
+      ->latest();
+
     return PostResource::collection(
-      PostResource::prepare(
-        Post::whereNull('parent_id')->latest()
-      )->paginate(6)
+      PostResource::prepare($posts)->paginate(6)
     );
   }
 
@@ -40,6 +52,20 @@ class PostController extends Controller
     $post->parent_id = $validated['parent_id'] ?? null;
 
     $user->posts()->save($post);
+
+    // Notify the parent post's author when this is a comment/reply.
+    if (!empty($validated['parent_id'])) {
+      $parent = Post::find($validated['parent_id']);
+      if ($parent && $parent->user_id !== $user->id) {
+        Notification::create([
+          'user_id' => $parent->user_id,
+          'from_user_id' => $user->id,
+          'type' => 'comment',
+          'content' => $user->first_name . ' ' . $user->last_name . ' commented on your post',
+          'post_id' => $parent->id,
+        ]);
+      }
+    }
 
     // Handle image uploads
     if ($request->hasFile('images')) {

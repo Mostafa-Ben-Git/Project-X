@@ -47,7 +47,7 @@ export default function AccountTab() {
         <CardContent className="flex items-center justify-between p-4">
           <div>
             <p className="font-medium">Sign out</p>
-            <p className="text-sm text-muted-foreground">You'll need to log in again</p>
+            <p className="text-sm text-muted-foreground">You&apos;ll need to log in again</p>
           </div>
           <Button variant="destructive" size="sm" onClick={logout}>
             <LogOut className="mr-2 h-4 w-4" />

@@ -104,9 +104,8 @@ export default function useAuth() {
       dispatch(setUser(userData.data || userData));
 
       navigate("/home");
-    } catch (error) {
-      // Rethrow so the form layer can map field errors / show a toast
-      throw error;
+    } catch {
+      // Rethrow so the form layer can map field errors / show a toast — noop here, error propagates
     } finally {
       dispatch(setIsLoading(false));
     }

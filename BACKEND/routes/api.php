@@ -25,8 +25,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [TokenAuthController::class, 'logout'])->name('logout');
     Route::post('/heartbeat', function (Request $request) {
         $user = $request->user();
-        $user->update(['last_active_at' => now()]);
-        \App\Support\Broadcast::safe(new \App\Events\UserStatusUpdated($user));
+        $user->update(['last_active_at' => now(), 'status' => 'online']);
+        \App\Support\Broadcast::safe(new \App\Events\UserStatusBroadcast($user));
         return response()->json(['ok' => true]);
     });
     Route::post('/status', function (Request $request) {
@@ -36,7 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
             'status' => $request->status,
             'last_active_at' => $request->status === 'offline' ? now() : $user->last_active_at,
         ]);
-        \App\Support\Broadcast::safe(new \App\Events\UserStatusUpdated($user));
+        \App\Support\Broadcast::safe(new \App\Events\UserStatusBroadcast($user));
         return response()->json(['ok' => true]);
     });
     Route::get('/user/posts', function (Request $request) {

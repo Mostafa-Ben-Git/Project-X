@@ -54,6 +54,7 @@ function PostPage() {
     );
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [comments, commentsQuery.hasNextPage, commentsQuery.isFetchingNextPage, commentsQuery.fetchNextPage]);
 
   if (postQuery.isLoading && !currentPost) {
@@ -128,7 +129,7 @@ function PostPage() {
         )}
 
         {!commentsQuery.hasNextPage && comments.length > 0 && (
-          <p className="py-4 text-center text-sm text-muted-foreground">You've reached the end</p>
+          <p className="py-4 text-center text-sm text-muted-foreground">You&apos;ve reached the end</p>
         )}
       </section>
     </div>
