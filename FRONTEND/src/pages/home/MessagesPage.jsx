@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { useIsMobile } from "@/hooks/use-mobile";
 import useAuth from "@/hooks/useAuth";
 import { useMessages } from "@/hooks/useMessages";
 import { ArrowLeft, Send } from "lucide-react";
@@ -15,6 +16,7 @@ function MessagesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const chatId = userId ? Number(userId) : null;
+  const isMobile = useIsMobile();
 
   const {
     conversations,
@@ -63,16 +65,85 @@ function MessagesPage() {
     navigate("/messages");
   };
 
-  // ── Chat Room (URL-driven so refresh keeps you in the room) ──
-  if (chatId) {
+  // ── Conversation list body (shared by mobile + desktop) ──
+  const renderListBody = () => (
+    <>
+      <h1 className="mb-6 text-2xl font-bold">Messages</h1>
+
+      {isLoading && conversations.length === 0 ? (
+        <LoaderCircle />
+      ) : conversations.length === 0 ? (
+        <div className="flex flex-col items-center py-16 text-muted-foreground">
+          <Send size={48} className="mb-4 opacity-50" />
+          <p>No conversations yet</p>
+          <p className="text-sm">Visit a user&apos;s profile to start chatting</p>
+        </div>
+      ) : (
+        <ul className="space-y-px">
+          {conversations?.map((conv) => {
+            const partner = getChatPartner(conv);
+            if (!partner) return null;
+            const hasUnread = conv.unread_count > 0;
+            return (
+              <li key={conv.id}>
+                <button
+                  onClick={() => navigate(`/messages/${partner.id}`)}
+                  className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted ${
+                    hasUnread ? "bg-accent/50" : ""
+                  }`}
+                >
+                  <div className="relative shrink-0">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={partner?.avatar} />
+                      <AvatarFallback>
+                        {partner?.first_name?.[0]}
+                        {partner?.last_name?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    {partner?.status !== "hidden" && (
+                      <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${statusDotClass(partner?.status) || "bg-gray-400"}`} />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className={hasUnread ? "font-bold" : "font-semibold"}>
+                        {partner?.first_name} {partner?.last_name}
+                      </p>
+                      <span className={`text-xs ${hasUnread ? "font-medium text-foreground" : "text-muted-foreground"}`}>
+                        {conv.ago}
+                      </span>
+                    </div>
+                    <p className={`truncate text-sm ${hasUnread ? "font-medium text-foreground" : "text-muted-foreground"}`}>
+                      {conv.content}
+                    </p>
+                  </div>
+                  {hasUnread && (
+                    <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                      {conv.unread_count > 99 ? "99+" : conv.unread_count}
+                    </span>
+                  )}
+                </button>
+                <Separator />
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </>
+  );
+
+  // ── Chat room body (shared by mobile + desktop). showBack = mobile only ──
+  const renderChatBody = (showBack) => {
     const partner = currentChat;
     return (
-      <main className="flex h-[calc(100vh-3rem)] flex-col p-4">
+      <>
         {/* Header */}
         <div className="flex items-center gap-3 border-b pb-3">
-          <Button variant="ghost" size="icon" onClick={goToList}>
-            <ArrowLeft size={20} />
-          </Button>
+          {showBack && (
+            <Button variant="ghost" size="icon" onClick={goToList} className="md:hidden">
+              <ArrowLeft size={20} />
+            </Button>
+          )}
           <Link to={`/profile/${partner?.username}`} className="relative cursor-pointer">
             <Avatar className="h-10 w-10">
               <AvatarImage src={partner?.avatar} />
@@ -138,7 +209,7 @@ function MessagesPage() {
         </div>
 
         {/* Input */}
-        <form onSubmit={handleSend} className="flex gap-2 border-t pt-3">
+        <form onSubmit={handleSend} className="flex gap-2 border-t pt-3 pb-2 md:pb-3">
           <Input
             ref={inputRef}
             value={newMessage}
@@ -155,74 +226,41 @@ function MessagesPage() {
             )}
           </Button>
         </form>
+      </>
+    );
+  };
+
+  // ── MOBILE: show one panel at a time ──
+  if (isMobile) {
+    if (chatId) {
+      return (
+        <main className="flex h-full flex-col overflow-hidden p-4">
+          {renderChatBody(true)}
+        </main>
+      );
+    }
+    return (
+      <main className="h-full overflow-y-auto p-4">
+        {renderListBody()}
       </main>
     );
   }
 
-  // ── Conversations List ──
+  // ── DESKTOP: side-by-side split view ──
   return (
-    <main className="mx-auto max-w-2xl p-4">
-      <h1 className="mb-6 text-2xl font-bold">Messages</h1>
-
-      {isLoading && conversations.length === 0 ? (
-        <LoaderCircle />
-      ) : conversations.length === 0 ? (
-        <div className="flex flex-col items-center py-16 text-muted-foreground">
-          <Send size={48} className="mb-4 opacity-50" />
-          <p>No conversations yet</p>
-          <p className="text-sm">Visit a user&apos;s profile to start chatting</p>
-        </div>
-      ) : (
-        <ul className="space-y-px">
-          {conversations?.map((conv) => {
-            const partner = getChatPartner(conv);
-            if (!partner) return null;
-            const hasUnread = conv.unread_count > 0;
-            return (
-              <li key={conv.id}>
-                <button
-                  onClick={() => navigate(`/messages/${partner.id}`)}
-                  className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-muted ${
-                    hasUnread ? "bg-accent/50" : ""
-                  }`}
-                >
-                  <div className="relative shrink-0">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={partner?.avatar} />
-                      <AvatarFallback>
-                        {partner?.first_name?.[0]}
-                        {partner?.last_name?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    {partner?.status !== "hidden" && (
-                      <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${statusDotClass(partner?.status) || "bg-gray-400"}`} />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className={hasUnread ? "font-bold" : "font-semibold"}>
-                        {partner?.first_name} {partner?.last_name}
-                      </p>
-                      <span className={`text-xs ${hasUnread ? "font-medium text-foreground" : "text-muted-foreground"}`}>
-                        {conv.ago}
-                      </span>
-                    </div>
-                    <p className={`truncate text-sm ${hasUnread ? "font-medium text-foreground" : "text-muted-foreground"}`}>
-                      {conv.content}
-                    </p>
-                  </div>
-                  {hasUnread && (
-                    <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                      {conv.unread_count > 99 ? "99+" : conv.unread_count}
-                    </span>
-                  )}
-                </button>
-                <Separator />
-              </li>
-            );
-          })}
-        </ul>
-      )}
+    <main className="mx-auto flex h-full w-full max-w-[1000px] overflow-hidden">
+      <aside className="flex w-[350px] shrink-0 flex-col overflow-hidden border-r">
+        <div className="flex-1 overflow-y-auto p-4">{renderListBody()}</div>
+      </aside>
+      <section className="flex flex-1 flex-col overflow-hidden">
+        {chatId ? (
+          renderChatBody(false)
+        ) : (
+          <div className="flex flex-1 items-center justify-center text-muted-foreground">
+            Select a conversation to start messaging
+          </div>
+        )}
+      </section>
     </main>
   );
 }

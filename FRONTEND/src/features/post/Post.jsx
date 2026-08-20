@@ -44,7 +44,13 @@ function Post({
   clickable = true,
 }) {
   const nav = useNavigate();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const { isDeleting, deletePost } = usePosts();
+
+  const handleDelete = () => {
+    setDropdownOpen(false);
+    deletePost(post_id);
+  };
   const { user: currentUser } = useAuth();
 
   const handleClick = (e) => {
@@ -87,7 +93,7 @@ function Post({
         {currentUser.username === user.username && (
           <AlertDialog>
             <Dialog>
-              <DropdownMenu>
+              <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
@@ -102,7 +108,7 @@ function Post({
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DialogTrigger asChild>
-                    <Button variant="ghost" className="justify-start">
+                    <Button variant="ghost" className="justify-start" onClick={() => setDropdownOpen(false)}>
                       Edit post
                     </Button>
                   </DialogTrigger>
@@ -110,6 +116,7 @@ function Post({
                     <Button
                       variant="ghost"
                       className="justify-start text-destructive hover:text-destructive"
+                      onClick={() => setDropdownOpen(false)}
                     >
                       Delete post
                     </Button>
@@ -150,7 +157,7 @@ function Post({
 
       <p
         className={cn(
-          "mt-3 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-foreground",
+          "mt-3 px-1 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-foreground",
           clickable && "cursor-pointer transition-opacity hover:opacity-90",
         )}
         dangerouslySetInnerHTML={{ __html: safeContent }}

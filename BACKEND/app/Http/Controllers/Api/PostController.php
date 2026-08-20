@@ -103,7 +103,7 @@ class PostController extends Controller
     $validated = $request->validated();
 
     if (isset($validated['content'])) {
-      $post->content = nl2br(Str::of($validated['content'])->trim());
+    $post->content = $validated['content'] ? nl2br(Str::of($validated['content'])->trim()) : "";
     }
 
     $post->parent_id = $validated['parent_id'] ?? $post->parent_id;

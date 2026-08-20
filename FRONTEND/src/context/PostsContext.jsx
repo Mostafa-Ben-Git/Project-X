@@ -69,20 +69,24 @@ function PostsProvider({ children }) {
   };
 
   const deletePost = async (post_id) => {
+    // Optimistic: remove from state immediately
+    const previousPosts = posts;
+    setPosts((prevPosts) =>
+      prevPosts.filter((post) => post.post_id !== post_id),
+    );
     setIsDeleting(true);
+
     try {
       await apiService.delete(`/api/posts/${post_id}`);
-
-      setPosts((prevPosts) =>
-        prevPosts.filter((post) => post.post_id !== post_id),
-      );
+      toast.success("Post deleted successfully");
     } catch (error) {
+      // Rollback on error
+      setPosts(previousPosts);
       const responseData = error.response;
       console.error("Error deleting post", responseData);
-      setErrors(responseData);
+      toast.error("Failed to delete post");
     } finally {
       setIsDeleting(false);
-      toast.success("Post deleted successfully");
     }
   };
 
@@ -152,10 +156,12 @@ function PostsProvider({ children }) {
   const likingHandler = async (post_id) => {
     try {
       await apiService.post(`/api/posts/${post_id}/changeLikeStatus`);
+      return true;
     } catch (error) {
       const responseData = error.response;
       console.error("Error adding post", responseData);
       setErrors(responseData);
+      return false;
     }
   };
 

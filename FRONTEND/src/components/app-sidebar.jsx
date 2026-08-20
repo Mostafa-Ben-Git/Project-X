@@ -9,6 +9,7 @@ import {
   SidebarMenuBadge,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -41,6 +42,8 @@ function SidebarNavItem({ item, count }) {
 
 export function AppSidebar() {
   const { messages, notifications } = useUnreadCounts();
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   const countFor = (item) =>
     item.countKey === "messages"
@@ -54,7 +57,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <NavLink
           to="/home"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-primary text-lg font-bold text-sidebar-primary-foreground"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-primary text-lg font-bold text-sidebar-primary-foreground transition-colors hover:bg-sidebar-accent"
           aria-label="Home"
         >
           X
@@ -70,10 +73,17 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
-          <ThemeToggle />
-          <UserBanner compact />
-        </div>
+        {isCollapsed ? (
+          <div className="flex flex-col items-center gap-2">
+            <ThemeToggle />
+            <UserBanner compact />
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <UserBanner compact={false} />
+            <ThemeToggle />
+          </div>
+        )}
       </SidebarFooter>
     </Sidebar>
   );

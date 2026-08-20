@@ -10,7 +10,7 @@ import usePosts from "@/hooks/usePosts";
 import { useRealtime } from "@/hooks/useRealtime";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useEffect } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { startHeartbeat, stopHeartbeat } from "@/api/apiService";
 
 function UserLayout() {
@@ -19,6 +19,8 @@ function UserLayout() {
   const { messages, notifications } = useUnreadCounts();
   useRealtime(user?.id);
   useOnlineStatus();
+  const location = useLocation();
+  const isMessages = location.pathname.startsWith("/messages");
 
   // Start heartbeat for online status
   useEffect(() => {
@@ -48,13 +50,21 @@ function UserLayout() {
         <header className="sticky top-0 z-30 hidden h-12 items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur md:flex">
           <SidebarTrigger />
         </header>
-        <div className="px-4 pb-16 md:pb-0">
-          <ScrollArea className="mt-6">
-            <div className="mx-auto w-full max-w-[600px]">
+        {isMessages ? (
+          <div className="flex-1 overflow-hidden px-4">
+            <div className="h-full">
               <Outlet />
             </div>
-          </ScrollArea>
-        </div>
+          </div>
+        ) : (
+          <div className="px-4 pb-16 md:pb-0">
+            <ScrollArea className="mt-6">
+              <div className="mx-auto w-full max-w-[600px]">
+                <Outlet />
+              </div>
+            </ScrollArea>
+          </div>
+        )}
       </SidebarInset>
       <RightBar />
       <SidebarMobile

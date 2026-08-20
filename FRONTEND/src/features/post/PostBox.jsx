@@ -14,6 +14,7 @@ import { Image, Loader2, PinIcon, SmilePlus } from "lucide-react";
 import { lazy, Suspense, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ImagePreview } from "../../components/ImagePreview";
+import ImageLightbox from "@/components/ImageLightbox";
 
 // Lazy-load the heavy emoji picker only when the dropdown opens
 const EmojiPicker = lazy(() => import("emoji-picker-react"));
@@ -30,6 +31,13 @@ function PostBox({ className, parent_id, isReplay = false }) {
 
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
+  const [lightboxIndex, setLightboxIndex] = useState(null);
+
+  const previewUrls = newPost.images.map((image) =>
+    typeof image === "string" || image instanceof String
+      ? image
+      : URL.createObjectURL(image),
+  );
 
   const handleEmojiClick = ({ emoji }) => {
     const { selectionStart, selectionEnd } = textareaRef.current;
@@ -72,7 +80,7 @@ function PostBox({ className, parent_id, isReplay = false }) {
     e.preventDefault();
     const formData = new FormData();
     if (!isEmpty) {
-      formData.append("content", newPost.text);
+      formData.append("content", newPost.text || "");
       if (parent_id) {
         formData.append("parent_id", parent_id);
       }
@@ -119,11 +127,28 @@ function PostBox({ className, parent_id, isReplay = false }) {
               key={index}
               image={image}
               OnRemove={() => handleRemoveImage(index)}
+              onExpand={() => setLightboxIndex(index)}
               rounded="md"
               border={2}
             />
           ))}
         </div>
+      )}
+
+      {lightboxIndex !== null && (
+        <ImageLightbox
+          src={previewUrls[lightboxIndex]}
+          images={previewUrls}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={(dir) =>
+            setLightboxIndex((prev) =>
+              dir === "next"
+                ? (prev + 1) % newPost.images.length
+                : (prev - 1 + newPost.images.length) % newPost.images.length,
+            )
+          }
+        />
       )}
 
       <div className="flex items-center justify-between border-t border-border px-3 py-2">

@@ -36,9 +36,13 @@ function PostInfo({
     }
   };
 
-  const handleLike = (e) => {
+  const handleLike = async (e) => {
     e.stopPropagation();
     const nextLiked = !isLiked;
+    const prevLike = like;
+    const prevLiked = isLiked;
+
+    // Optimistically update UI immediately
     setLike((prev) => (nextLiked ? prev + 1 : prev - 1));
     setIsLiked(nextLiked);
 
@@ -48,7 +52,13 @@ function PostInfo({
       heart.current.classList.add("animate-beat-heart-once");
     }
 
-    likingHandler(post_id);
+    // Fire API in background and roll back on failure
+    const ok = await likingHandler(post_id);
+    if (!ok) {
+      setLike(prevLike);
+      setIsLiked(prevLiked);
+      toast.error("Could not update like. Please try again.");
+    }
   };
 
   const handleShare = async (e) => {

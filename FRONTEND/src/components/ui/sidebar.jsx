@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva } from "class-variance-authority"
@@ -619,4 +620,5 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
+  useSidebar,
 }

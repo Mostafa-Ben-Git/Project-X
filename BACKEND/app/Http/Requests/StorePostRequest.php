@@ -14,7 +14,7 @@ class StorePostRequest extends FormRequest
   public function rules(): array
   {
     return [
-      'content' => 'required|string|max:10000',
+      'content' => 'nullable|string|max:10000',
       'parent_id' => 'nullable|integer|exists:posts,id',
       'images' => 'nullable|array|max:5',
       'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
@@ -24,7 +24,6 @@ class StorePostRequest extends FormRequest
   public function messages(): array
   {
     return [
-      'content.required' => 'Post content is required.',
       'content.max' => 'Post content must not exceed 10,000 characters.',
       'images.max' => 'You can upload a maximum of 5 images.',
       'images.*.image' => 'Each file must be an image.',
