@@ -95,7 +95,6 @@ function PostPage() {
             postData={currentPost}
             className="border-b"
             clickable={false}
-            extraInfo={true}
           />
         )}
       </section>

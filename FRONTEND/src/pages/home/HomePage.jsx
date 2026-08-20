@@ -5,59 +5,77 @@ import PostBox from "@/features/post/PostBox";
 import { useFeed } from "@/hooks/useFeed";
 
 function HomePage() {
-  const {
-    posts,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-  } = useFeed();
+  const { posts, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useFeed();
 
   const sentinelRef = useRef(null);
 
   useEffect(() => {
     if (!sentinelRef.current || !hasNextPage) return;
+
     const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage) fetchNextPage();
+      ([entry]) => {
+        if (entry.isIntersecting && hasNextPage) fetchNextPage();
       },
       { rootMargin: "300px" },
     );
+
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
   }, [posts, hasNextPage, fetchNextPage]);
 
   return (
-    <main className="w-full p-2">
-      <div className="mx-auto flex max-w-2xl flex-col gap-3">
-        <PostBox className="rounded-md border p-2" />
+    <main className="w-full px-2 sm:px-4">
+      <div className="mx-auto flex w-full max-w-[600px] flex-col">
+        <PostBox />
 
         {isLoading && (
-          <div className="flex justify-center py-6">
+          <div
+            className="flex items-center justify-center py-10"
+            role="status"
+            aria-label="Loading posts"
+          >
             <LoaderCircle />
           </div>
         )}
 
-        {!isLoading &&
-          posts?.map((post, i) => (
-            <Post
-              {...post}
-              postData={post}
-              key={`post-${post.post_id}`}
-              className="cursor-pointer rounded-md border"
-              innerRef={i === posts.length - 1 ? sentinelRef : undefined}
-            />
-          ))}
+        {!isLoading && posts?.length === 0 && (
+          <div className="flex flex-col items-center gap-1 py-16 text-center">
+            <p className="text-sm font-medium text-foreground">
+              No posts yet
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Posts from people you follow will show up here.
+            </p>
+          </div>
+        )}
+
+        {!isLoading && posts?.length > 0 && (
+          <ul className="flex flex-col divide-y divide-border">
+            {posts.map((post, i) => (
+              <Post
+                {...post}
+                postData={post}
+                key={`post-${post.post_id}`}
+                innerRef={i === posts.length - 1 ? sentinelRef : undefined}
+              />
+            ))}
+          </ul>
+        )}
 
         {isFetchingNextPage && (
-          <div className="flex justify-center py-4">
+          <div
+            className="flex items-center justify-center py-6"
+            role="status"
+            aria-label="Loading more posts"
+          >
             <LoaderCircle />
           </div>
         )}
 
-        {!hasNextPage && !isLoading && (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            No more posts
+        {!hasNextPage && !isLoading && posts?.length > 0 && (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+              You&apos;re all caught up
           </p>
         )}
       </div>

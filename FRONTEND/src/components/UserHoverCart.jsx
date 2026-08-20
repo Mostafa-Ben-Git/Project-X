@@ -65,7 +65,7 @@ export function UserHoverCart({ user, className }) {
             className="relative shrink-0 rounded-full"
             aria-label={`View ${user.first_name} ${user.last_name}'s profile`}
           >
-            <Avatar className="h-14 w-14">
+            <Avatar className="h-10 w-10">
               <AvatarImage
                 src={user.avatar}
                 alt={`${user.first_name} ${user.last_name}`}

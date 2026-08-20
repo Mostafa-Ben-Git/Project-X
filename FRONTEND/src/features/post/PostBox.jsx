@@ -98,15 +98,15 @@ function PostBox({ className, parent_id, isReplay = false }) {
     <form
       onSubmit={handleSubmit}
       encType="multipart/form-data"
-      className={cn("w-full border", className)}
+      className={cn("w-full border-b border-border", className)}
     >
-      <div className="my-2 flex items-center justify-between gap-3 rounded-t-lg px-2">
-        <UserAvatar user={user} />
+      <div className="flex gap-3 px-4 pt-3">
+        <UserAvatar user={user} className="h-10 w-10 shrink-0" />
         <Textarea
           name="text"
           value={newPost.text}
-          className="w-full border p-1 text-xl outline-none"
-          placeholder={isReplay ? "Reply..." : "Say something..."}
+          className="w-full resize-none border-0 bg-transparent p-0 text-lg outline-none focus-visible:ring-0 min-h-[80px]"
+          placeholder={isReplay ? "Reply..." : "What is happening?!"}
           onChange={handleOnChange}
           ref={textareaRef}
         />
@@ -126,27 +126,13 @@ function PostBox({ className, parent_id, isReplay = false }) {
         </div>
       )}
 
-      <div className="flex flex-row-reverse items-center justify-between gap-2 border-t px-3 py-2">
-        <Button
-          type="submit"
-          size="sm"
-          disabled={isEmpty || isPosting}
-          className="text-xs font-medium"
-        >
-          {isPosting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : isReplay ? (
-            "Reply"
-          ) : (
-            "Post"
-          )}
-        </Button>
+      <div className="flex items-center justify-between border-t border-border px-3 py-2">
         <div className="flex space-x-1 ps-0 sm:ps-2 rtl:space-x-reverse">
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-muted-foreground"
+            className="h-9 w-9 text-blue-600"
           >
             <PinIcon />
             <span className="sr-only">Attach file</span>
@@ -158,7 +144,7 @@ function PostBox({ className, parent_id, isReplay = false }) {
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 text-muted-foreground"
+                className="h-9 w-9 text-blue-600"
               >
                 <SmilePlus />
               </Button>
@@ -185,7 +171,7 @@ function PostBox({ className, parent_id, isReplay = false }) {
             type="button"
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-muted-foreground"
+            className="h-9 w-9 text-blue-600"
             onClick={handleUpload}
           >
             <Image />
@@ -199,6 +185,19 @@ function PostBox({ className, parent_id, isReplay = false }) {
             <span className="sr-only">Upload image</span>
           </Button>
         </div>
+        <Button
+          type="submit"
+          disabled={isEmpty || isPosting}
+          className="rounded-full bg-blue-600 text-white hover:bg-blue-700"
+        >
+          {isPosting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : isReplay ? (
+            "Reply"
+          ) : (
+            "Post"
+          )}
+        </Button>
       </div>
     </form>
   );

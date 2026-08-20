@@ -1,6 +1,10 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import RightBar from "@/features/sidebar/RightBar";
-import { Sidebar } from "@/features/sidebar/sidebar";
+import { SidebarMobile } from "@/features/sidebar/sidebar-mobile";
+import { AppSidebar } from "@/components/app-sidebar";
+import { sidebarItems } from "@/features/sidebar/sidebarItems";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 import useAuth from "@/hooks/useAuth";
 import usePosts from "@/hooks/usePosts";
 import { useRealtime } from "@/hooks/useRealtime";
@@ -12,6 +16,7 @@ import { startHeartbeat, stopHeartbeat } from "@/api/apiService";
 function UserLayout() {
   const { getUser, user, isLoggedIn } = useAuth();
   const { fetchPosts } = usePosts();
+  const { messages, notifications } = useUnreadCounts();
   useRealtime(user?.id);
   useOnlineStatus();
 
@@ -37,15 +42,26 @@ function UserLayout() {
   if (!isLoggedIn) return <Navigate to="/login" />;
 
   return (
-    <section className="relative px-4 pb-16 md:pb-0 md:ml-[70px] 2xl:mr-[340px]">
-      <Sidebar />
-      <ScrollArea className="mt-6">
-        <div className="mx-auto w-full max-w-[600px]">
-          <Outlet />
+    <SidebarProvider defaultOpen={false}>
+      <AppSidebar />
+      <SidebarInset className="2xl:mr-[340px]">
+        <header className="sticky top-0 z-30 hidden h-12 items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur md:flex">
+          <SidebarTrigger />
+        </header>
+        <div className="px-4 pb-16 md:pb-0">
+          <ScrollArea className="mt-6">
+            <div className="mx-auto w-full max-w-[600px]">
+              <Outlet />
+            </div>
+          </ScrollArea>
         </div>
-      </ScrollArea>
+      </SidebarInset>
       <RightBar />
-    </section>
+      <SidebarMobile
+        sidebarItems={sidebarItems}
+        counts={{ messages, notifications }}
+      />
+    </SidebarProvider>
   );
 }
 

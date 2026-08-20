@@ -6,9 +6,9 @@ use Illuminate\Console\Command;
 
 class ServeAll extends Command
 {
-    protected $signature = 'serve:all {--port=8000 : API port} {--reverb-port=8080 : Reverb WebSocket port}';
+    protected $signature = 'serve:all {--port=8000 : API port} {--reverb-port=8080 : Reverb port}';
 
-    protected $description = 'Start API server, Reverb WebSocket, and scheduler in one command';
+    protected $description = 'Start API server, Reverb WebSocket, and scheduler in this window';
 
     public function handle(): int
     {
@@ -18,44 +18,48 @@ class ServeAll extends Command
         $artisan = base_path('artisan');
 
         $this->info('');
-        $this->info('╔══════════════════════════════════════╗');
-        $this->info('║       Project-X — Starting All       ║');
-        $this->info('╚══════════════════════════════════════╝');
-        $this->info('');
-        $this->info("  API server    → http://localhost:{$port}");
-        $this->info("  Reverb        → ws://localhost:{$reverbPort}");
-        $this->info("  Scheduler     → every minute");
-        $this->info('  Frontend      → http://localhost:5173');
-        $this->info('');
-        $this->info('  Press Ctrl+C to stop all servers.');
+        $this->info('  Project-X — Starting all services...');
+        $this->info("  API       → http://localhost:{$port}");
+        $this->info("  Reverb    → ws://localhost:{$reverbPort}");
+        $this->info("  Scheduler → every minute");
+        $this->info('  Press Ctrl+C to stop.');
         $this->info('');
 
-        // Build a single shell command that starts all three in background
-        $cmd = sprintf(
-            'start "API" cmd /c "%s %s serve --host=localhost --port=%d > nul 2>&1" && ' .
-            'start "Reverb" cmd /c "%s %s reverb:start --port=%d > nul 2>&1" && ' .
-            'start "Scheduler" cmd /c "%s %s schedule:work > nul 2>&1"',
-            $php, $artisan, $port,
-            $php, $artisan, $reverbPort,
-            $php, $artisan
-        );
+        $cmds = [
+            [$php, $artisan, 'serve', "--port={$port}"],
+            [$php, $artisan, 'reverb:start', "--port={$reverbPort}"],
+            [$php, $artisan, 'schedule:work'],
+        ];
 
-        exec($cmd);
-
-        // Wait for Ctrl+C
-        $this->info('All 3 backend processes started as separate windows.');
-        $this->info('Close the spawned windows or press Ctrl+C here to stop.');
-
-        // Keep alive until interrupted
-        try {
-            while (true) {
-                sleep(5);
-            }
-        } catch (\Throwable $e) {
-            // Ctrl+C
+        $procs = [];
+        foreach ($cmds as $cmd) {
+            $procs[] = popen(implode(' ', array_map('escapeshellarg', $cmd)) . ' 2>&1', 'r');
         }
 
-        $this->info('Stopped.');
+        while (true) {
+            $running = false;
+            foreach ($procs as $i => $proc) {
+                if (feof($proc)) {
+                    pclose($proc);
+                    $procs[$i] = null;
+                    continue;
+                }
+                $running = true;
+                $line = fgets($proc, 1024);
+                if ($line !== false && trim($line) !== '') {
+                    $label = ['API', 'Reverb', 'Scheduler'][$i] ?? '?';
+                    $this->line("<fg=gray>[{$label}]</> " . trim($line));
+                }
+            }
+
+            if (!$running) {
+                break;
+            }
+
+            usleep(100000);
+        }
+
+        $this->info('All services stopped.');
         return Command::SUCCESS;
     }
 }
