@@ -30,6 +30,23 @@ apiService.interceptors.response.use(
     // Only force-logout on 401 from the /api/user endpoint (real auth check).
     // Other 401s may be transient (deploy, server restart) — don't wipe the session.
     if (status === 401 && error?.config?.url?.includes("/api/user")) {
+      // Retry ONCE after a short delay — absorbs transient 401s during a
+      // frontend redeploy (non-atomic asset copy / config:clear cold boot).
+      // If the retry also 401s, the session is genuinely dead → log out.
+      if (!error.config.__authRetry) {
+        error.config.__authRetry = true;
+        await new Promise((r) => setTimeout(r, 1500));
+        try {
+          await apiService.get("/api/user");
+          // Re-validation succeeded: session is alive, don't log out.
+          return Promise.reject({ ...error, __absorbed: true });
+        } catch (retryErr) {
+          if (retryErr?.response?.status !== 401) {
+            // Not a 401 on retry — leave as-is, don't wipe session.
+            return Promise.reject(error);
+          }
+        }
+      }
       localStorage.removeItem("token");
       localStorage.removeItem("userLogedIn");
       window.location.href = "/login";
