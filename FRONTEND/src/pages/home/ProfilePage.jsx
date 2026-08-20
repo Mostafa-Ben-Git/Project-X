@@ -2,7 +2,8 @@ import { useState, useRef, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
-import { useUserProfile } from "@/hooks/useUserProfile";
+import { useFollow } from "@/hooks/useFollow";
+import { useUserProfile, ProfileNotFound } from "@/hooks/useUserProfile";
 import { useProfileTabs } from "@/hooks/useProfileTabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -13,12 +14,30 @@ import { EmptyState } from "@/components/empty-state";
 function ProfilePage() {
   const { username } = useParams();
   const { user: currentUser } = useAuth();
+  const { handleFollow, isPending } = useFollow();
   const [activeTab, setActiveTab] = useState("posts");
+  const [isFollowing, setIsFollowing] = useState(
+    () => profileUser?.is_following ?? displayUser?.is_following ?? false
+  );
+  const [followPending, setFollowPending] = useState(false);
 
   // If username param exists, fetch that user's profile; otherwise use current user
   const { data: profileUser, isLoading: profileLoading } = useUserProfile(username);
   const displayUser = username ? profileUser : currentUser;
   const userId = displayUser?.id;
+
+  const onFollow = async () => {
+    if (isPending || !userId) return;
+    setFollowPending(true);
+    setIsFollowing((prev) => !prev); // optimistic
+    try {
+      await handleFollow(userId);
+    } catch {
+      setIsFollowing((prev) => !prev); // rollback
+    } finally {
+      setFollowPending(false);
+    }
+  };
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useProfileTabs(userId, activeTab);
@@ -45,6 +64,8 @@ function ProfilePage() {
       </div>
     );
   }
+
+  if (username && !profileUser) return <ProfileNotFound />;
 
   if (!displayUser) return null;
 
@@ -73,7 +94,14 @@ function ProfilePage() {
               <Button variant="outline" size="sm">Edit profile</Button>
             </Link>
           ) : (
-            <Button variant="outline" size="sm">Follow</Button>
+            <Button
+              variant={isFollowing ? "outline" : "default"}
+              size="sm"
+              disabled={followPending}
+              onClick={onFollow}
+            >
+              {isFollowing ? "Following" : "Follow"}
+            </Button>
           )}
         </div>
 
