@@ -8,20 +8,7 @@ import { useMessages } from "@/hooks/useMessages";
 import { ArrowLeft, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { formatDistanceToNow } from "date-fns";
-
-const STATUS_COLORS = {
-  online: "bg-green-500",
-  away: "bg-yellow-500",
-  offline: "bg-gray-400",
-  dnd: "bg-red-500",
-  hidden: "bg-gray-400",
-};
-
-function formatLastActive(lastActiveAt) {
-  if (!lastActiveAt) return "";
-  return formatDistanceToNow(new Date(lastActiveAt), { addSuffix: true });
-}
+import { formatLastActive, statusDotClass } from "@/lib/status";
 
 function MessagesPage() {
   const { userId } = useParams();
@@ -95,7 +82,7 @@ function MessagesPage() {
               </AvatarFallback>
             </Avatar>
             {partner?.status !== "hidden" && (
-              <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${STATUS_COLORS[partner?.status] || STATUS_COLORS.offline}`} />
+              <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${statusDotClass(partner?.status) || "bg-gray-400"}`} />
             )}
           </div>
           <div>
@@ -206,7 +193,7 @@ function MessagesPage() {
                       </AvatarFallback>
                     </Avatar>
                     {partner?.status !== "hidden" && (
-                      <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${STATUS_COLORS[partner?.status] || STATUS_COLORS.offline}`} />
+                      <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${statusDotClass(partner?.status) || "bg-gray-400"}`} />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">

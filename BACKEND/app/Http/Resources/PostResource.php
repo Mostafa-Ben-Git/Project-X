@@ -66,10 +66,13 @@ class PostResource extends JsonResource
         'email' => $user->email,
         'avatar' => $user->avatar,
         'bio' => $user->bio,
+        'status' => $user->status,
+        'last_active_at' => $user->last_active_at?->toIso8601String(),
         'joined_at' => $user->created_at?->diffForHumans(),
         'followers_count' => (int) ($user->followers_count ?? 0),
         'following_count' => (int) ($user->followings_count ?? 0),
         'posts_count' => (int) ($user->posts_count ?? 0),
+        'is_following' => auth()->check() ? $user->isFollowing(auth()->user()) : false,
       ] : null,
     ];
   }
