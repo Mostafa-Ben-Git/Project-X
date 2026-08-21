@@ -51,9 +51,9 @@ function NotificationsPage() {
   };
 
   return (
-    <main className="mx-auto max-w-2xl p-4">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Notifications</h1>
+    <main className="mx-auto max-w-2xl p-3 sm:p-4">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-xl font-bold sm:text-2xl">Notifications</h1>
         {unreadCount > 0 && (
           <Button variant="ghost" size="sm" onClick={markAllRead}>
             <CheckCheck size={18} className="mr-1" />
@@ -95,15 +95,15 @@ function NotificationsPage() {
                     {n.from_user?.last_name?.[0]}
                   </AvatarFallback>
                 </Avatar>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm">
-                    <span className="font-semibold">
-                      {n.from_user?.first_name} {n.from_user?.last_name}
-                    </span>{" "}
-                    <span className="text-muted-foreground">{n.content}</span>
-                  </span>
-                  <span className="text-xs text-muted-foreground">{n.ago}</span>
-                </span>
+                 <span className="min-w-0 flex-1">
+                   <span className="block truncate text-sm">
+                     <span className="font-semibold">
+                       {n.from_user?.first_name} {n.from_user?.last_name}
+                     </span>{" "}
+                     <span className="text-muted-foreground">{n.content}</span>
+                   </span>
+                   <span className="text-xs text-muted-foreground">{n.ago}</span>
+                 </span>
                 {!n.read_at && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />}
               </button>
               <Separator />
