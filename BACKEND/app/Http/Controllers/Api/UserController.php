@@ -161,7 +161,9 @@ class UserController extends Controller
         'likes as liked_by_current_user' => fn($q) => $q->where('user_id', $userId),
         'reposts as reposted_by_current_user' => fn($q) => $q->where('user_id', $userId),
       ])
-      ->latest()
+      ->orderByDesc('is_pinned')
+      ->orderByDesc('pinned_at')
+      ->orderByDesc('created_at')
       ->paginate(10);
 
     return PostResource::collection($posts);

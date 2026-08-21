@@ -177,18 +177,56 @@ class PostController extends Controller
   }
 
   /**
+   * Pin / unpin a post to the owner's profile (owner only, capped at 3).
+   */
+  public function togglePin(Request $request, Post $post)
+  {
+    if ($request->user()->id !== $post->user_id) {
+      return response()->json(['message' => 'Unauthorized. You can only pin your own posts.'], 403);
+    }
+
+    if ($post->is_pinned) {
+      $post->update(['is_pinned' => false, 'pinned_at' => null]);
+    } else {
+      $maxPins = 3;
+      $pinnedCount = Post::where('user_id', $post->user_id)
+        ->where('is_pinned', true)
+        ->count();
+      if ($pinnedCount >= $maxPins) {
+        // Release the oldest pinned post so the new one can take its place
+        Post::where('user_id', $post->user_id)
+          ->where('is_pinned', true)
+          ->oldest('pinned_at')
+          ->first()
+          ?->update(['is_pinned' => false, 'pinned_at' => null]);
+      }
+      $post->update(['is_pinned' => true, 'pinned_at' => now()]);
+    }
+
+    return response()->json(['is_pinned' => $post->is_pinned]);
+  }
+
+  /**
    * Get comments for a post.
    */
-  public function getPostComments(Post $post)
+  public function getPostComments(Request $request, Post $post)
   {
-    if ($post->comments()->count() === 0) {
+    // Sort: "top" by likes count desc, otherwise newest first.
+    $sort = $request->query('sort', 'top');
+    $query = $post->comments();
+    if ($sort === 'new') {
+      $query->latest();
+    } else {
+      // likes_count is added by PostResource::prepare's withCount
+      $query->orderByDesc('likes_count')->orderByDesc('created_at');
+    }
+
+    if ($query->count() === 0) {
       return response()->json(['message' => 'No comments found'], 404);
     }
 
     return PostResource::collection(
-      PostResource::prepare(
-        $post->comments()->latest()
-      )->paginate(5)
+      PostResource::prepare($query)->paginate(5)
     );
   }
 

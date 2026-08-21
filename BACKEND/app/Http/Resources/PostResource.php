@@ -41,6 +41,7 @@ class PostResource extends JsonResource
     return [
       'post_id' => $this->id,
       'parent_id' => $this->parent_id,
+      'is_pinned' => (bool) $this->is_pinned,
       'content' => $this->content,
       'user_id' => $this->user_id,
       'images' => $this->whenLoaded('images', function () {

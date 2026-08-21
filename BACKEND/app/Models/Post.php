@@ -14,13 +14,15 @@ class Post extends Model
   use HasFactory, SoftDeletes, HasUuids;
 
   protected $fillable = [
-    'content', 'images', 'user_id', 'parent_id', 'views_count',
+    'content', 'images', 'user_id', 'parent_id', 'views_count', 'is_pinned', 'pinned_at',
   ];
 
   protected $with = ['user', 'images'];
 
   protected $casts = [
     'views_count' => 'integer',
+    'is_pinned' => 'boolean',
+    'pinned_at' => 'datetime',
   ];
 
   public function user(): BelongsTo

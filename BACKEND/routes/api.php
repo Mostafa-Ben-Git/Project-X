@@ -78,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ── Reposts ──
     Route::post('/posts/{post}/repost', [RepostController::class, 'toggleRepost'])->whereUuid('post');
+    Route::post('/posts/{post}/pin', [PostController::class, 'togglePin'])->whereUuid('post');
 
     // ── Views (scaled: deduped + buffered) ──
     Route::post('/posts/{post}/view', [PostViewController::class, 'store'])->whereUuid('post')->middleware('throttle:60,1');
