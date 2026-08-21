@@ -7,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import useAuth from "@/hooks/useAuth";
 import { useMessages } from "@/hooks/useMessages";
 import { getRoomForUser } from "@/api/messages";
-import { ArrowLeft, Copy, Image as ImageIcon, MoreHorizontal, Pin, Reply, Send, SmilePlus, Trash2, X } from "lucide-react";
+import { ArrowLeft, Clock, Copy, Image as ImageIcon, MoreHorizontal, Pin, Reply, Send, SmilePlus, Trash2, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -44,6 +44,8 @@ function MessagesPage() {
     deleteMessage,
     togglePin,
     openChat,
+    cooldown,
+    isRateLimited,
   } = useMessages({ userId: legacyUserId, room });
 
   const [newMessage, setNewMessage] = useState("");
@@ -150,6 +152,7 @@ function MessagesPage() {
 
   const handleSend = async (e) => {
     e.preventDefault();
+    if (isRateLimited) return;
     const hasText = newMessage.trim().length > 0;
     const hasImage = !!selectedImage;
     if ((!hasText && !hasImage) || (!room && !legacyUserId)) return;
@@ -164,6 +167,14 @@ function MessagesPage() {
     requestAnimationFrame(() => inputRef.current?.focus());
     try {
       await sendMessage(content, image, replyTo?.id || null, replyTo);
+    } catch (err) {
+      // On rate-limit (429) restore composer so user doesn't lose draft
+      const status = err?.response?.status;
+      if (status === 429) {
+        setNewMessage(content || "");
+        if (image) setSelectedImage(image);
+        if (replyTo) setReplyingTo(replyTo);
+      }
     } finally {
       requestAnimationFrame(() => inputRef.current?.focus());
     }
@@ -477,6 +488,14 @@ function MessagesPage() {
           </div>
         )}
 
+        {/* Rate-limit cooldown */}
+        {isRateLimited && (
+          <div className="mb-2 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+            <Clock size={14} className="shrink-0" />
+            Too many messages — please wait {cooldown}s before sending again.
+          </div>
+        )}
+
         {/* Draft image preview — tappable for full preview */}
         {selectedImage && draftPreviewUrl && (
           <div className="relative mb-2 flex items-center gap-2 rounded-lg border bg-muted p-2">
@@ -540,10 +559,17 @@ function MessagesPage() {
           />
           <Button
             type="submit"
-            disabled={(!newMessage.trim() && !selectedImage) || isSending}
+            disabled={(!newMessage.trim() && !selectedImage) || isSending || isRateLimited}
             className="h-9 md:h-10 px-3 md:px-4"
+            title={isRateLimited ? `Wait ${cooldown}s` : undefined}
           >
-            {isSending ? <LoaderCircle size={16} /> : <Send size={16} className="md:w-[18px] md:h-[18px]" />}
+            {isRateLimited ? (
+              <span className="flex items-center gap-1 text-xs"><Clock size={14} />{cooldown}s</span>
+            ) : isSending ? (
+              <LoaderCircle size={16} />
+            ) : (
+              <Send size={16} className="md:w-[18px] md:h-[18px]" />
+            )}
           </Button>
         </form>
 

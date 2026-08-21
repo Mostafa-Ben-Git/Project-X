@@ -98,15 +98,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages/unread-count', [MessageController::class, 'unreadCount']);
     // Secure room routes (preferred) — token is Crypt::encryptString(partnerId)
     Route::get('/messages/room/{room}', [MessageController::class, 'messagesByRoom']);
-    Route::post('/messages/room/{room}', [MessageController::class, 'sendToRoom']);
+    Route::post('/messages/room/{room}', [MessageController::class, 'sendToRoom'])->middleware('throttle:messages');
     Route::get('/messages/room/{room}/resolve', [MessageController::class, 'resolveRoomToken']);
     Route::get('/messages/room/{room}/pinned', [MessageController::class, 'pinned']);
-    Route::post('/messages/room/{room}/reply/{message}', [MessageController::class, 'reply'])->whereUuid('message');
+    Route::post('/messages/room/{room}/reply/{message}', [MessageController::class, 'reply'])->whereUuid('message')->middleware('throttle:messages');
     Route::delete('/messages/room/{room}/{message}', [MessageController::class, 'destroy'])->whereUuid('message');
     Route::post('/messages/room/{room}/{message}/restore', [MessageController::class, 'restore'])->whereUuid('message');
     Route::post('/messages/room/{room}/{message}/pin', [MessageController::class, 'togglePin'])->whereUuid('message');
     Route::get('/users/{user}/room', [MessageController::class, 'roomForUser'])->whereUuid('user');
     // Legacy direct-user routes (kept for backward compat, also secured via auth)
     Route::get('/messages/{user}', [MessageController::class, 'messagesWith'])->whereUuid('user');
-    Route::post('/messages/{user}', [MessageController::class, 'send'])->whereUuid('user');
+    Route::post('/messages/{user}', [MessageController::class, 'send'])->whereUuid('user')->middleware('throttle:messages');
 });

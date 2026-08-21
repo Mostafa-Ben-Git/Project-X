@@ -25,7 +25,21 @@ class RouteServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Chat: generous but protects from spam — 30/min global + 10/10s burst per room
+        RateLimiter::for('messages', function (Request $request) {
+            $key = $request->user()?->id ?: $request->ip();
+            return [
+                Limit::perMinute(30)->by($key)->response(function (Request $req, array $headers) {
+                    $retry = $headers['Retry-After'] ?? 60;
+                    return response()->json([
+                        'message' => "Too many messages. Please wait {$retry}s before sending again.",
+                        'retry_after' => (int) $retry,
+                    ], 429, $headers);
+                }),
+            ];
         });
 
         $this->routes(function () {

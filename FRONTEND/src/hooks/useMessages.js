@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import * as api from "@/api/messages";
@@ -9,6 +9,13 @@ export function useMessages({ userId = null, room = null } = {}) {
   const qc = useQueryClient();
   const messagesEndRef = useRef(null);
   const { user: currentUser } = useAuth();
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setInterval(() => setCooldown((c) => (c > 0 ? c - 1 : 0)), 1000);
+    return () => clearInterval(t);
+  }, [cooldown]);
 
   // Support both legacy userId param and new encrypted room param
   const activeRoom = room || null;
@@ -154,13 +161,21 @@ export function useMessages({ userId = null, room = null } = {}) {
 
       return { previous, optimisticId, optimisticImageUrl };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (err, _vars, ctx) => {
       if (ctx?.previous) {
         const key = activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId];
         qc.setQueryData(key, ctx.previous);
       }
       if (ctx?.optimisticImageUrl) URL.revokeObjectURL(ctx.optimisticImageUrl);
-      toast.error("Could not send message");
+      const status = err?.response?.status;
+      if (status === 429) {
+        const retry = parseInt(err?.response?.data?.retry_after || err?.response?.headers?.["retry-after"] || "5", 10);
+        const secs = Number.isFinite(retry) ? retry : 5;
+        setCooldown(secs);
+        toast.error(err?.response?.data?.message || `Too many messages — please wait ${secs}s`, { duration: secs * 1000 });
+      } else {
+        toast.error(err?.response?.data?.message || "Could not send message");
+      }
     },
     onSuccess: (realMsg, _vars, ctx) => {
       const key = activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId];
@@ -250,6 +265,8 @@ export function useMessages({ userId = null, room = null } = {}) {
     isSending: send.isPending,
     isDeleting: del.isPending,
     isPinning: pin.isPending,
+    cooldown,
+    isRateLimited: cooldown > 0,
     unreadCount: 0,
     messagesEndRef,
     fetchConversations: conversations.refetch,
