@@ -18,14 +18,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { useQueryClient } from "@tanstack/react-query";
 import usePosts from "@/hooks/usePosts";
 import useAuth from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-import { Loader2, Settings } from "lucide-react";
+import { Loader2, Pin, Settings } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import DOMPurify from "dompurify";
+import { togglePinPost } from "@/api/posts";
 import { UserHoverCart } from "../../components/UserHoverCart";
 import { ImagesCarousel } from "./ImagesCarousel";
 import PostInfo from "./PostInfo";
@@ -44,12 +47,25 @@ function Post({
   innerRef,
   type = "post",
   clickable = true,
+  is_pinned = false,
 }) {
   const nav = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { isDeleting, deletePost } = usePosts();
   const { user: currentUser } = useAuth();
+  const queryClient = useQueryClient();
   const viewRef = usePostView(post_id);
+
+  const handleTogglePin = async () => {
+    setDropdownOpen(false);
+    try {
+      await togglePinPost(post_id);
+      queryClient.invalidateQueries({ queryKey: ["profile", currentUser?.id] });
+      toast.success(is_pinned ? "Unpinned from profile" : "Pinned to profile");
+    } catch {
+      toast.error("Could not update pin");
+    }
+  };
 
   // Guard against null user (e.g. when loaded from URL without state)
   if (!user) return null;
@@ -61,6 +77,9 @@ function Post({
 
   const initials = `${user.first_name?.[0] ?? ""}${user.last_name?.[0] ?? ""}`;
   const safeContent = DOMPurify.sanitize(content);
+  const isArabic = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(
+    (content || "").replace(/<[^>]*>/g, "")
+  );
 
   // Merge intersection refs: infinite scroll sentinel + view tracking
   const setRefs = (el) => {
@@ -92,8 +111,14 @@ function Post({
 
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
             <UserHoverCart user={user} />
-            <span className="shrink-0 text-sm text-muted-foreground">
+            <span className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground">
               {dates.ago}
+              {is_pinned && (
+                <span className="inline-flex items-center gap-0.5 text-primary">
+                  <Pin size={12} />
+                  Pinned
+                </span>
+              )}
             </span>
           </div>
         </div>
@@ -115,6 +140,9 @@ function Post({
                 <DropdownMenuContent className="flex w-44 flex-col gap-1 p-2">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <Button variant="ghost" className="justify-start" onClick={handleTogglePin}>
+                    {is_pinned ? "Unpin from profile" : "Pin to profile"}
+                  </Button>
                   <DialogTrigger asChild>
                     <Button variant="ghost" className="justify-start" onClick={() => setDropdownOpen(false)}>
                       Edit post
@@ -164,8 +192,10 @@ function Post({
       </div>
 
       <p
+        dir={isArabic ? "rtl" : "ltr"}
         className={cn(
           "mt-3 px-1 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-foreground",
+          isArabic ? "text-right" : "text-left",
           clickable && "cursor-pointer transition-opacity hover:opacity-90",
         )}
         dangerouslySetInnerHTML={{ __html: safeContent }}
