@@ -226,8 +226,8 @@ function MessagesPage() {
     const partner = currentChat;
     return (
       <>
-        {/* Header */}
-        <div className="flex items-center gap-2 md:gap-3 border-b pb-2 md:pb-3">
+        {/* Header — fixed at top of room, stays visible while messages scroll */}
+        <div className="sticky top-0 z-10 -mx-3 -mt-3 flex shrink-0 items-center gap-2 border-b bg-background px-3 pb-2 pt-3 md:-mx-4 md:-mt-4 md:px-4 md:pb-3 md:pt-4">
           {showBack && (
             <Button variant="ghost" size="icon" onClick={goToList} className="md:hidden -ml-2">
               <ArrowLeft size={20} />
@@ -463,7 +463,7 @@ function MessagesPage() {
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
             rows={1}
-            className="max-h-[120px] min-h-9 flex-1 resize-none overflow-y-auto rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:min-h-10 md:text-base"
+            className="max-h-[120px] min-h-9 flex-1 resize-none overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:min-h-10 md:text-base"
             disabled={isSending}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
