@@ -59,6 +59,14 @@ export function useMessages({ userId = null, room = null } = {}) {
     getNextPageParam: (lastPage) => lastPage.meta.current_page < lastPage.meta.last_page ? lastPage.meta.current_page + 1 : undefined,
     enabled: !!(activeRoom || activeUserId),
     staleTime: 10_000,
+    onSuccess: (data) => {
+      // Opening a room marks its messages read on the server; refresh the cached
+      // unread counts so the per-room badge and global message badge clear.
+      if (data?.pages?.length === 1) {
+        qc.invalidateQueries({ queryKey: ["conversations"] });
+        qc.invalidateQueries({ queryKey: ["messages", "unread"] });
+      }
+    },
   });
 
   // Flatten pages (backend latest-first) and reverse for asc display (oldest top, newest bottom)
