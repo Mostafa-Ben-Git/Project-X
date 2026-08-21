@@ -15,6 +15,7 @@ return new class extends Migration
       $table->text('content');
       $table->timestamp('read_at')->nullable();
       $table->timestamps();
+      $table->softDeletes();
 
       $table->index(['sender_id', 'receiver_id']);
       $table->index(['receiver_id', 'sender_id']);
