@@ -38,8 +38,6 @@ class PostResource extends JsonResource
    */
   public function toArray(Request $request): array
   {
-    $user = $this->whenLoaded('user');
-
     return [
       'post_id' => $this->id,
       'parent_id' => $this->parent_id,
@@ -65,21 +63,21 @@ class PostResource extends JsonResource
         'views' => (int) ($this->views_count ?? 0),
         'is_bookmarked' => (bool) ($this->bookmarked_by_current_user ?? 0),
       ],
-      'user' => $user ? [
-        'id' => $user->id,
-        'first_name' => $user->first_name,
-        'last_name' => $user->last_name,
-        'username' => $user->username,
-        'email' => $user->email,
-        'avatar' => $user->avatar,
-        'bio' => $user->bio,
-        'status' => $user->status,
-        'last_active_at' => $user->last_active_at?->toIso8601String(),
-        'joined_at' => $user->created_at?->diffForHumans(),
-        'followers_count' => (int) ($user->followers_count ?? 0),
-        'following_count' => (int) ($user->followings_count ?? 0),
-        'posts_count' => (int) ($user->posts_count ?? 0),
-        'is_following' => auth()->check() ? $user->isFollowing(auth()->user()) : false,
+      'user' => $this->relationLoaded('user') && $this->user ? [
+        'id' => $this->user->id,
+        'first_name' => $this->user->first_name,
+        'last_name' => $this->user->last_name,
+        'username' => $this->user->username,
+        'email' => $this->user->email,
+        'avatar' => $this->user->avatar,
+        'bio' => $this->user->bio,
+        'status' => $this->user->status,
+        'last_active_at' => $this->user->last_active_at?->toIso8601String(),
+        'joined_at' => $this->user->created_at?->diffForHumans(),
+        'followers_count' => (int) ($this->user->followers_count ?? 0),
+        'following_count' => (int) ($this->user->followings_count ?? 0),
+        'posts_count' => (int) ($this->user->posts_count ?? 0),
+        'is_following' => auth()->check() ? $this->user->isFollowing(auth()->user()) : false,
       ] : null,
     ];
   }
