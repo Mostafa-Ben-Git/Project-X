@@ -379,22 +379,23 @@ function MessagesPage() {
 
         {/* Messages — ScrollArea with reverse infinite scroll (latest at bottom, scroll up for older) */}
         <div className="relative flex min-h-0 flex-1 flex-col">
-          <ScrollArea viewportRef={scrollViewportRef} className="flex-1 py-3 md:py-4">
-            {hasNextPage && (
-              <div className="flex justify-center py-2">
-                <Button variant="ghost" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-                  {isFetchingNextPage ? <LoaderCircle size={14} className="mr-2" /> : null}
-                  Load older messages
-                </Button>
-              </div>
-            )}
-            {isFetchingNextPage && !hasNextPage ? null : null}
-            {isChatLoading ? (
-              <div className="flex justify-center py-8"><LoaderCircle /></div>
-            ) : messages?.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">No messages yet. Say hi 👋</p>
-            ) : (
-              messages?.map((msg) => {
+          <ScrollArea viewportRef={scrollViewportRef} className="flex-1">
+            <div className="flex flex-col gap-2 md:gap-3 px-1 py-3 md:py-4 pr-2">
+              {hasNextPage && (
+                <div className="flex justify-center py-2">
+                  <Button variant="ghost" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                    {isFetchingNextPage ? <LoaderCircle size={14} className="mr-2" /> : null}
+                    Load older messages
+                  </Button>
+                </div>
+              )}
+              {isFetchingNextPage && !hasNextPage ? null : null}
+              {isChatLoading ? (
+                <div className="flex justify-center py-8"><LoaderCircle /></div>
+              ) : messages?.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">No messages yet. Say hi 👋</p>
+              ) : (
+                messages?.map((msg) => {
               const isMine = msg.sender_id === user?.id;
               return (
                 <div
@@ -503,9 +504,10 @@ function MessagesPage() {
                 </div>
               );
             })
-          )}
-          <div ref={messagesEndRef} />
-            </ScrollArea>
+            )}
+            <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
 
           {/* Scroll-to-bottom / new message indicator — only when user is far from bottom */}
           {!isNearBottom && (
