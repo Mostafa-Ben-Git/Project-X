@@ -152,13 +152,14 @@ class UserController extends Controller
 
     $posts = $user->posts()
       ->whereNull('parent_id')
-      ->withCount(['likes', 'comments'])
+      ->withCount(['likes', 'comments', 'reposts'])
       ->with([
         'user' => fn($q) => $q->withCount(['followers', 'followings', 'posts']),
         'images',
       ])
       ->withCount([
         'likes as liked_by_current_user' => fn($q) => $q->where('user_id', $userId),
+        'reposts as reposted_by_current_user' => fn($q) => $q->where('user_id', $userId),
       ])
       ->latest()
       ->paginate(10);
@@ -176,12 +177,13 @@ class UserController extends Controller
     $replies = $user->posts()
       ->whereNotNull('parent_id')
       ->with('parent.user', 'images')
-      ->withCount(['likes', 'comments'])
+      ->withCount(['likes', 'comments', 'reposts'])
       ->with([
         'user' => fn($q) => $q->withCount(['followers', 'followings', 'posts']),
       ])
       ->withCount([
         'likes as liked_by_current_user' => fn($q) => $q->where('user_id', $userId),
+        'reposts as reposted_by_current_user' => fn($q) => $q->where('user_id', $userId),
       ])
       ->latest()
       ->paginate(10);
@@ -200,14 +202,55 @@ class UserController extends Controller
     $posts = Post::whereIn('id', $likedPostIds)
       ->whereNull('parent_id')
       ->with('user', 'images')
-      ->withCount(['likes', 'comments'])
+      ->withCount(['likes', 'comments', 'reposts'])
       ->withCount([
         'likes as liked_by_current_user' => fn($q) => $q->where('user_id', $userId),
+        'reposts as reposted_by_current_user' => fn($q) => $q->where('user_id', $userId),
       ])
       ->latest()
       ->paginate(10);
 
     return PostResource::collection($posts);
+  }
+
+  public function userReposts(User $user)
+  {
+    $userId = auth()->id();
+    $repostedPostIds = $user->reposts()->pluck('post_id');
+
+    $posts = Post::whereIn('id', $repostedPostIds)
+      ->whereNull('parent_id')
+      ->with('user', 'images')
+      ->withCount(['likes', 'comments', 'reposts'])
+      ->withCount([
+        'likes as liked_by_current_user' => fn($q) => $q->where('user_id', $userId),
+        'reposts as reposted_by_current_user' => fn($q) => $q->where('user_id', $userId),
+      ])
+      ->latest()
+      ->paginate(10);
+
+    return PostResource::collection($posts);
+  }
+
+  public function userPostsCount(User $user): JsonResponse
+  {
+    $count = $user->posts()->whereNull('parent_id')->count();
+
+    return response()->json(['count' => $count]);
+  }
+
+  public function userRepliesCount(User $user): JsonResponse
+  {
+    $count = $user->posts()->whereNotNull('parent_id')->count();
+
+    return response()->json(['count' => $count]);
+  }
+
+  public function userRepostsCount(User $user): JsonResponse
+  {
+    $count = $user->reposts()->count();
+
+    return response()->json(['count' => $count]);
   }
 
   /**

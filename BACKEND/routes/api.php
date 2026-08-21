@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\Api\BookmarkController;
 use App\Http\Controllers\Api\FollowerController;
 use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\PostViewController;
+use App\Http\Controllers\Api\RepostController;
 use App\Http\Controllers\Api\TokenAuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Resources\PostResource;
@@ -48,36 +51,57 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ── Users ──
     Route::get('/users/search', [UserController::class, 'search']);
-    Route::get('/users/{user}/followers', [UserController::class, 'followers']);
-    Route::get('/users/{user}/following', [UserController::class, 'following']);
-    Route::get('/users/{user}/posts', [UserController::class, 'userPosts']);
-    Route::get('/users/{user}/replies', [UserController::class, 'userReplies']);
-    Route::get('/users/{user}/likes', [UserController::class, 'userLikes']);
+    Route::get('/users/{user}/followers', [UserController::class, 'followers'])->whereUuid('user');
+    Route::get('/users/{user}/following', [UserController::class, 'following'])->whereUuid('user');
+    Route::get('/users/{user}/posts', [UserController::class, 'userPosts'])->whereUuid('user');
+    Route::get('/users/{user}/replies', [UserController::class, 'userReplies'])->whereUuid('user');
+    Route::get('/users/{user}/likes', [UserController::class, 'userLikes'])->whereUuid('user');
+    Route::get('/users/{user}/reposts', [UserController::class, 'userReposts'])->whereUuid('user');
+    Route::get('/users/{user}/posts-count', [UserController::class, 'userPostsCount'])->whereUuid('user');
+    Route::get('/users/{user}/replies-count', [UserController::class, 'userRepliesCount'])->whereUuid('user');
+    Route::get('/users/{user}/reposts-count', [UserController::class, 'userRepostsCount'])->whereUuid('user');
     Route::post('/users/change-password', [UserController::class, 'changePassword']);
     Route::get('/profiles/{username}', [UserController::class, 'showByUsername']);
-    Route::apiResource('/users', UserController::class);
+    Route::apiResource('/users', UserController::class)->whereUuid('user');
 
     // ── Posts ──
-    Route::apiResource('/posts', PostController::class);
-    Route::post('/post/{post}/update', [PostController::class, 'updatePost']);
-    Route::get('/posts/{post}/comments', [PostController::class, 'getPostComments']);
-    Route::get('/{username}/post/{post_id}', [PostController::class, 'getPostByUsernameAndId']);
+    Route::apiResource('/posts', PostController::class)->whereUuid('post');
+    Route::post('/post/{post}/update', [PostController::class, 'updatePost'])->whereUuid('post');
+    Route::get('/posts/{post}/comments', [PostController::class, 'getPostComments'])->whereUuid('post');
+    Route::get('/{username}/post/{post_id}', [PostController::class, 'getPostByUsernameAndId'])->whereUuid('post_id');
 
     // ── Follow ──
-    Route::post('/users/{user}/changeFollowStatus', [FollowerController::class, 'changeFollowStatus']);
+    Route::post('/users/{user}/changeFollowStatus', [FollowerController::class, 'changeFollowStatus'])->whereUuid('user');
 
     // ── Likes ──
-    Route::post('/posts/{post}/changeLikeStatus', [LikeController::class, 'changeLikeStatus']);
+    Route::post('/posts/{post}/changeLikeStatus', [LikeController::class, 'changeLikeStatus'])->whereUuid('post');
+
+    // ── Reposts ──
+    Route::post('/posts/{post}/repost', [RepostController::class, 'toggleRepost'])->whereUuid('post');
+
+    // ── Views (scaled: deduped + buffered) ──
+    Route::post('/posts/{post}/view', [PostViewController::class, 'store'])->whereUuid('post')->middleware('throttle:60,1');
+
+    // ── Bookmarks ──
+    Route::post('/posts/{post}/bookmark', [BookmarkController::class, 'toggle'])->whereUuid('post');
+    Route::get('/bookmarks', [BookmarkController::class, 'index']);
+    Route::delete('/bookmarks/{post}', [BookmarkController::class, 'destroy'])->whereUuid('post');
 
     // ── Notifications ──
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
-    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->whereUuid('notification');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
-    // ── Messages ──
+    // ── Messages (secure room format: encrypted partner id) ──
     Route::get('/conversations', [MessageController::class, 'conversations']);
     Route::get('/messages/unread-count', [MessageController::class, 'unreadCount']);
-    Route::get('/messages/{user}', [MessageController::class, 'messagesWith']);
-    Route::post('/messages/{user}', [MessageController::class, 'send']);
+    // Secure room routes (preferred) — token is Crypt::encryptString(partnerId)
+    Route::get('/messages/room/{room}', [MessageController::class, 'messagesByRoom']);
+    Route::post('/messages/room/{room}', [MessageController::class, 'sendToRoom']);
+    Route::get('/messages/room/{room}/resolve', [MessageController::class, 'resolveRoomToken']);
+    Route::get('/users/{user}/room', [MessageController::class, 'roomForUser'])->whereUuid('user');
+    // Legacy direct-user routes (kept for backward compat, also secured via auth)
+    Route::get('/messages/{user}', [MessageController::class, 'messagesWith'])->whereUuid('user');
+    Route::post('/messages/{user}', [MessageController::class, 'send'])->whereUuid('user');
 });

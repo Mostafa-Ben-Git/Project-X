@@ -16,6 +16,7 @@ const HomePage = lazy(() => import("@/pages/home/HomePage"));
 const MessagesPage = lazy(() => import("@/pages/home/MessagesPage"));
 const NotifPage = lazy(() => import("@/pages/home/NotifPage"));
 const ProfilePage = lazy(() => import("@/pages/home/ProfilePage"));
+const BookmarksPage = lazy(() => import("@/pages/home/BookmarksPage"));
 const SettingsLayout = lazy(() => import("@/pages/settings/SettingsLayout"));
 const ProfileTab = lazy(() => import("@/pages/settings/tabs/ProfileTab"));
 const PasswordTab = lazy(() => import("@/pages/settings/tabs/PasswordTab"));
@@ -105,6 +106,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "messages/room/:roomId",
+        element: (
+          <PageLoader>
+            <MessagesPage />
+          </PageLoader>
+        ),
+      },
+      {
         path: "messages/:userId",
         element: (
           <PageLoader>
@@ -117,6 +126,14 @@ const router = createBrowserRouter([
         element: (
           <PageLoader>
             <NotifPage />
+          </PageLoader>
+        ),
+      },
+      {
+        path: "bookmarks",
+        element: (
+          <PageLoader>
+            <BookmarksPage />
           </PageLoader>
         ),
       },

@@ -4,28 +4,38 @@ import { toast } from "sonner";
 import * as api from "@/api/messages";
 import { getUserById } from "@/api/users";
 
-export function useMessages(chatId = null) {
+export function useMessages({ userId = null, room = null } = {}) {
   const qc = useQueryClient();
   const messagesEndRef = useRef(null);
 
-  // Derive the active conversation partner from a URL param (message room).
-  // Falls back to local state driven by openChat/closeChat in the list view.
+  // Support both legacy userId param and new encrypted room param
+  const activeRoom = room || null;
   const [localChat, setLocalChat] = useState(null);
-  const activeUserId = chatId ?? localChat?.id ?? null;
+  const activeUserId = activeRoom ? null : (userId ?? localChat?.id ?? null);
 
-  // When a chat is driven by the URL (refreshed room), fetch the partner profile.
-  // Refetch every 15s to get realtime status updates.
-  const partner = useQuery({
-    queryKey: ["user", activeUserId],
-    queryFn: () => getUserById(activeUserId),
-    enabled: !!chatId && !!activeUserId,
+  // Resolve encrypted room to partner profile
+  const roomPartner = useQuery({
+    queryKey: ["room-partner", activeRoom],
+    queryFn: () => api.resolveRoom(activeRoom),
+    enabled: !!activeRoom,
     staleTime: 10_000,
     refetchInterval: 15_000,
   });
 
-  const currentChat = chatId
-    ? (partner.data ?? { id: activeUserId })
-    : localChat;
+  const partner = useQuery({
+    queryKey: ["user", activeUserId],
+    queryFn: () => getUserById(activeUserId),
+    enabled: !!activeUserId && !activeRoom,
+    staleTime: 10_000,
+    refetchInterval: 15_000,
+  });
+
+  const resolvedPartner = activeRoom ? roomPartner.data : partner.data;
+  const currentChat = activeRoom
+    ? (resolvedPartner ?? { id: null })
+    : activeUserId
+      ? (partner.data ?? { id: activeUserId })
+      : localChat;
 
   const conversations = useQuery({
     queryKey: ["conversations"],
@@ -34,20 +44,20 @@ export function useMessages(chatId = null) {
   });
 
   const chatMessages = useQuery({
-    queryKey: ["messages", activeUserId],
-    queryFn: () => api.fetchMessagesWith(activeUserId),
-    enabled: !!activeUserId,
+    queryKey: activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId],
+    queryFn: () => activeRoom ? api.fetchMessagesByRoom(activeRoom) : api.fetchMessagesWith(activeUserId),
+    enabled: !!(activeRoom || activeUserId),
     staleTime: 10_000,
   });
 
   const send = useMutation({
-    mutationFn: ({ userId, content }) => api.sendMessage(userId, content),
+    mutationFn: ({ content, imageFile }) =>
+      activeRoom
+        ? api.sendMessageToRoom(activeRoom, content, imageFile)
+        : api.sendMessage(activeUserId, content, imageFile),
     onSuccess: (newMsg) => {
-      const partnerId =
-        newMsg.receiver_id === activeUserId ? newMsg.receiver_id : newMsg.sender_id;
-      qc.setQueryData(["messages", partnerId], (old) =>
-        old ? [...old, newMsg] : [newMsg],
-      );
+      const key = activeRoom ? ["messages", "room", activeRoom] : ["messages", newMsg.receiver_id === activeUserId ? newMsg.receiver_id : newMsg.sender_id];
+      qc.setQueryData(key, (old) => (old ? [...old, newMsg] : [newMsg]));
       qc.invalidateQueries({ queryKey: ["conversations"] });
       qc.invalidateQueries({ queryKey: ["messages", "unread"] });
     },
@@ -65,16 +75,27 @@ export function useMessages(chatId = null) {
   }, [qc]);
 
   const sendMessage = useCallback(
-    async (userId, content) => {
-      await send.mutateAsync({ userId, content });
+    async (content, imageFile = null) => {
+      await send.mutateAsync({ content, imageFile });
     },
     [send],
+  );
+
+  const sendMessageLegacy = useCallback(
+    async (uid, content, imageFile = null) => {
+      // Backward compat helper when caller provides explicit userId
+      await api.sendMessage(uid, content, imageFile);
+      qc.invalidateQueries({ queryKey: ["conversations"] });
+    },
+    [qc],
   );
 
   return {
     conversations: conversations.data ?? [],
     messages: chatMessages.data ?? [],
     currentChat,
+    activeRoom,
+    activeUserId: activeRoom ? resolvedPartner?.id : activeUserId,
     isLoading: conversations.isLoading,
     isChatLoading: chatMessages.isLoading,
     isError: conversations.isError,
@@ -83,6 +104,7 @@ export function useMessages(chatId = null) {
     messagesEndRef,
     fetchConversations: conversations.refetch,
     sendMessage,
+    sendMessageLegacy,
     openChat,
     closeChat,
   };

@@ -8,7 +8,7 @@ import {
 import useAuth from "@/hooks/useAuth";
 import usePosts from "@/hooks/usePosts";
 import { SmilePlus } from "lucide-react";
-import { lazy, Suspense, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 
 const EmojiPicker = lazy(() => import("emoji-picker-react"));
 
@@ -17,6 +17,14 @@ function ReplayBox() {
   const { user } = useAuth();
 
   const textareaRef = useRef(null);
+
+  // Auto-grow up to 120px
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }, [newComment]);
 
   const handleEmojiClick = ({ emoji }) => {
     const { selectionStart, selectionEnd } = textareaRef.current;
@@ -47,44 +55,39 @@ function ReplayBox() {
 
   return (
     <form onSubmit={handleSubmit} encType="multipart/form-data">
-      <div className="flex w-full gap-2 rounded-lg border border-border bg-card p-3">
-        <Avatar className="flex-none">
+      <div className="flex w-full items-end gap-2 rounded-none border-0 border-b border-border bg-card p-2 shadow-none sm:p-3">
+        <Avatar className="h-8 w-8 shrink-0 sm:h-9 sm:w-9">
           <AvatarImage src={user?.avatar} alt={user?.username} />
-          <AvatarFallback>
+          <AvatarFallback className="text-xs">
             {user?.first_name?.[0]}
             {user?.last_name?.[0]}
           </AvatarFallback>
         </Avatar>
-        <div className="flex flex-grow items-center overflow-hidden rounded-sm border border-border bg-background">
+        <div className="flex flex-1 items-end gap-1 overflow-hidden rounded-none border-0 bg-background px-3 py-1.5 shadow-none focus-within:ring-0 focus-within:outline-none">
           <textarea
             name="text"
             rows={1}
             value={newComment}
-            className="flex-1 resize-none truncate bg-transparent p-1 text-base text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
-            placeholder="Add Comment..."
+            className="max-h-[120px] min-h-[24px] flex-1 resize-none rounded-none border-0 bg-transparent text-[16px] leading-5 text-foreground placeholder:text-muted-foreground/70 shadow-none outline-none focus:outline-none focus:ring-0 sm:text-sm"
+            placeholder="Add a comment..."
             onChange={handleOnChange}
             ref={textareaRef}
           ></textarea>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground">
-                <SmilePlus />
+              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0 rounded-full text-muted-foreground">
+                <SmilePlus className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <Suspense fallback={<div className="w-64 p-2 text-sm">Loading…</div>}>
+            <DropdownMenuContent side="top" align="end" className="p-0">
+              <Suspense fallback={<div className="w-64 p-3 text-sm">Loading…</div>}>
                 <EmojiPicker
                   theme="dark"
                   emojiStyle="native"
                   onEmojiClick={handleEmojiClick}
                   rows={2}
-                  perRow={8}
-                  emojiSize={32}
-                  pickerStyle={{
-                    position: "absolute",
-                    bottom: "20px",
-                    right: "20px",
-                  }}
+                  perRow={7}
+                  emojiSize={28}
                 />
               </Suspense>
             </DropdownMenuContent>
@@ -94,8 +97,9 @@ function ReplayBox() {
           type="submit"
           size="sm"
           disabled={isEmpty || isCommenting}
+          className="min-h-9 shrink-0 rounded-full px-4"
         >
-          {isCommenting ? "Replaying..." : "Replay"}
+          {isCommenting ? "..." : "Reply"}
         </Button>
       </div>
     </form>

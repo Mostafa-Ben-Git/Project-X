@@ -29,7 +29,7 @@ export default function Carousel({
         style={{ transform: `translateX(-${curr * 100}%)` }}
       >
         {images.map((image) => (
-          <img key={image} src={image} alt="" className="w-full rounded-md" />
+          <img key={image} src={image} alt="" className="h-auto max-h-[280px] w-full rounded-md object-cover sm:max-h-[400px] md:max-h-[500px]" />
         ))}
       </div>
       {images.length !== 1 && (

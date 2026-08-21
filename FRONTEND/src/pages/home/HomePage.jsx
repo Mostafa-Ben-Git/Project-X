@@ -25,8 +25,8 @@ function HomePage() {
   }, [posts, hasNextPage, fetchNextPage]);
 
   return (
-    <main className="w-full px-2 sm:px-4">
-      <div className="mx-auto flex w-full max-w-[600px] flex-col">
+    <main className="w-full">
+      <div className="flex w-full flex-col">
         <PostBox />
 
         {isLoading && (

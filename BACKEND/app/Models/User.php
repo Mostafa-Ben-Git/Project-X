@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -10,7 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-  use HasApiTokens, HasFactory, Notifiable;
+  use HasApiTokens, HasFactory, Notifiable, HasUuids;
 
   protected $fillable = [
     'first_name',
@@ -56,6 +57,7 @@ class User extends Authenticatable
   public function followers()
   {
     return $this->belongsToMany(User::class, 'followers', 'following_id', 'follower_id')
+      ->using(Follower::class)
       ->withTimestamps();
   }
 
@@ -83,6 +85,28 @@ class User extends Authenticatable
   public function receivedMessages(): HasMany
   {
     return $this->hasMany(Message::class, 'receiver_id');
+  }
+
+  public function reposts(): HasMany
+  {
+    return $this->hasMany(Repost::class);
+  }
+
+  public function bookmarks(): HasMany
+  {
+    return $this->hasMany(Bookmark::class);
+  }
+
+  public function postViews(): HasMany
+  {
+    return $this->hasMany(PostView::class);
+  }
+
+  public function bookmarkedPosts()
+  {
+    return $this->belongsToMany(Post::class, 'bookmarks', 'user_id', 'post_id')
+      ->withTimestamps()
+      ->withPivot('id');
   }
 
   public function isFollowing(User $user): bool

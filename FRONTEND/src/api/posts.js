@@ -30,6 +30,21 @@ export async function toggleLike(postId) {
   return data;
 }
 
+export async function recordView(postId) {
+  const { data } = await apiService.post(`/api/posts/${postId}/view`);
+  return data;
+}
+
+export async function toggleBookmark(postId) {
+  const { data } = await apiService.post(`/api/posts/${postId}/bookmark`);
+  return data;
+}
+
+export async function fetchBookmarks({ pageParam = 1 } = {}) {
+  const { data } = await apiService.get(`/api/bookmarks?page=${pageParam}`);
+  return data;
+}
+
 export async function fetchPostComments(postId, { pageParam = 1 } = {}) {
   const { data } = await apiService.get(`/api/posts/${postId}/comments?page=${pageParam}`);
   return data;

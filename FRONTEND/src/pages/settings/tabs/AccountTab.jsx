@@ -2,6 +2,17 @@ import useAuth from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { LogOut } from "lucide-react";
 
 export default function AccountTab() {
@@ -16,9 +27,9 @@ export default function AccountTab() {
           <CardTitle className="text-base">Account info</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
-          <div className="flex justify-between">
+          <div className="flex justify-between gap-2">
             <span className="text-muted-foreground">Email</span>
-            <span>{user.email}</span>
+            <span className="truncate text-right">{user.email}</span>
           </div>
           <Separator />
           <div className="flex justify-between">
@@ -44,15 +55,33 @@ export default function AccountTab() {
       </Card>
 
       <Card className="border-destructive/50">
-        <CardContent className="flex items-center justify-between p-4">
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="font-medium">Sign out</p>
             <p className="text-sm text-muted-foreground">You&apos;ll need to log in again</p>
           </div>
-          <Button variant="destructive" size="sm" onClick={logout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="min-h-11 w-full sm:w-auto" size="lg">
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Sign out?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You&apos;ll need to log in again to access your account.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="min-h-11">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={logout} className="min-h-11 bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Sign out
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
     </div>

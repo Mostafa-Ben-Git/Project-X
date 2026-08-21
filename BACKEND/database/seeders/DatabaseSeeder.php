@@ -46,11 +46,11 @@ class DatabaseSeeder extends Seeder
         ->take(rand(1, 8))
         ->pluck('id');
 
-      $syncData = [];
       foreach ($followers as $followerId) {
-        $syncData[$followerId] = ['created_at' => now(), 'updated_at' => now()];
+        if (!$user->followers()->where('follower_id', $followerId)->exists()) {
+          $user->followers()->attach($followerId, ['created_at' => now(), 'updated_at' => now()]);
+        }
       }
-      $user->followers()->sync($syncData);
     });
 
     // ── Posts with images and comments ──
@@ -82,6 +82,17 @@ class DatabaseSeeder extends Seeder
         foreach ($users as $user) {
           if (!Like::where('user_id', $user->id)->where('post_id', $post->id)->exists()) {
             Like::factory()->create([
+              'user_id' => $user->id,
+              'post_id' => $post->id,
+            ]);
+          }
+        }
+
+        // Repost the post
+        $repostUsers = User::inRandomOrder()->take(rand(0, 4))->get();
+        foreach ($repostUsers as $user) {
+          if (!\App\Models\Repost::where('user_id', $user->id)->where('post_id', $post->id)->exists()) {
+            \App\Models\Repost::create([
               'user_id' => $user->id,
               'post_id' => $post->id,
             ]);

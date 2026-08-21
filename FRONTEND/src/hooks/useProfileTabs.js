@@ -1,10 +1,10 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { getUserPosts, getUserReplies, getUserLikes } from "@/api/users";
+import { getUserPosts, getUserReplies, getUserReposts } from "@/api/users";
 
 const fetchers = {
   posts: getUserPosts,
   replies: getUserReplies,
-  likes: getUserLikes,
+  reposts: getUserReposts,
 };
 
 export function useProfileTabs(userId, tab = "posts") {

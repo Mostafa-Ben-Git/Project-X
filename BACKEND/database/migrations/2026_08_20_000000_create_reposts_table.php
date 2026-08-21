@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,13 +11,13 @@ return new class extends Migration
    */
   public function up(): void
   {
-    Schema::create('posts', function (Blueprint $table) {
-      $table->uuid('id')->primary();
+    Schema::create('reposts', function (Blueprint $table) {
+      $table->uuid("id")->primary();
       $table->uuid('user_id');
-      $table->text('content');
-      $table->uuid('parent_id')->nullable();
-      $table->softDeletes();
+      $table->uuid('post_id');
       $table->timestamps();
+
+      $table->unique(['user_id', 'post_id']);
     });
   }
 
@@ -27,6 +26,6 @@ return new class extends Migration
    */
   public function down(): void
   {
-    Schema::dropIfExists('posts');
+    Schema::dropIfExists('reposts');
   }
 };

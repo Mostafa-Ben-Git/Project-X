@@ -40,6 +40,26 @@ export async function getUserLikes(userId, { pageParam = 1 } = {}) {
   return data;
 }
 
+export async function getUserReposts(userId, { pageParam = 1 } = {}) {
+  const { data } = await apiService.get(`/api/users/${userId}/reposts?page=${pageParam}`);
+  return data;
+}
+
+export async function getUserPostsCount(userId) {
+  const { data } = await apiService.get(`/api/users/${userId}/posts-count`);
+  return data.count;
+}
+
+export async function getUserRepliesCount(userId) {
+  const { data } = await apiService.get(`/api/users/${userId}/replies-count`);
+  return data.count;
+}
+
+export async function getUserRepostsCount(userId) {
+  const { data } = await apiService.get(`/api/users/${userId}/reposts-count`);
+  return data.count;
+}
+
 export async function getUserById(userId) {
   const { data } = await apiService.get(`/api/users/${userId}`);
   return data;

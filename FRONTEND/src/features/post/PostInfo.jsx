@@ -1,31 +1,50 @@
 import usePosts from "@/hooks/usePosts";
+import { toggleBookmark } from "@/api/posts";
 import { cn } from "@/lib/utils";
-import { Heart, MessageCircle, Share2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Bookmark, Eye, Heart, MessageCircle, Repeat, Share2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 function PostInfo({
-  likes,
+  reposts_count,
   comments_count,
+  is_reposted,
+  likes,
   is_liked,
+  views,
+  is_bookmarked,
   post_id,
   postData,
   className,
   replay = false,
 }) {
   const navigate = useNavigate();
-  const { likingHandler } = usePosts();
+  const { repostingHandler, likingHandler } = usePosts();
 
-  const [like, setLike] = useState(likes);
+  const [reposts, setReposts] = useState(reposts_count);
+  const [isReposted, setIsReposted] = useState(is_reposted);
+
+  const [likesCount, setLikesCount] = useState(likes);
   const [isLiked, setIsLiked] = useState(is_liked);
-  const heart = useRef(null);
+  const [viewsCount] = useState(views ?? 0);
+  const [isBookmarked, setIsBookmarked] = useState(is_bookmarked);
+  const [bookmarkPending, setBookmarkPending] = useState(false);
 
   // keep local state in sync if the underlying post data changes (e.g. refetch)
   useEffect(() => {
-    setLike(likes);
+    setReposts(reposts_count);
+    setIsReposted(is_reposted);
+  }, [reposts_count, is_reposted]);
+
+  useEffect(() => {
+    setLikesCount(likes);
     setIsLiked(is_liked);
   }, [likes, is_liked]);
+
+  useEffect(() => {
+    setIsBookmarked(is_bookmarked);
+  }, [is_bookmarked]);
 
   const handleReply = (e) => {
     e.stopPropagation();
@@ -36,26 +55,39 @@ function PostInfo({
     }
   };
 
+  const handleRepost = async (e) => {
+    e.stopPropagation();
+    const nextReposted = !isReposted;
+    const prevReposts = reposts;
+    const prevReposted = isReposted;
+
+    // Optimistically update UI immediately
+    setReposts((prev) => (nextReposted ? prev + 1 : prev - 1));
+    setIsReposted(nextReposted);
+
+    // Fire API in background and roll back on failure
+    const ok = await repostingHandler(post_id);
+    if (!ok) {
+      setReposts(prevReposts);
+      setIsReposted(prevReposted);
+      toast.error("Could not update repost. Please try again.");
+    }
+  };
+
   const handleLike = async (e) => {
     e.stopPropagation();
     const nextLiked = !isLiked;
-    const prevLike = like;
+    const prevLikes = likesCount;
     const prevLiked = isLiked;
 
     // Optimistically update UI immediately
-    setLike((prev) => (nextLiked ? prev + 1 : prev - 1));
+    setLikesCount((prev) => (nextLiked ? prev + 1 : prev - 1));
     setIsLiked(nextLiked);
-
-    if (nextLiked && heart.current) {
-      heart.current.classList.remove("animate-beat-heart-once");
-      void heart.current.offsetWidth; // restart animation
-      heart.current.classList.add("animate-beat-heart-once");
-    }
 
     // Fire API in background and roll back on failure
     const ok = await likingHandler(post_id);
     if (!ok) {
-      setLike(prevLike);
+      setLikesCount(prevLikes);
       setIsLiked(prevLiked);
       toast.error("Could not update like. Please try again.");
     }
@@ -75,6 +107,24 @@ function PostInfo({
     }
   };
 
+  const handleBookmark = async (e) => {
+    e.stopPropagation();
+    if (bookmarkPending) return;
+    const next = !isBookmarked;
+    const prev = isBookmarked;
+    setIsBookmarked(next);
+    setBookmarkPending(true);
+    try {
+      await toggleBookmark(post_id);
+      toast.success(next ? "Saved to bookmarks" : "Removed from bookmarks");
+    } catch {
+      setIsBookmarked(prev);
+      toast.error("Could not update bookmark");
+    } finally {
+      setBookmarkPending(false);
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -82,6 +132,20 @@ function PostInfo({
         className,
       )}
     >
+      <button
+        type="button"
+        aria-label={isReposted ? "Undo repost" : "Repost post"}
+        aria-pressed={isReposted}
+        onClick={handleRepost}
+        className={cn(
+          "flex min-h-11 min-w-11 flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 transition-colors duration-200 hover:bg-green-500/10 hover:text-green-500 sm:flex-none sm:justify-start sm:px-2",
+          isReposted ? "text-green-500" : "text-muted-foreground",
+        )}
+      >
+        <Repeat size={18} className="shrink-0" />
+        <span className="text-xs tabular-nums">{Number(reposts)}</span>
+      </button>
+
       <button
         type="button"
         aria-label={isLiked ? "Unlike post" : "Like post"}
@@ -93,13 +157,11 @@ function PostInfo({
         )}
       >
         <Heart
-          ref={heart}
           size={18}
-          strokeWidth={isLiked ? 0 : 2}
+          className="shrink-0"
           fill={isLiked ? "currentColor" : "none"}
-          className="shrink-0 transition-transform duration-200"
         />
-        <span className="text-xs tabular-nums">{Number(like)}</span>
+        <span className="text-xs tabular-nums">{Number(likesCount)}</span>
       </button>
 
       {!replay && (
@@ -112,6 +174,25 @@ function PostInfo({
           >
             <MessageCircle size={18} className="shrink-0" />
             <span className="text-xs tabular-nums">{comments_count}</span>
+          </button>
+
+          <span className="flex min-h-11 min-w-11 flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-muted-foreground sm:flex-none sm:justify-start sm:px-2" title="Views">
+            <Eye size={18} className="shrink-0" />
+            <span className="text-xs tabular-nums">{Number(viewsCount)}</span>
+          </span>
+
+          <button
+            type="button"
+            aria-label={isBookmarked ? "Remove bookmark" : "Bookmark post"}
+            aria-pressed={isBookmarked}
+            onClick={handleBookmark}
+            disabled={bookmarkPending}
+            className={cn(
+              "flex min-h-11 min-w-11 flex-1 items-center justify-center rounded-md py-1.5 transition-colors duration-200 hover:bg-yellow-500/10 hover:text-yellow-500 sm:flex-none sm:px-2",
+              isBookmarked ? "text-yellow-500" : "text-muted-foreground",
+            )}
+          >
+            <Bookmark size={18} className="shrink-0" fill={isBookmarked ? "currentColor" : "none"} />
           </button>
 
           <button

@@ -35,10 +35,16 @@ function NotificationsPage() {
   } = useNotifications();
   const navigate = useNavigate();
 
-  const handleClick = (n) => {
+  const handleClick = async (n) => {
     if (!n.read_at) markRead(n.id);
-    if (n.type === "message") {
-      navigate(`/messages/${n.from_user?.id}`);
+    if (n.type === "message" && n.from_user?.id) {
+      try {
+        const mod = await import("@/api/messages");
+        const room = await mod.getRoomForUser(n.from_user.id);
+        navigate(`/messages/room/${room}`);
+      } catch {
+        navigate(`/messages/${n.from_user.id}`);
+      }
     } else if (n.post_id) {
       navigate("/home");
     }

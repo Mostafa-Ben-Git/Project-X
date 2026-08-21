@@ -15,22 +15,26 @@ export default function SettingsLayout() {
   const activeTab = location.pathname.split("/settings/")[1] || "profile";
 
   return (
-    <main className="mx-auto max-w-xl space-y-6 p-4">
+    <main className="mx-auto max-w-xl space-y-4 p-3 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:space-y-6 sm:p-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate("/profile")} className="text-muted-foreground hover:text-foreground">
+        <button
+          onClick={() => navigate("/profile")}
+          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-accent text-muted-foreground hover:text-foreground"
+          aria-label="Back to profile"
+        >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-lg font-bold">Settings</h1>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs - scrollable on mobile, labels always visible */}
       <Tabs value={activeTab} onValueChange={(val) => navigate(`/settings/${val}`)}>
-        <TabsList className="w-full">
+        <TabsList className="w-full justify-start gap-1 overflow-x-auto p-1 sm:justify-center">
           {TABS.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value} className="flex-1 gap-1.5">
+            <TabsTrigger key={tab.value} value={tab.value} className="min-h-[36px] flex-1 gap-1.5 whitespace-nowrap px-2 text-xs sm:px-3 sm:text-sm">
               <tab.icon size={14} />
-              <span className="hidden sm:inline">{tab.label}</span>
+              <span>{tab.label}</span>
             </TabsTrigger>
           ))}
         </TabsList>

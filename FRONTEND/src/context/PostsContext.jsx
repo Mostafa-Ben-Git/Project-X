@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import apiService from "@/api/apiService"; // Assuming you have an API service
 import useIntersectionObserver from "@/hooks/useIntersectionObserver";
@@ -24,6 +25,8 @@ function PostsProvider({ children }) {
 
   const [errors, setErrors] = useState({});
   const [scrollPosition, setScrollPosition] = useState(0);
+
+  const qc = useQueryClient();
 
   const homePageRef = useRef(null);
 
@@ -165,6 +168,23 @@ function PostsProvider({ children }) {
     }
   };
 
+  const repostingHandler = async (post_id) => {
+    try {
+      await apiService.post(`/api/posts/${post_id}/repost`);
+      // Invalidate profile tabs and count badges so Home -> Profile stays in sync
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["user-reposts-count"] });
+      qc.invalidateQueries({ queryKey: ["user-posts-count"] });
+      qc.invalidateQueries({ queryKey: ["user-replies-count"] });
+      return true;
+    } catch (error) {
+      const responseData = error.response;
+      console.error("Error reposting post", responseData);
+      setErrors(responseData);
+      return false;
+    }
+  };
+
   const value = {
     isDeleting,
     setIsDeleting,
@@ -177,6 +197,7 @@ function PostsProvider({ children }) {
     scrollPosition,
     homePageRef,
     likingHandler,
+    repostingHandler,
     setComments,
     commentPage,
     setCommentPage,

@@ -25,7 +25,7 @@ export function ImagesCarousel({ images }) {
     });
   };
 
-  // Single image: full width, capped height
+  // Single image: full width, responsive capped height
   if (images.length === 1) {
     return (
       <>
@@ -33,7 +33,7 @@ export function ImagesCarousel({ images }) {
           <Image
             src={images[0]}
             onOpen={() => openLightbox(0)}
-            className="max-h-[512px] w-full object-cover"
+            className="max-h-[280px] w-full object-cover sm:max-h-[420px] md:max-h-[512px]"
           />
         </div>
         {lightboxIndex !== null && (
@@ -62,14 +62,14 @@ export function ImagesCarousel({ images }) {
                     <Image
                       src={image}
                       onOpen={() => openLightbox(index)}
-                      className="max-h-[400px] w-auto object-contain"
+                      className="max-h-[260px] w-auto max-w-full object-contain sm:max-h-[360px] md:max-h-[400px]"
                     />
                   </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="left-2 scale-125" />
-            <CarouselNext className="right-2 scale-125" />
+            <CarouselPrevious className="left-2 scale-100 sm:scale-125" />
+            <CarouselNext className="right-2 scale-100 sm:scale-125" />
           </Carousel>
         </div>
         {lightboxIndex !== null && (
@@ -85,17 +85,17 @@ export function ImagesCarousel({ images }) {
     );
   }
 
-  // Two images: equal split
+  // Two images: equal split, responsive heights
   if (images.length === 2) {
     return (
       <>
-        <div className="my-2 grid grid-cols-2 gap-0.5 overflow-hidden rounded-xl">
+        <div className="my-2 grid grid-cols-2 gap-0.5 overflow-hidden rounded-xl sm:gap-1">
           {images.map((image, index) => (
             <Image
               key={index}
               src={image}
               onOpen={() => openLightbox(index)}
-              className="h-[300px] w-full object-cover"
+              className="h-[180px] w-full object-cover sm:h-[240px] md:h-[300px]"
             />
           ))}
         </div>
@@ -112,11 +112,11 @@ export function ImagesCarousel({ images }) {
     );
   }
 
-  // Three images: tall left, two stacked right
+  // Three images: tall left, two stacked right, responsive
   if (images.length === 3) {
     return (
       <>
-        <div className="my-2 grid h-[300px] grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden rounded-xl">
+        <div className="my-2 grid h-[220px] grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden rounded-xl sm:h-[300px] sm:gap-1 md:h-[360px]">
           <Image
             src={images[0]}
             onOpen={() => openLightbox(0)}
@@ -125,12 +125,12 @@ export function ImagesCarousel({ images }) {
           <Image
             src={images[1]}
             onOpen={() => openLightbox(1)}
-            className="col-start-2 row-start-1 h-[150px] w-full object-cover"
+            className="col-start-2 row-start-1 h-full w-full object-cover"
           />
           <Image
             src={images[2]}
             onOpen={() => openLightbox(2)}
-            className="col-start-2 row-start-2 h-[150px] w-full object-cover"
+            className="col-start-2 row-start-2 h-full w-full object-cover"
           />
         </div>
         {lightboxIndex !== null && (
@@ -146,16 +146,16 @@ export function ImagesCarousel({ images }) {
     );
   }
 
-  // Four images: 2x2 grid
+  // Four images: 2x2 grid, responsive
   return (
     <>
-      <div className="my-2 grid grid-cols-2 gap-0.5 overflow-hidden rounded-xl">
+      <div className="my-2 grid grid-cols-2 gap-0.5 overflow-hidden rounded-xl sm:gap-1">
         {images.map((image, index) => (
           <Image
             key={index}
             src={image}
             onOpen={() => openLightbox(index)}
-            className="h-[200px] w-full object-cover"
+            className="h-[140px] w-full object-cover sm:h-[180px] md:h-[200px]"
           />
         ))}
       </div>

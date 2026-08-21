@@ -16,7 +16,7 @@ class UpdatePostRequest extends FormRequest
   {
     return [
       'content' => 'sometimes|required|string|max:10000',
-      'parent_id' => 'nullable|integer|exists:posts,id',
+      'parent_id' => 'nullable|uuid|exists:posts,id',
       'images' => 'nullable|array|max:5',
       'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
     ];

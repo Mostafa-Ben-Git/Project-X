@@ -16,7 +16,9 @@ use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('user.{id}', function ($user, $id) {
     // Only the owner of the account can join their private channel.
-    return (int) $user->id === (int) $id;
+    // IDs are UUID strings now, so compare as strings (casting to int would
+    // break authorization because every UUID cast to int becomes 0).
+    return (string) $user->id === (string) $id;
 });
 
 // Presence channel — all authenticated users join, everyone sees who's online.

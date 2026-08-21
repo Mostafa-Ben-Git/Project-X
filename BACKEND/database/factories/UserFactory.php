@@ -21,6 +21,18 @@ class UserFactory extends Factory
     $bg = fake()->randomElement($bgColors);
     $avatar = "https://ui-avatars.com/api/?name=" . urlencode($firstName . '+' . $lastName) . "&background={$bg}&color=fff&bold=true&size=128";
 
+    // Weighted status: ~30% online, 40% offline, 10% away, 10% dnd, 10% hidden
+    $statusPool = ['online','online','online','offline','offline','offline','offline','away','dnd','hidden'];
+    $status = fake()->randomElement($statusPool);
+    $lastActiveAt = match ($status) {
+      'online' => now()->subMinutes(rand(0, 4)),
+      'away' => now()->subMinutes(rand(5, 30)),
+      'dnd' => now()->subMinutes(rand(0, 15)),
+      'offline' => fake()->optional(0.2, now()->subDays(rand(1, 7)))->passthrough(now()->subHours(rand(2, 48))),
+      'hidden' => fake()->optional(0.3, now()->subDays(rand(1, 5)))->passthrough(now()->subHours(rand(5, 72))),
+      default => now()->subMinutes(rand(0, 10)),
+    };
+
     return [
       'first_name' => $firstName,
       'last_name' => $lastName,
@@ -47,6 +59,8 @@ class UserFactory extends Factory
         'twitter' => 'https://twitter.com/' . $this->faker->userName,
         'instagram' => 'https://instagram.com/' . $this->faker->userName,
       ]),
+      'status' => $status,
+      'last_active_at' => $lastActiveAt,
     ];
   }
 

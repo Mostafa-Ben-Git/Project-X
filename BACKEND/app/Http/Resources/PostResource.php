@@ -24,7 +24,10 @@ class PostResource extends JsonResource
       ->withCount([
         'likes',
         'comments',
+        'reposts',
         'likes as liked_by_current_user' => fn($q) => $q->where('user_id', $userId),
+        'reposts as reposted_by_current_user' => fn($q) => $q->where('user_id', $userId),
+        'bookmarks as bookmarked_by_current_user' => fn($q) => $q->where('user_id', $userId),
       ]);
   }
 
@@ -56,7 +59,11 @@ class PostResource extends JsonResource
       'info' => [
         'is_liked' => (bool) ($this->liked_by_current_user ?? 0),
         'likes' => (int) ($this->likes_count ?? 0),
+        'is_reposted' => (bool) ($this->reposted_by_current_user ?? 0),
+        'reposts_count' => (int) ($this->reposts_count ?? 0),
         'comments_count' => (int) ($this->comments_count ?? 0),
+        'views' => (int) ($this->views_count ?? 0),
+        'is_bookmarked' => (bool) ($this->bookmarked_by_current_user ?? 0),
       ],
       'user' => $user ? [
         'id' => $user->id,

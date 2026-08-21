@@ -79,7 +79,7 @@ class PostController extends Controller
       }
     }
 
-    return new PostResource($post->load('images'));
+    return new PostResource($post->load(['user', 'images']));
   }
 
   /**

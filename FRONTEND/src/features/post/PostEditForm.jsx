@@ -92,7 +92,7 @@ function PostEditForm({ post_id }) {
             id="post_content"
             onChange={(e) => setPost({ ...post, content: e.target.value })}
             defaultValue={post?.content}
-            className="col-span-3"
+            className="col-span-3 rounded-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
           />
         </div>
       </div>

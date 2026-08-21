@@ -1,10 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import { useFollow } from "@/hooks/useFollow";
 import { useUserProfile, ProfileNotFound } from "@/hooks/useUserProfile";
 import { useProfileTabs } from "@/hooks/useProfileTabs";
+import { getUserPostsCount, getUserRepliesCount, getUserRepostsCount } from "@/api/users";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,6 +48,22 @@ function ProfilePage() {
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useProfileTabs(userId, activeTab);
+
+  const { data: postsCount } = useQuery({
+    queryKey: ["user-posts-count", userId],
+    queryFn: () => getUserPostsCount(userId),
+    enabled: !!userId,
+  });
+  const { data: repliesCount } = useQuery({
+    queryKey: ["user-replies-count", userId],
+    queryFn: () => getUserRepliesCount(userId),
+    enabled: !!userId,
+  });
+  const { data: repostsCount } = useQuery({
+    queryKey: ["user-reposts-count", userId],
+    queryFn: () => getUserRepostsCount(userId),
+    enabled: !!userId,
+  });
 
   const posts = data?.pages?.flatMap((p) => p.data) ?? [];
 
@@ -124,9 +142,15 @@ function ProfilePage() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="border-t">
         <TabsList className="w-full rounded-none">
-          <TabsTrigger value="posts" className="flex-1">Posts</TabsTrigger>
-          <TabsTrigger value="replies" className="flex-1">Replies</TabsTrigger>
-          <TabsTrigger value="likes" className="flex-1">Likes</TabsTrigger>
+          <TabsTrigger value="posts" className="flex-1">
+            Posts{postsCount != null && <span className="ml-1 text-muted-foreground">({postsCount})</span>}
+          </TabsTrigger>
+          <TabsTrigger value="replies" className="flex-1">
+            Replies{repliesCount != null && <span className="ml-1 text-muted-foreground">({repliesCount})</span>}
+          </TabsTrigger>
+          <TabsTrigger value="reposts" className="flex-1">
+            Reposts{repostsCount != null && <span className="ml-1 text-muted-foreground">({repostsCount})</span>}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-0">

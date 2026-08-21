@@ -19,11 +19,11 @@ function PostPage() {
     if (!user) getUser();
   }, [user, getUser]);
 
-  // Fetch the single post
+  // Fetch the single post (only after auth is ready)
   const postQuery = useQuery({
     queryKey: ["post", username, post_id],
     queryFn: () => getPost(username, post_id),
-    enabled: !!username && !!post_id,
+    enabled: !!username && !!post_id && !!user,
   });
 
   // Fetch comments as infinite query
@@ -57,6 +57,15 @@ function PostPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [comments, commentsQuery.hasNextPage, commentsQuery.isFetchingNextPage, commentsQuery.fetchNextPage]);
 
+  // Show loading while auth is initializing
+  if (!user && !postQuery.isLoading) {
+    return (
+      <div className="flex justify-center py-20">
+        <LoaderCircle />
+      </div>
+    );
+  }
+
   if (postQuery.isLoading && !currentPost) {
     return (
       <div className="flex justify-center py-20">
@@ -89,7 +98,7 @@ function PostPage() {
       </header>
 
       <section>
-        {currentPost && (
+        {currentPost && currentPost.user && (
           <Post
             {...currentPost}
             postData={currentPost}

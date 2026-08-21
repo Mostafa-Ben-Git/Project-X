@@ -10,9 +10,48 @@ export async function fetchMessagesWith(userId) {
   return data.data;
 }
 
-export async function sendMessage(userId, content) {
+export async function sendMessage(userId, content, imageFile = null) {
+  if (imageFile) {
+    const fd = new FormData();
+    if (content) fd.append("content", content);
+    fd.append("image", imageFile);
+    const { data } = await apiService.post(`/api/messages/${userId}`, fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data;
+  }
   const { data } = await apiService.post(`/api/messages/${userId}`, { content });
   return data;
+}
+
+// ── Secure room helpers (encrypted URL) ──
+export async function getRoomForUser(userId) {
+  const { data } = await apiService.get(`/api/users/${userId}/room`);
+  return data.room;
+}
+
+export async function fetchMessagesByRoom(room) {
+  const { data } = await apiService.get(`/api/messages/room/${encodeURIComponent(room)}`);
+  return data.data;
+}
+
+export async function sendMessageToRoom(room, content, imageFile = null) {
+  if (imageFile) {
+    const fd = new FormData();
+    if (content) fd.append("content", content);
+    fd.append("image", imageFile);
+    const { data } = await apiService.post(`/api/messages/room/${encodeURIComponent(room)}`, fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data;
+  }
+  const { data } = await apiService.post(`/api/messages/room/${encodeURIComponent(room)}`, { content });
+  return data;
+}
+
+export async function resolveRoom(room) {
+  const { data } = await apiService.get(`/api/messages/room/${encodeURIComponent(room)}/resolve`);
+  return data.partner;
 }
 
 export async function getMessagesUnread() {

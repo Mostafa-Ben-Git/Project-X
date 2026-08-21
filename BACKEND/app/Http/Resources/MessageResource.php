@@ -11,15 +11,31 @@ class MessageResource extends JsonResource
 
   public function toArray(Request $request): array
   {
+    $authId = $request->user()?->id;
+    // Secure room token: encrypted partner id (never expose raw UUID in URL)
+    $partnerId = $this->sender_id === $authId ? $this->receiver_id : $this->sender_id;
+    $room = null;
+    try {
+      if ($partnerId) {
+        $enc = \Illuminate\Support\Facades\Crypt::encryptString($partnerId);
+        $room = rtrim(strtr($enc, '+/', '-_'), '=');
+      }
+    } catch (\Throwable $e) {
+      $room = null;
+    }
+
     return [
       'id' => $this->id,
       'content' => $this->content,
+      'image_url' => $this->image_path ? asset($this->image_path) : null,
+      'type' => $this->type ?? ($this->image_path ? 'image' : 'text'),
       'sender_id' => $this->sender_id,
       'receiver_id' => $this->receiver_id,
       'read_at' => $this->read_at,
       'created_at' => $this->created_at,
       'ago' => $this->created_at->diffForHumans(),
       'unread_count' => (int) ($this->unread_count ?? 0),
+      'room' => $room,
       'sender' => [
         'id' => $this->sender?->id,
         'first_name' => $this->sender?->first_name,

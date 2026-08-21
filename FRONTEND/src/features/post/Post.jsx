@@ -23,12 +23,14 @@ import useAuth from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { Loader2, Settings } from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DOMPurify from "dompurify";
 import { UserHoverCart } from "../../components/UserHoverCart";
 import { ImagesCarousel } from "./ImagesCarousel";
 import PostInfo from "./PostInfo";
 import PostEditForm from "./PostEditForm";
+import { usePostView } from "@/hooks/usePostView";
 
 function Post({
   content,
@@ -46,12 +48,11 @@ function Post({
   const nav = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { isDeleting, deletePost } = usePosts();
-
-  const handleDelete = () => {
-    setDropdownOpen(false);
-    deletePost(post_id);
-  };
   const { user: currentUser } = useAuth();
+  const viewRef = usePostView(post_id);
+
+  // Guard against null user (e.g. when loaded from URL without state)
+  if (!user) return null;
 
   const handleClick = (e) => {
     e.stopPropagation();
@@ -61,9 +62,16 @@ function Post({
   const initials = `${user.first_name?.[0] ?? ""}${user.last_name?.[0] ?? ""}`;
   const safeContent = DOMPurify.sanitize(content);
 
+  // Merge intersection refs: infinite scroll sentinel + view tracking
+  const setRefs = (el) => {
+    if (typeof innerRef === "function") innerRef(el);
+    else if (innerRef) innerRef.current = el;
+    viewRef(el);
+  };
+
   return (
     <li
-      ref={innerRef}
+      ref={setRefs}
       className={cn(
         "relative w-full list-none overflow-hidden border-b border-border p-3 transition-colors hover:bg-accent/30 sm:p-4",
         className,
