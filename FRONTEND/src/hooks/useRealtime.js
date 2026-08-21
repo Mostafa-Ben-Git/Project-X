@@ -49,12 +49,16 @@ export function useRealtime(userId) {
         qc.invalidateQueries({ queryKey: ["messages", "unread"] });
         if (payload && payload.sender_id !== userId) {
           qc.invalidateQueries({ queryKey: ["user", payload.sender_id] });
+          // Suppress toast if user is currently inside a message room (they'll see the bubble + arrow indicator)
+          const inMessageRoom = window.location.pathname.startsWith("/messages/");
+          if (inMessageRoom) return;
           const from = payload?.sender;
           const name = from
             ? `${from.first_name} ${from.last_name}`
             : "Someone";
+          const preview = payload.content || (payload.image_url ? "📷 Image" : "");
           toast("New message", {
-            description: `${name}: ${payload.content}`,
+            description: `${name}: ${preview}`,
             action: {
               label: "Open chat",
               onClick: () => navigate(`/messages/${payload.sender_id}`),
