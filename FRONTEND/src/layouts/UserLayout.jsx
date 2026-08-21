@@ -52,7 +52,7 @@ function UserLayout() {
     <SidebarProvider defaultOpen={false} className="h-dvh overflow-hidden">
       <AppSidebar />
       <SidebarInset className="flex h-dvh flex-col overflow-hidden 2xl:mr-[340px]">
-        <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/80 px-3 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <header className="sticky top-0 z-30 hidden h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/80 px-3 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:flex">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="hidden md:flex" />
             <span className="text-base font-bold tracking-tight md:hidden">X</span>
