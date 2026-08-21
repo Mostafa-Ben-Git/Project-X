@@ -369,7 +369,7 @@ function MessagesPage() {
               <ArrowLeft size={20} />
             </Button>
           )}
-          <Link to={`/profile/${partner?.username}`} className="relative cursor-pointer shrink-0">
+          <Link to={partner?.id === user?.id ? "/profile" : `/profile/${partner?.username}`} className="relative cursor-pointer shrink-0">
             <Avatar className="h-8 w-8 md:h-10 md:w-10">
               <AvatarImage src={partner?.avatar} />
               <AvatarFallback className="text-xs md:text-sm">
@@ -382,7 +382,7 @@ function MessagesPage() {
             )}
           </Link>
           <div className="min-w-0 flex-1">
-            <Link to={`/profile/${partner?.username}`} className="cursor-pointer">
+            <Link to={partner?.id === user?.id ? "/profile" : `/profile/${partner?.username}`} className="cursor-pointer">
               <p className="font-semibold text-sm md:text-base truncate">
                 {partner?.first_name} {partner?.last_name}
               </p>

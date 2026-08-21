@@ -27,7 +27,7 @@ export function UserHoverCart({ user, className }) {
   const dot = statusDotClass(user.status);
 
   const goToProfile = () => {
-    if (user.username) navigate(`/profile/${user.username}`);
+    if (user.username) navigate(isSelf ? "/profile" : `/profile/${user.username}`);
   };
 
   const onFollow = async () => {

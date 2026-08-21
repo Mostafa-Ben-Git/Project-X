@@ -16,7 +16,7 @@ export const UserBanner = ({ compact = false }) => {
   if (!user) return null;
 
   const items = [
-    { label: "View Profile", icon: UserIcon, onClick: () => navigate(`/profile/${user.username}`) },
+    { label: "View Profile", icon: UserIcon, onClick: () => navigate("/profile") },
     { label: "Messages", icon: Mail, onClick: () => navigate("/messages") },
     { label: "Account Settings", icon: Settings, onClick: () => navigate("/settings") },
   ];
