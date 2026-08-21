@@ -51,10 +51,13 @@ export function useMessages({ userId = null, room = null } = {}) {
   });
 
   const send = useMutation({
-    mutationFn: ({ content, imageFile }) =>
-      activeRoom
+    mutationFn: ({ content, imageFile, replyToId }) => {
+      if (replyToId && activeRoom) return api.replyToMessage(activeRoom, replyToId, content, imageFile);
+      if (replyToId && activeUserId) return api.sendMessage(activeUserId, content, imageFile); // fallback: treat as normal
+      return activeRoom
         ? api.sendMessageToRoom(activeRoom, content, imageFile)
-        : api.sendMessage(activeUserId, content, imageFile),
+        : api.sendMessage(activeUserId, content, imageFile);
+    },
     onSuccess: (newMsg) => {
       const key = activeRoom ? ["messages", "room", activeRoom] : ["messages", newMsg.receiver_id === activeUserId ? newMsg.receiver_id : newMsg.sender_id];
       qc.setQueryData(key, (old) => (old ? [...old, newMsg] : [newMsg]));
@@ -62,6 +65,35 @@ export function useMessages({ userId = null, room = null } = {}) {
       qc.invalidateQueries({ queryKey: ["messages", "unread"] });
     },
     onError: () => toast.error("Could not send message"),
+  });
+
+  const del = useMutation({
+    mutationFn: (msgId) => api.deleteMessage(activeRoom, msgId),
+    onSuccess: (_data, msgId) => {
+      const key = activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId];
+      qc.setQueryData(key, (old) => (old ? old.filter((m) => m.id !== msgId) : old));
+      qc.invalidateQueries({ queryKey: ["conversations"] });
+      toast.success("Message deleted");
+    },
+    onError: () => toast.error("Could not delete message"),
+  });
+
+  const pin = useMutation({
+    mutationFn: (msgId) => api.togglePin(activeRoom, msgId),
+    onSuccess: (updated) => {
+      const key = activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId];
+      qc.setQueryData(key, (old) => (old ? old.map((m) => (m.id === updated.id ? updated : m)) : old));
+      qc.invalidateQueries({ queryKey: ["pinned", activeRoom] });
+      toast.success(updated.is_pinned ? "Pinned" : "Unpinned");
+    },
+    onError: (e) => toast.error(e?.response?.data?.message || "Could not pin message"),
+  });
+
+  const pinned = useQuery({
+    queryKey: ["pinned", activeRoom],
+    queryFn: () => api.fetchPinned(activeRoom),
+    enabled: !!activeRoom,
+    staleTime: 10_000,
   });
 
   const openChat = useCallback((user) => {
@@ -75,8 +107,8 @@ export function useMessages({ userId = null, room = null } = {}) {
   }, [qc]);
 
   const sendMessage = useCallback(
-    async (content, imageFile = null) => {
-      await send.mutateAsync({ content, imageFile });
+    async (content, imageFile = null, replyToId = null) => {
+      await send.mutateAsync({ content, imageFile, replyToId });
     },
     [send],
   );
@@ -90,9 +122,13 @@ export function useMessages({ userId = null, room = null } = {}) {
     [qc],
   );
 
+  const deleteMessage = useCallback((msgId) => del.mutateAsync(msgId), [del]);
+  const togglePin = useCallback((msgId) => pin.mutateAsync(msgId), [pin]);
+
   return {
     conversations: conversations.data ?? [],
     messages: chatMessages.data ?? [],
+    pinned: pinned.data ?? [],
     currentChat,
     activeRoom,
     activeUserId: activeRoom ? resolvedPartner?.id : activeUserId,
@@ -100,11 +136,15 @@ export function useMessages({ userId = null, room = null } = {}) {
     isChatLoading: chatMessages.isLoading,
     isError: conversations.isError,
     isSending: send.isPending,
+    isDeleting: del.isPending,
+    isPinning: pin.isPending,
     unreadCount: 0,
     messagesEndRef,
     fetchConversations: conversations.refetch,
     sendMessage,
     sendMessageLegacy,
+    deleteMessage,
+    togglePin,
     openChat,
     closeChat,
   };

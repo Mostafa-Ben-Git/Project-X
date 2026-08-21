@@ -100,6 +100,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages/room/{room}', [MessageController::class, 'messagesByRoom']);
     Route::post('/messages/room/{room}', [MessageController::class, 'sendToRoom']);
     Route::get('/messages/room/{room}/resolve', [MessageController::class, 'resolveRoomToken']);
+    Route::get('/messages/room/{room}/pinned', [MessageController::class, 'pinned']);
+    Route::post('/messages/room/{room}/reply/{message}', [MessageController::class, 'reply'])->whereUuid('message');
+    Route::delete('/messages/room/{room}/{message}', [MessageController::class, 'destroy'])->whereUuid('message');
+    Route::post('/messages/room/{room}/{message}/restore', [MessageController::class, 'restore'])->whereUuid('message');
+    Route::post('/messages/room/{room}/{message}/pin', [MessageController::class, 'togglePin'])->whereUuid('message');
     Route::get('/users/{user}/room', [MessageController::class, 'roomForUser'])->whereUuid('user');
     // Legacy direct-user routes (kept for backward compat, also secured via auth)
     Route::get('/messages/{user}', [MessageController::class, 'messagesWith'])->whereUuid('user');

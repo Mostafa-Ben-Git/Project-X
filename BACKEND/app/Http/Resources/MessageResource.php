@@ -24,6 +24,7 @@ class MessageResource extends JsonResource
       $room = null;
     }
 
+    $reply = $this->whenLoaded('replyTo');
     return [
       'id' => $this->id,
       'content' => $this->content,
@@ -31,11 +32,22 @@ class MessageResource extends JsonResource
       'type' => $this->type ?? ($this->image_path ? 'image' : 'text'),
       'sender_id' => $this->sender_id,
       'receiver_id' => $this->receiver_id,
+      'reply_to_id' => $this->reply_to_id,
+      'is_pinned' => (bool) $this->is_pinned,
+      'pinned_at' => $this->pinned_at?->toIso8601String(),
+      'is_mine' => $authId ? $this->sender_id === $authId : false,
+      'can_delete' => $authId ? ($this->sender_id === $authId || $this->receiver_id === $authId) : false,
       'read_at' => $this->read_at,
       'created_at' => $this->created_at,
       'ago' => $this->created_at->diffForHumans(),
       'unread_count' => (int) ($this->unread_count ?? 0),
       'room' => $room,
+      'reply_to' => $reply ? [
+        'id' => $reply->id,
+        'content' => $reply->content ? \Illuminate\Support\Str::limit($reply->content, 80) : null,
+        'image_url' => $reply->image_path ? asset($reply->image_path) : null,
+        'sender_id' => $reply->sender_id,
+      ] : null,
       'sender' => [
         'id' => $this->sender?->id,
         'first_name' => $this->sender?->first_name,

@@ -95,8 +95,7 @@ class MessageController extends Controller
       ->orWhere(function ($query) use ($userId, $user) {
         $query->where('sender_id', $user->id)->where('receiver_id', $userId);
       })
-      ->with('sender:id,first_name,last_name,username,avatar,status,last_active_at')
-      ->with('receiver:id,first_name,last_name,username,avatar,status,last_active_at')
+      ->with(['replyTo', 'sender:id,first_name,last_name,username,avatar,status,last_active_at', 'receiver:id,first_name,last_name,username,avatar,status,last_active_at'])
       ->orderBy('created_at', 'asc')
       ->paginate(50);
 
@@ -107,6 +106,138 @@ class MessageController extends Controller
       ->update(['read_at' => now()]);
 
     return MessageResource::collection($messages);
+  }
+
+  /**
+   * Reply to a message in a secure room.
+   */
+  public function reply(Request $request, string $room, string $message)
+  {
+    $partner = $this->resolveRoom($room, $request);
+    if (!$partner) return response()->json(['message' => 'Invalid room'], 404);
+
+    $parent = Message::find($message);
+    if (!$parent || !in_array($parent->sender_id, [$request->user()->id, $partner->id]) || !in_array($parent->receiver_id, [$request->user()->id, $partner->id])) {
+      return response()->json(['message' => 'Message not found in this room'], 404);
+    }
+
+    $request->validate([
+      'content' => 'nullable|string|max:5000',
+      'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+    ]);
+    if (empty($request->content) && !$request->hasFile('image')) {
+      return response()->json(['message' => 'Reply content or image required'], 422);
+    }
+
+    $imagePath = null;
+    $type = 'text';
+    if ($request->hasFile('image')) {
+      $file = $request->file('image');
+      $name = time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $file->getClientOriginalExtension();
+      $file->move(public_path('images/messages'), $name);
+      $imagePath = 'images/messages/' . $name;
+      $type = $request->filled('content') ? 'mixed' : 'image';
+    }
+
+    $msg = Message::create([
+      'sender_id' => $request->user()->id,
+      'receiver_id' => $partner->id,
+      'content' => $request->content,
+      'image_path' => $imagePath,
+      'type' => $type,
+      'reply_to_id' => $parent->id,
+    ]);
+
+    \App\Support\Broadcast::safe(new \App\Events\MessageSent($msg));
+    Notification::create([
+      'user_id' => $partner->id,
+      'from_user_id' => $request->user()->id,
+      'type' => 'message',
+      'content' => $msg->content ? substr($msg->content, 0, 100) : ($msg->image_path ? '📷 Replied with image' : 'Replied'),
+      'message_id' => $msg->id,
+    ]);
+
+    return new MessageResource($msg->load(['replyTo', 'sender:id,first_name,last_name,username,avatar']));
+  }
+
+  /**
+   * Delete a message (soft delete, for both participants).
+   */
+  public function destroy(Request $request, string $room, string $message)
+  {
+    $partner = $this->resolveRoom($room, $request);
+    if (!$partner) return response()->json(['message' => 'Invalid room'], 404);
+    $msg = Message::find($message);
+    if (!$msg || !in_array($msg->sender_id, [$request->user()->id, $partner->id]) || !in_array($msg->receiver_id, [$request->user()->id, $partner->id])) {
+      return response()->json(['message' => 'Message not found'], 404);
+    }
+    if (!$msg->canDelete($request->user())) {
+      return response()->json(['message' => 'Unauthorized'], 403);
+    }
+    $msg->delete();
+    // Broadcast deletion (best-effort)
+    \App\Support\Broadcast::safe(new \App\Events\MessageSent($msg->fresh())); // reuse; frontend will refetch
+    return response()->json(['message' => 'Deleted'], 200);
+  }
+
+  /**
+   * Restore a soft-deleted message (undo).
+   */
+  public function restore(Request $request, string $room, string $message)
+  {
+    $partner = $this->resolveRoom($room, $request);
+    if (!$partner) return response()->json(['message' => 'Invalid room'], 404);
+    $msg = Message::withTrashed()->find($message);
+    if (!$msg || $msg->sender_id !== $request->user()->id) {
+      return response()->json(['message' => 'Not found or not owner'], 404);
+    }
+    $msg->restore();
+    return new MessageResource($msg->load(['replyTo', 'sender']));
+  }
+
+  /**
+   * Pin / unpin a message.
+   */
+  public function togglePin(Request $request, string $room, string $message)
+  {
+    $partner = $this->resolveRoom($room, $request);
+    if (!$partner) return response()->json(['message' => 'Invalid room'], 404);
+    $msg = Message::find($message);
+    if (!$msg || !in_array($msg->sender_id, [$request->user()->id, $partner->id]) || !in_array($msg->receiver_id, [$request->user()->id, $partner->id])) {
+      return response()->json(['message' => 'Message not found'], 404);
+    }
+
+    $isPinned = !$msg->is_pinned;
+    if ($isPinned) {
+      $pinnedCount = Message::where(function ($q) use ($request, $partner) {
+        $q->where('sender_id', $request->user()->id)->where('receiver_id', $partner->id);
+      })->orWhere(function ($q) use ($request, $partner) {
+        $q->where('sender_id', $partner->id)->where('receiver_id', $request->user()->id);
+      })->where('is_pinned', true)->count();
+      if ($pinnedCount >= 3) {
+        return response()->json(['message' => 'Pin limit reached (3)'], 422);
+      }
+      $msg->update(['is_pinned' => true, 'pinned_at' => now(), 'pinned_by' => $request->user()->id]);
+    } else {
+      $msg->update(['is_pinned' => false, 'pinned_at' => null, 'pinned_by' => null]);
+    }
+    \App\Support\Broadcast::safe(new \App\Events\MessageSent($msg->fresh()));
+    return new MessageResource($msg->load(['replyTo', 'sender', 'receiver']));
+  }
+
+  /**
+   * Get pinned messages in room.
+   */
+  public function pinned(Request $request, string $room)
+  {
+    $partner = $this->resolveRoom($room, $request);
+    if (!$partner) return response()->json(['message' => 'Invalid room'], 404);
+    $uid = $request->user()->id;
+    $msgs = Message::where('is_pinned', true)->where(function ($q) use ($uid, $partner) {
+      $q->where(function ($qq) use ($uid, $partner) { $qq->where('sender_id', $uid)->where('receiver_id', $partner->id); })
+        ->orWhere(function ($qq) use ($uid, $partner) { $qq->where('sender_id', $partner->id)->where('receiver_id', $uid); });
+    })->with(['replyTo', 'sender', 'receiver'])->latest('pinned_at')->get();
+    return MessageResource::collection($msgs);
   }
 
   /**

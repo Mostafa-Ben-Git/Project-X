@@ -6,11 +6,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import useAuth from "@/hooks/useAuth";
 import { useMessages } from "@/hooks/useMessages";
 import { getRoomForUser } from "@/api/messages";
-import { ArrowLeft, Image as ImageIcon, Send, SmilePlus, X } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { ArrowLeft, Copy, Image as ImageIcon, MoreHorizontal, Pin, Reply, Send, SmilePlus, Trash2, X } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { formatLastActive, statusDotClass } from "@/lib/status";
+import ImageLightbox from "@/components/ImageLightbox";
 
 const EmojiPicker = lazy(() => import("emoji-picker-react"));
 
@@ -27,6 +29,7 @@ function MessagesPage() {
   const {
     conversations,
     messages,
+    pinned,
     currentChat,
     isLoading,
     isChatLoading,
@@ -34,13 +37,29 @@ function MessagesPage() {
     messagesEndRef,
     fetchConversations,
     sendMessage,
+    deleteMessage,
+    togglePin,
     openChat,
   } = useMessages({ userId: legacyUserId, room });
 
   const [newMessage, setNewMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [replyingTo, setReplyingTo] = useState(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  const draftPreviewUrl = useMemo(() => (selectedImage ? URL.createObjectURL(selectedImage) : null), [selectedImage]);
+  const messageImages = useMemo(() => messages?.filter((m) => m.image_url).map((m) => m.image_url) ?? [], [messages]);
+
+  // Auto-resize textarea like PostBox (grows with content up to max height)
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }, [newMessage]);
 
   // If legacy URL is hit, redirect to secure encrypted room
   useEffect(() => {
@@ -89,12 +108,25 @@ function MessagesPage() {
     if ((!hasText && !hasImage) || (!room && !legacyUserId)) return;
     try {
       const content = newMessage.trim() || null;
-      await sendMessage(content, selectedImage);
+      await sendMessage(content, selectedImage, replyingTo?.id || null);
       setNewMessage("");
       setSelectedImage(null);
+      setReplyingTo(null);
       inputRef.current?.focus();
     } catch {
       // error handled in hook
+    }
+  };
+
+  const handleCopy = async (text) => {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      const { toast } = await import("sonner");
+      toast.success("Copied to clipboard");
+    } catch {
+      const { toast } = await import("sonner");
+      toast.error("Copy failed");
     }
   };
 
@@ -230,6 +262,25 @@ function MessagesPage() {
           </div>
         </div>
 
+        {/* Pinned strip */}
+        {pinned?.length > 0 && (
+          <div className="mb-2 rounded-lg border bg-amber-50 p-2 dark:bg-amber-950/30">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
+              <Pin size={14} /> Pinned ({pinned.length}/3)
+            </div>
+            <ul className="mt-1.5 space-y-1">
+              {pinned.map((p) => (
+                <li key={p.id} className="flex items-center justify-between gap-2 rounded bg-background px-2 py-1 text-xs">
+                  <span className="truncate">{p.content || (p.image_url ? "📷 Image" : "—")}</span>
+                  <Button variant="ghost" size="sm" className="h-6 shrink-0 px-2 text-xs" onClick={() => document.getElementById(`msg-${p.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}>
+                    Jump
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Messages */}
         <div className="flex-1 overflow-y-auto py-3 md:py-4 space-y-2 md:space-y-3">
           {isChatLoading ? (
@@ -242,32 +293,102 @@ function MessagesPage() {
               return (
                 <div
                   key={msg.id}
-                  className={`flex ${isMine ? "justify-end" : "justify-start"} px-1`}
+                  id={`msg-${msg.id}`}
+                  className={`group flex items-end gap-1 ${isMine ? "justify-end" : "justify-start"} px-1`}
                 >
+                  {isMine && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+                          <MoreHorizontal size={14} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem onClick={() => setReplyingTo(msg)}><Reply size={14} className="mr-2" />Reply</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleCopy(msg.content)} disabled={!msg.content}><Copy size={14} className="mr-2" />Copy</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => togglePin(msg.id)}><Pin size={14} className="mr-2" />{msg.is_pinned ? "Unpin" : "Pin"}</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive"><Trash2 size={14} className="mr-2" />Delete</DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete message?</AlertDialogTitle>
+                              <AlertDialogDescription>This will delete the message for everyone.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteMessage(msg.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                   <div
-                    className={`max-w-[75%] md:max-w-[70%] overflow-hidden rounded-xl px-3 py-1.5 md:px-4 md:py-2 ${
-                      isMine
-                        ? "bg-blue-600 text-white"
-                        : "bg-muted text-foreground"
-                    }`}
+                    className={`relative max-w-[75%] md:max-w-[70%] overflow-hidden rounded-xl px-3 py-1.5 md:px-4 md:py-2 ${
+                      msg.is_pinned ? "ring-1 ring-amber-400" : ""
+                    } ${isMine ? "bg-blue-600 text-white" : "bg-muted text-foreground"}`}
                   >
+                    {msg.is_pinned && <span className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-amber-300"><Pin size={10} /> Pinned</span>}
+                    {msg.reply_to && (
+                      <div className={`mb-1.5 rounded border-l-2 px-2 py-1 text-xs ${isMine ? "border-white/50 bg-white/10" : "border-border bg-background/60"}`}>
+                        <p className="truncate font-medium opacity-80">Replying to</p>
+                        {msg.reply_to.image_url && <span className="text-[11px]">📷 Image</span>}
+                        {msg.reply_to.content && <p className="truncate opacity-70">{msg.reply_to.content}</p>}
+                      </div>
+                    )}
                     {msg.image_url && (
-                      <img
-                        src={msg.image_url}
-                        alt="attachment"
-                        className="mb-1.5 max-h-64 w-full rounded-lg object-cover"
-                        loading="lazy"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const idx = messageImages.indexOf(msg.image_url);
+                          setLightboxIndex(idx >= 0 ? idx : 0);
+                        }}
+                        className="mb-1.5 block w-full overflow-hidden rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                        aria-label="Preview image"
+                      >
+                        <img src={msg.image_url} alt="attachment" className="max-h-64 w-full rounded-lg object-cover transition-opacity hover:opacity-90" loading="lazy" />
+                      </button>
                     )}
                     {msg.content && <p className="text-sm md:text-base break-words whitespace-pre-wrap">{msg.content}</p>}
-                    <p
-                      className={`mt-0.5 md:mt-1 text-[8px] md:text-[10px] ${
-                        isMine ? "text-blue-200" : "text-muted-foreground"
-                      }`}
-                    >
-                      {msg.ago}
-                    </p>
+                    <p className={`mt-0.5 md:mt-1 text-[8px] md:text-[10px] ${isMine ? "text-blue-200" : "text-muted-foreground"}`}>{msg.ago}</p>
                   </div>
+                  {!isMine && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+                          <MoreHorizontal size={14} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-40">
+                        <DropdownMenuItem onClick={() => setReplyingTo(msg)}><Reply size={14} className="mr-2" />Reply</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleCopy(msg.content)} disabled={!msg.content}><Copy size={14} className="mr-2" />Copy</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => togglePin(msg.id)}><Pin size={14} className="mr-2" />{msg.is_pinned ? "Unpin" : "Pin"}</DropdownMenuItem>
+                        {msg.can_delete && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive"><Trash2 size={14} className="mr-2" />Delete</DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete message?</AlertDialogTitle>
+                                  <AlertDialogDescription>This will delete the message for everyone.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteMessage(msg.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
               );
             })
@@ -275,14 +396,26 @@ function MessagesPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Image preview */}
-        {selectedImage && (
+        {/* Reply banner */}
+        {replyingTo && (
+          <div className="mb-2 flex items-center gap-2 rounded-lg border bg-muted p-2">
+            <Reply size={16} className="shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-medium">Replying to {replyingTo.sender_id === user?.id ? "yourself" : currentChat?.first_name || "message"}</p>
+              <p className="truncate text-xs text-muted-foreground">{replyingTo.content || (replyingTo.image_url ? "📷 Image" : "")}</p>
+            </div>
+            <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setReplyingTo(null)}>
+              <X size={14} />
+            </Button>
+          </div>
+        )}
+
+        {/* Draft image preview — tappable for full preview */}
+        {selectedImage && draftPreviewUrl && (
           <div className="relative mb-2 flex items-center gap-2 rounded-lg border bg-muted p-2">
-            <img
-              src={URL.createObjectURL(selectedImage)}
-              alt="preview"
-              className="h-16 w-16 rounded-md object-cover"
-            />
+            <button type="button" onClick={() => setPreviewImage(draftPreviewUrl)} className="shrink-0 overflow-hidden rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Preview selected image">
+              <img src={draftPreviewUrl} alt="preview" className="h-16 w-16 rounded-md object-cover transition-opacity hover:opacity-90" />
+            </button>
             <div className="flex-1 truncate text-xs text-muted-foreground">{selectedImage.name}</div>
             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedImage(null)}>
               <X size={14} />
@@ -330,7 +463,7 @@ function MessagesPage() {
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
             rows={1}
-            className="max-h-24 min-h-9 flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:min-h-10 md:text-base"
+            className="max-h-[120px] min-h-9 flex-1 resize-none overflow-y-auto rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:min-h-10 md:text-base"
             disabled={isSending}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -347,6 +480,26 @@ function MessagesPage() {
             {isSending ? <LoaderCircle size={16} /> : <Send size={16} className="md:w-[18px] md:h-[18px]" />}
           </Button>
         </form>
+
+        {/* Lightbox for draft preview */}
+        {previewImage && (
+          <ImageLightbox src={previewImage} images={[previewImage]} index={0} onClose={() => setPreviewImage(null)} />
+        )}
+
+        {/* Lightbox for message history images */}
+        {lightboxIndex !== null && messageImages.length > 0 && (
+          <ImageLightbox
+            src={messageImages[lightboxIndex]}
+            images={messageImages}
+            index={lightboxIndex}
+            onClose={() => setLightboxIndex(null)}
+            onNavigate={(dir) =>
+              setLightboxIndex((prev) =>
+                dir === "next" ? (prev + 1) % messageImages.length : (prev - 1 + messageImages.length) % messageImages.length
+              )
+            }
+          />
+        )}
       </>
     );
   };
