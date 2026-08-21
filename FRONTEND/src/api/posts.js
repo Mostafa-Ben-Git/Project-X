@@ -45,7 +45,12 @@ export async function fetchBookmarks({ pageParam = 1 } = {}) {
   return data;
 }
 
-export async function fetchPostComments(postId, { pageParam = 1 } = {}) {
-  const { data } = await apiService.get(`/api/posts/${postId}/comments?page=${pageParam}`);
+export async function fetchPostComments(postId, { pageParam = 1, sort = "top" } = {}) {
+  const { data } = await apiService.get(`/api/posts/${postId}/comments?page=${pageParam}&sort=${sort}`);
+  return data;
+}
+
+export async function togglePinPost(postId) {
+  const { data } = await apiService.post(`/api/posts/${postId}/pin`);
   return data;
 }

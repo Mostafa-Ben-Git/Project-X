@@ -6,7 +6,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import useAuth from "@/hooks/useAuth";
-import { LogOut, MoreHorizontal, Settings, User as UserIcon, Mail } from "lucide-react";
+import { LogOut, MoreVertical, Settings, User as UserIcon, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export const UserBanner = ({ compact = false }) => {
@@ -71,7 +71,7 @@ export const UserBanner = ({ compact = false }) => {
                 <span className="truncate text-xs text-muted-foreground">@{user.username}</span>
               </div>
             </div>
-            <MoreHorizontal size={18} className="shrink-0 text-muted-foreground" />
+            <MoreVertical size={18} className="shrink-0 text-muted-foreground" />
           </div>
         </Button>
       </PopoverTrigger>

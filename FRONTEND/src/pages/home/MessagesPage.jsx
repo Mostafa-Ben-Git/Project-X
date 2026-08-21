@@ -7,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import useAuth from "@/hooks/useAuth";
 import { useMessages } from "@/hooks/useMessages";
 import { getRoomForUser } from "@/api/messages";
-import { ArrowDown, ArrowLeft, Clock, Copy, Image as ImageIcon, MoreHorizontal, Pin, Reply, Send, SmilePlus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowLeft, Clock, Copy, Image as ImageIcon, MoreVertical, Pin, Reply, Send, SmilePlus, Trash2, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -447,7 +447,7 @@ function MessagesPage() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
-                          <MoreHorizontal size={14} />
+                          <MoreVertical size={14} />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
@@ -511,7 +511,7 @@ function MessagesPage() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
-                          <MoreHorizontal size={14} />
+                          <MoreVertical size={14} />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="w-40">

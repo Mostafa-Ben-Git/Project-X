@@ -5,9 +5,10 @@ import useAuth from "@/hooks/useAuth";
 import { getPost, fetchPostComments } from "@/api/posts";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 function PostPage() {
   const { username, post_id } = useParams();
@@ -26,10 +27,11 @@ function PostPage() {
     enabled: !!username && !!post_id && !!user,
   });
 
-  // Fetch comments as infinite query
+  // Fetch comments as infinite query (sort: top by likes, or newest)
+  const [commentSort, setCommentSort] = useState("top");
   const commentsQuery = useInfiniteQuery({
-    queryKey: ["comments", post_id],
-    queryFn: ({ pageParam = 1 }) => fetchPostComments(post_id, { pageParam }),
+    queryKey: ["comments", post_id, commentSort],
+    queryFn: ({ pageParam = 1 }) => fetchPostComments(post_id, { pageParam, sort: commentSort }),
     initialPageParam: 1,
     getNextPageParam: (last) =>
       last.meta.current_page < last.meta.last_page
@@ -113,6 +115,31 @@ function PostPage() {
       </section>
 
       <section>
+        <div className="flex items-center justify-between border-b border-border px-4 py-2">
+          <span className="text-sm font-semibold">Comments</span>
+          <div className="flex rounded-md border p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setCommentSort("top")}
+              className={cn(
+                "rounded px-2 py-1 transition-colors",
+                commentSort === "top" ? "bg-accent font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Top
+            </button>
+            <button
+              type="button"
+              onClick={() => setCommentSort("new")}
+              className={cn(
+                "rounded px-2 py-1 transition-colors",
+                commentSort === "new" ? "bg-accent font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Newest
+            </button>
+          </div>
+        </div>
         <ul>
           {comments.map((comment) => (
             <Post
