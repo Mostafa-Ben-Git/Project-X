@@ -66,6 +66,11 @@ function MessagesPage() {
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [newMessage]);
 
+  // Keep focus when replying
+  useEffect(() => {
+    if (replyingTo) inputRef.current?.focus();
+  }, [replyingTo]);
+
   // If legacy URL is hit, redirect to secure encrypted room
   useEffect(() => {
     if (legacyUserId) {
@@ -148,17 +153,19 @@ function MessagesPage() {
     const hasText = newMessage.trim().length > 0;
     const hasImage = !!selectedImage;
     if ((!hasText && !hasImage) || (!room && !legacyUserId)) return;
+    const content = newMessage.trim() || null;
+    const replyTo = replyingTo;
+    const image = selectedImage;
+    // Optimistic: clear composer instantly and keep focus for rapid typing
+    setNewMessage("");
+    setSelectedImage(null);
+    setReplyingTo(null);
+    // Keep focus before and after async send
+    requestAnimationFrame(() => inputRef.current?.focus());
     try {
-      const content = newMessage.trim() || null;
-      const replyTo = replyingTo;
-      // Optimistic: clear composer instantly for snappy UX
-      setNewMessage("");
-      setSelectedImage(null);
-      setReplyingTo(null);
-      inputRef.current?.focus();
-      await sendMessage(content, selectedImage, replyTo?.id || null, replyTo);
-    } catch {
-      // error handled in hook
+      await sendMessage(content, image, replyTo?.id || null, replyTo);
+    } finally {
+      requestAnimationFrame(() => inputRef.current?.focus());
     }
   };
 
@@ -524,7 +531,6 @@ function MessagesPage() {
             placeholder="Type a message..."
             rows={1}
             className="max-h-[120px] min-h-9 flex-1 resize-none overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:min-h-10 md:text-base"
-            disabled={isSending}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
