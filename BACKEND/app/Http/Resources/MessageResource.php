@@ -24,7 +24,6 @@ class MessageResource extends JsonResource
       $room = null;
     }
 
-    $reply = $this->whenLoaded('replyTo');
     return [
       'id' => $this->id,
       'content' => $this->content,
@@ -42,11 +41,11 @@ class MessageResource extends JsonResource
       'ago' => $this->created_at->diffForHumans(),
       'unread_count' => (int) ($this->unread_count ?? 0),
       'room' => $room,
-      'reply_to' => $reply ? [
-        'id' => $reply->id,
-        'content' => $reply->content ? \Illuminate\Support\Str::limit($reply->content, 80) : null,
-        'image_url' => $reply->image_path ? asset($reply->image_path) : null,
-        'sender_id' => $reply->sender_id,
+      'reply_to' => $this->relationLoaded('replyTo') && $this->replyTo ? [
+        'id' => $this->replyTo->id,
+        'content' => $this->replyTo->content ? \Illuminate\Support\Str::limit($this->replyTo->content, 80) : null,
+        'image_url' => $this->replyTo->image_path ? asset($this->replyTo->image_path) : null,
+        'sender_id' => $this->replyTo->sender_id,
       ] : null,
       'sender' => [
         'id' => $this->sender?->id,
