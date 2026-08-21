@@ -30,7 +30,7 @@ export default function SettingsLayout() {
 
       {/* Tabs - scrollable on mobile, labels always visible */}
       <Tabs value={activeTab} onValueChange={(val) => navigate(`/settings/${val}`)}>
-        <TabsList className="w-full justify-start gap-1 overflow-x-auto p-1 sm:justify-center">
+        <TabsList className="w-full justify-start gap-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden p-1 sm:justify-center">
           {TABS.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value} className="min-h-[36px] flex-1 gap-1.5 whitespace-nowrap px-2 text-xs sm:px-3 sm:text-sm">
               <tab.icon size={14} />
