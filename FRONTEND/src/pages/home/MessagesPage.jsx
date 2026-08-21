@@ -7,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import useAuth from "@/hooks/useAuth";
 import { useMessages } from "@/hooks/useMessages";
 import { getRoomForUser } from "@/api/messages";
-import { ArrowLeft, Clock, Copy, Image as ImageIcon, MoreHorizontal, Pin, Reply, Send, SmilePlus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowLeft, Clock, Copy, Image as ImageIcon, MoreHorizontal, Pin, Reply, Send, SmilePlus, Trash2, X } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -53,9 +53,12 @@ function MessagesPage() {
   const [previewImage, setPreviewImage] = useState(null);
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const [unreadBelow, setUnreadBelow] = useState(0);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const scrollViewportRef = useRef(null);
+  const prevMessagesCountRef = useRef(0);
 
   const draftPreviewUrl = useMemo(() => (selectedImage ? URL.createObjectURL(selectedImage) : null), [selectedImage]);
   const messageImages = useMemo(() => messages?.filter((m) => m.image_url).map((m) => m.image_url) ?? [], [messages]);
@@ -86,46 +89,77 @@ function MessagesPage() {
     fetchConversations();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Scroll to bottom on initial load / new messages (reverse infinite shows latest at bottom)
+  // Track scroll position: near-bottom state + reverse infinite load with position preservation
   useEffect(() => {
     const vp = scrollViewportRef.current;
     if (!vp) return;
-    // On first load, jump to bottom; on new messages, smooth scroll if near bottom
-    const isNearBottom = vp.scrollHeight - vp.scrollTop - vp.clientHeight < 120;
-    if (messages.length > 0 && (isNearBottom || vp.scrollTop === 0)) {
-      // Use rAF to ensure DOM updated
-      requestAnimationFrame(() => {
-        vp.scrollTop = vp.scrollHeight;
-      });
-    }
-  }, [messages]);
 
-  // Initial scroll to bottom after chat loads
-  useEffect(() => {
-    if (!isChatLoading && messages.length > 0 && scrollViewportRef.current) {
-      scrollViewportRef.current.scrollTop = scrollViewportRef.current.scrollHeight;
-    }
-  }, [isChatLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+    let loadingOlder = false;
 
-  // Reverse infinite scroll: when scrolled near top, load older messages and preserve position
-  useEffect(() => {
-    const vp = scrollViewportRef.current;
-    if (!vp) return;
-    const onScroll = () => {
-      if (vp.scrollTop < 80 && hasNextPage && !isFetchingNextPage) {
+    const updateNearBottom = () => {
+      const distFromBottom = vp.scrollHeight - vp.scrollTop - vp.clientHeight;
+      setIsNearBottom(distFromBottom < 120);
+      // Reset unread badge once user returns to bottom
+      if (distFromBottom < 120) setUnreadBelow(0);
+      // Reverse infinite: load older when near top
+      if (vp.scrollTop < 80 && hasNextPage && !isFetchingNextPage && !loadingOlder) {
+        loadingOlder = true;
         const prevHeight = vp.scrollHeight;
         const prevTop = vp.scrollTop;
         fetchNextPage().then(() => {
           requestAnimationFrame(() => {
             const newHeight = vp.scrollHeight;
+            // Preserve viewport anchored at same content — keeps top position stable
             vp.scrollTop = newHeight - prevHeight + prevTop;
+            loadingOlder = false;
           });
         });
       }
     };
-    vp.addEventListener("scroll", onScroll, { passive: true });
-    return () => vp.removeEventListener("scroll", onScroll);
+
+    vp.addEventListener("scroll", updateNearBottom, { passive: true });
+    updateNearBottom();
+    return () => vp.removeEventListener("scroll", updateNearBottom);
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Scroll behavior: jump to bottom on first load; auto-follow only if user is near bottom
+  // If user is far up reading history, DON'T reset their scroll — show "new message" indicator instead
+  useEffect(() => {
+    const vp = scrollViewportRef.current;
+    if (!vp || messages.length === 0) return;
+
+    const prevCount = prevMessagesCountRef.current;
+    prevMessagesCountRef.current = messages.length;
+
+    // First load: jump to bottom
+    if (prevCount === 0) {
+      requestAnimationFrame(() => {
+        vp.scrollTop = vp.scrollHeight;
+      });
+      return;
+    }
+
+    const grewBy = messages.length - prevCount;
+    if (grewBy <= 0) return;
+
+    const distFromBottom = vp.scrollHeight - vp.scrollTop - vp.clientHeight;
+    if (distFromBottom < 120) {
+      // User at bottom: follow new messages smoothly
+      requestAnimationFrame(() => {
+        vp.scrollTop = vp.scrollHeight;
+      });
+    } else {
+      // User reading history: don't touch scroll, count unseen messages
+      setUnreadBelow((u) => u + grewBy);
+    }
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    const vp = scrollViewportRef.current;
+    if (!vp) return;
+    vp.scrollTo({ top: vp.scrollHeight, behavior: "smooth" });
+    setUnreadBelow(0);
+  };
 
   const handleEmojiClick = ({ emoji }) => {
     const el = inputRef.current;
@@ -344,8 +378,8 @@ function MessagesPage() {
         )}
 
         {/* Messages — ScrollArea with reverse infinite scroll (latest at bottom, scroll up for older) */}
-        <ScrollArea viewportRef={scrollViewportRef} className="flex-1 py-3 md:py-4">
-          <div className="space-y-2 md:space-y-3 pr-2">
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <ScrollArea viewportRef={scrollViewportRef} className="flex-1 py-3 md:py-4">
             {hasNextPage && (
               <div className="flex justify-center py-2">
                 <Button variant="ghost" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
@@ -471,10 +505,25 @@ function MessagesPage() {
             })
           )}
           <div ref={messagesEndRef} />
-        </div>
-        </ScrollArea>
+            </ScrollArea>
 
-        {/* Reply banner */}
+          {/* Scroll-to-bottom / new message indicator — only when user is far from bottom */}
+          {!isNearBottom && (
+            <button
+              type="button"
+              onClick={scrollToBottom}
+              className={`absolute bottom-3 right-4 z-20 flex h-10 items-center gap-1.5 rounded-full border bg-background/95 px-3 shadow-lg backdrop-blur transition-all hover:bg-accent ${
+                unreadBelow > 0 ? "border-primary text-primary" : "border-border text-foreground"
+              }`}
+              aria-label="Scroll to latest messages"
+            >
+              <ArrowDown size={16} />
+              {unreadBelow > 0 && (
+                <span className="text-xs font-semibold">{unreadBelow > 99 ? "99+" : unreadBelow} new</span>
+              )}
+            </button>
+          )}
+        </div>
         {replyingTo && (
           <div className="mb-2 flex items-center gap-2 rounded-lg border bg-muted p-2">
             <Reply size={16} className="shrink-0 text-muted-foreground" />
