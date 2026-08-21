@@ -404,7 +404,7 @@ function MessagesPage() {
                         <img
                           src={msg.image_url}
                           alt="attachment"
-                          className={`${msg.content ? "max-h-[180px] sm:max-h-56" : "max-h-64 sm:max-h-64"} w-auto max-w-full mx-auto rounded-lg object-contain sm:object-cover transition-opacity hover:opacity-90`}
+                          className={`w-full h-auto max-w-full rounded-lg object-cover transition-opacity hover:opacity-90 ${msg.content ? "max-h-40 sm:max-h-48" : "max-h-64 sm:max-h-72"}`}
                           loading="lazy"
                         />
                       </button>
