@@ -398,13 +398,18 @@ function MessagesPage() {
                           const idx = messageImages.indexOf(msg.image_url);
                           setLightboxIndex(idx >= 0 ? idx : 0);
                         }}
-                        className="mb-1.5 block w-full overflow-hidden rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                        className={`block w-full overflow-hidden rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${msg.content ? "mb-1.5" : ""}`}
                         aria-label="Preview image"
                       >
-                        <img src={msg.image_url} alt="attachment" className="max-h-64 w-full rounded-lg object-cover transition-opacity hover:opacity-90" loading="lazy" />
+                        <img
+                          src={msg.image_url}
+                          alt="attachment"
+                          className={`${msg.content ? "max-h-[180px] sm:max-h-56" : "max-h-64 sm:max-h-64"} w-auto max-w-full mx-auto rounded-lg object-contain sm:object-cover transition-opacity hover:opacity-90`}
+                          loading="lazy"
+                        />
                       </button>
                     )}
-                    {msg.content && <p className="text-sm md:text-base break-words whitespace-pre-wrap">{msg.content}</p>}
+                    {msg.content && <p className="text-sm md:text-base break-all whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{msg.content}</p>}
                     <p className={`mt-0.5 md:mt-1 text-[8px] md:text-[10px] ${isMine ? "text-blue-200" : "text-muted-foreground"}`}>{msg.ago}</p>
                   </div>
                   {!isMine && (
