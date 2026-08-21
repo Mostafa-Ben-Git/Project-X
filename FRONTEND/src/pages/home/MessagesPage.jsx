@@ -59,6 +59,7 @@ function MessagesPage() {
   const fileInputRef = useRef(null);
   const scrollViewportRef = useRef(null);
   const prevMessagesCountRef = useRef(0);
+  const prevLastIdRef = useRef(null);
 
   const draftPreviewUrl = useMemo(() => (selectedImage ? URL.createObjectURL(selectedImage) : null), [selectedImage]);
   const messageImages = useMemo(() => messages?.filter((m) => m.image_url).map((m) => m.image_url) ?? [], [messages]);
@@ -75,6 +76,15 @@ function MessagesPage() {
   useEffect(() => {
     if (replyingTo) inputRef.current?.focus();
   }, [replyingTo]);
+
+  // Reset scroll state when room changes — ensures entering a room always starts at bottom
+  useEffect(() => {
+    prevMessagesCountRef.current = 0;
+    prevLastIdRef.current = null;
+    setUnreadBelow(0);
+    setIsNearBottom(true);
+    if (scrollViewportRef.current) scrollViewportRef.current.scrollTop = 0;
+  }, [room, legacyUserId]);
 
   // If legacy URL is hit, redirect to secure encrypted room
   useEffect(() => {
@@ -122,19 +132,24 @@ function MessagesPage() {
     return () => vp.removeEventListener("scroll", updateNearBottom);
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Scroll behavior: jump to bottom on first load; auto-follow only if user is near bottom
-  // If user is far up reading history, DON'T reset their scroll — show "new message" indicator instead
+  // Scroll behavior: always start at bottom when entering a room; auto-follow only if near bottom
+  // New-message indicator only when there are *real* new incoming messages while user is at top
   useEffect(() => {
     const vp = scrollViewportRef.current;
     if (!vp || messages.length === 0) return;
 
     const prevCount = prevMessagesCountRef.current;
+    const prevLastId = prevLastIdRef.current;
+    const lastMsg = messages[messages.length - 1];
+    const lastId = lastMsg?.id || null;
     prevMessagesCountRef.current = messages.length;
+    prevLastIdRef.current = lastId;
 
-    // First load: jump to bottom
-    if (prevCount === 0) {
+    // First load or room switch: always jump to bottom (no smooth)
+    if (prevCount === 0 || !prevLastId) {
       requestAnimationFrame(() => {
         vp.scrollTop = vp.scrollHeight;
+        setIsNearBottom(true);
       });
       return;
     }
@@ -142,17 +157,28 @@ function MessagesPage() {
     const grewBy = messages.length - prevCount;
     if (grewBy <= 0) return;
 
+    // Determine if the new messages are actually *new incoming* (not pagination older)
+    // Only the tail (newest) matters; older pagination adds to the head.
+    const newTail = messages.slice(-grewBy);
+    const incomingNew = newTail.filter((m) => m.sender_id !== user?.id && !m._optimistic);
+    const incomingCount = incomingNew.length;
+    // If all new are own optimistic, treat as follow (user sent it)
+    const hasOwnNew = newTail.some((m) => m.sender_id === user?.id);
+
     const distFromBottom = vp.scrollHeight - vp.scrollTop - vp.clientHeight;
-    if (distFromBottom < 120) {
-      // User at bottom: follow new messages smoothly
+    const nearBottom = distFromBottom < 120;
+
+    if (nearBottom || hasOwnNew) {
+      // User at bottom or own message: follow smoothly
       requestAnimationFrame(() => {
         vp.scrollTop = vp.scrollHeight;
       });
-    } else {
-      // User reading history: don't touch scroll, count unseen messages
-      setUnreadBelow((u) => u + grewBy);
+      if (nearBottom) setUnreadBelow(0);
+    } else if (incomingCount > 0) {
+      // Far up and real incoming: show indicator, don't move scroll
+      setUnreadBelow((u) => u + incomingCount);
     }
-  }, [messages]);
+  }, [messages, user?.id]);
 
   const scrollToBottom = () => {
     const vp = scrollViewportRef.current;
@@ -509,20 +535,27 @@ function MessagesPage() {
             </div>
           </ScrollArea>
 
-          {/* Scroll-to-bottom / new message indicator — only when user is far from bottom */}
-          {!isNearBottom && (
+          {/* New-message indicator — only when there are real new incoming messages while scrolled up */}
+          {unreadBelow > 0 && (
             <button
               type="button"
               onClick={scrollToBottom}
-              className={`absolute bottom-3 right-4 z-20 flex h-10 items-center gap-1.5 rounded-full border bg-background/95 px-3 shadow-lg backdrop-blur transition-all hover:bg-accent ${
-                unreadBelow > 0 ? "border-primary text-primary" : "border-border text-foreground"
-              }`}
+              className="absolute bottom-3 right-4 z-20 flex h-10 items-center gap-1.5 rounded-full border border-primary bg-background/95 px-3 text-primary shadow-lg backdrop-blur transition-all hover:bg-accent"
               aria-label="Scroll to latest messages"
             >
               <ArrowDown size={16} />
-              {unreadBelow > 0 && (
-                <span className="text-xs font-semibold">{unreadBelow > 99 ? "99+" : unreadBelow} new</span>
-              )}
+              <span className="text-xs font-semibold">{unreadBelow > 99 ? "99+" : unreadBelow} new</span>
+            </button>
+          )}
+          {/* Subtle jump-to-bottom when scrolled up but no new messages (utility) */}
+          {unreadBelow === 0 && !isNearBottom && (
+            <button
+              type="button"
+              onClick={scrollToBottom}
+              className="absolute bottom-3 right-4 z-20 grid h-9 w-9 place-items-center rounded-full border border-border bg-background/95 shadow-lg backdrop-blur transition-all hover:bg-accent"
+              aria-label="Scroll to bottom"
+            >
+              <ArrowDown size={16} />
             </button>
           )}
         </div>
