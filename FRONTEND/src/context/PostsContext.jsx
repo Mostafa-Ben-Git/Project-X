@@ -71,20 +71,61 @@ function PostsProvider({ children }) {
     }
   };
 
+  // Optimistically remove a post from any infinite-query cache (feed + profile tabs)
+  const removeFromInfiniteCaches = (key, id) => {
+    qc.setQueriesData({ queryKey: key }, (old) => {
+      if (!old?.pages) return old;
+      let changed = false;
+      const pages = old.pages.map((p) => {
+        if (!Array.isArray(p.data)) return p;
+        const data = p.data.filter((x) => x.post_id !== id);
+        if (data.length !== p.data.length) changed = true;
+        return { ...p, data };
+      });
+      return changed ? { ...old, pages } : old;
+    });
+  };
+
+  // Optimistically update a post inside any infinite-query cache
+  const updateInInfiniteCaches = (key, id, updater) => {
+    qc.setQueriesData({ queryKey: key }, (old) => {
+      if (!old?.pages) return old;
+      let changed = false;
+      const pages = old.pages.map((p) => {
+        if (!Array.isArray(p.data)) return p;
+        const data = p.data.map((x) => {
+          if (x.post_id === id) {
+            changed = true;
+            return updater(x);
+          }
+          return x;
+        });
+        return { ...p, data };
+      });
+      return changed ? { ...old, pages } : old;
+    });
+  };
+
   const deletePost = async (post_id) => {
-    // Optimistic: remove from state immediately
     const previousPosts = posts;
-    setPosts((prevPosts) =>
-      prevPosts.filter((post) => post.post_id !== post_id),
-    );
+    // Optimistic: hide the post everywhere immediately
+    setPosts((prevPosts) => prevPosts.filter((post) => post.post_id !== post_id));
+    removeFromInfiniteCaches(["posts"], post_id);
+    removeFromInfiniteCaches(["profile"], post_id);
     setIsDeleting(true);
 
     try {
       await apiService.delete(`/api/posts/${post_id}`);
       toast.success("Post deleted successfully");
+      // Re-sync server truth (counts, ordering) after the optimistic removal
+      qc.invalidateQueries({ queryKey: ["posts"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["user-posts-count"] });
     } catch (error) {
       // Rollback on error
       setPosts(previousPosts);
+      qc.invalidateQueries({ queryKey: ["posts"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
       const responseData = error.response;
       console.error("Error deleting post", responseData);
       toast.error("Failed to delete post");
@@ -93,29 +134,39 @@ function PostsProvider({ children }) {
     }
   };
 
-  const editPost = async (post_id, post) => {
-    const abort = new AbortController();
-    try {
-      const { data } = await apiService.post(
-        `/api/post/${post_id}/update`,
-        post,
-        {
-          signal: abort.signal,
-        },
-      );
+  const editPost = async (post_id, payload) => {
+    const previousPosts = posts;
+    // Pull the new content for an immediate optimistic preview
+    const optimisticContent = payload?.get ? payload.get("content") : (payload?.content ?? "");
+    setPosts((prevPosts) =>
+      prevPosts.map((p) => (p.post_id === post_id ? { ...p, content: optimisticContent } : p)),
+    );
+    updateInInfiniteCaches(["posts"], post_id, (x) => ({ ...x, content: optimisticContent }));
+    updateInInfiniteCaches(["profile"], post_id, (x) => ({ ...x, content: optimisticContent }));
 
+    try {
+      const { data } = await apiService.post(`/api/post/${post_id}/update`, payload);
+      const updated = data?.data ?? data;
       setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.post_id === post_id ? { ...data } : post,
-        ),
+        prevPosts.map((p) => (p.post_id === post_id ? { ...p, ...updated } : p)),
       );
+      updateInInfiniteCaches(["posts"], post_id, () => updated);
+      updateInInfiniteCaches(["profile"], post_id, () => updated);
+      qc.setQueriesData({ queryKey: ["post"] }, (old) => {
+        if (old?.data && old.data.post_id === post_id) {
+          return { ...old, data: { ...old.data, ...updated } };
+        }
+        return old;
+      });
       toast.success("Post edited successfully");
     } catch (error) {
+      setPosts(previousPosts);
+      qc.invalidateQueries({ queryKey: ["posts"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["post"] });
       const responseData = error.response;
       console.error("Error editing post", responseData);
-      setErrors(responseData);
-    } finally {
-      abort.abort();
+      toast.error("Failed to edit post");
     }
   };
 

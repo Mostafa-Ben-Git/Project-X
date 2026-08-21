@@ -67,6 +67,14 @@ function Post({
     }
   };
 
+  const handleDelete = async () => {
+    await deletePost(post_id);
+    // When deleting the post from its own page, return to where the user came from
+    if (type === "post" && /\/post\//.test(window.location.pathname)) {
+      nav(-1);
+    }
+  };
+
   // Guard against null user (e.g. when loaded from URL without state)
   if (!user) return null;
 
@@ -176,7 +184,7 @@ function Post({
                   </AlertDialogCancel>
                   <AlertDialogAction
                     disabled={isDeleting}
-                    onClick={() => deletePost(post_id)}
+                    onClick={handleDelete}
                   >
                     {isDeleting ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
