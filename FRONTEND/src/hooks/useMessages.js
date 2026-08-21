@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useRef, useState, useMemo } from "react";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import * as api from "@/api/messages";
 import { getUserById } from "@/api/users";
@@ -43,10 +43,26 @@ export function useMessages({ userId = null, room = null } = {}) {
     staleTime: 20_000,
   });
 
-  const chatMessages = useQuery({
+  const chatMessages = useInfiniteQuery({
     queryKey: activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId],
-    queryFn: () => activeRoom ? api.fetchMessagesByRoom(activeRoom) : api.fetchMessagesWith(activeUserId),
+    queryFn: ({ pageParam = 1 }) => activeRoom ? api.fetchMessagesByRoom(activeRoom, { pageParam }) : api.fetchMessagesWith(activeUserId, { pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.meta.current_page < lastPage.meta.last_page ? lastPage.meta.current_page + 1 : undefined,
     enabled: !!(activeRoom || activeUserId),
+    staleTime: 10_000,
+  });
+
+  // Flatten pages (backend latest-first) and reverse for asc display (oldest top, newest bottom)
+  const messages = useMemo(() => {
+    const pages = chatMessages.data?.pages ?? [];
+    if (!pages.length) return [];
+    return pages.flatMap((p) => p.data).reverse();
+  }, [chatMessages.data]);
+
+  const pinned = useQuery({
+    queryKey: ["pinned", activeRoom],
+    queryFn: () => api.fetchPinned(activeRoom),
+    enabled: !!activeRoom,
     staleTime: 10_000,
   });
 
@@ -58,9 +74,8 @@ export function useMessages({ userId = null, room = null } = {}) {
         ? api.sendMessageToRoom(activeRoom, content, imageFile)
         : api.sendMessage(activeUserId, content, imageFile);
     },
-    onSuccess: (newMsg) => {
-      const key = activeRoom ? ["messages", "room", activeRoom] : ["messages", newMsg.receiver_id === activeUserId ? newMsg.receiver_id : newMsg.sender_id];
-      qc.setQueryData(key, (old) => (old ? [...old, newMsg] : [newMsg]));
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId] });
       qc.invalidateQueries({ queryKey: ["conversations"] });
       qc.invalidateQueries({ queryKey: ["messages", "unread"] });
     },
@@ -69,9 +84,8 @@ export function useMessages({ userId = null, room = null } = {}) {
 
   const del = useMutation({
     mutationFn: (msgId) => api.deleteMessage(activeRoom, msgId),
-    onSuccess: (_data, msgId) => {
-      const key = activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId];
-      qc.setQueryData(key, (old) => (old ? old.filter((m) => m.id !== msgId) : old));
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId] });
       qc.invalidateQueries({ queryKey: ["conversations"] });
       toast.success("Message deleted");
     },
@@ -81,19 +95,11 @@ export function useMessages({ userId = null, room = null } = {}) {
   const pin = useMutation({
     mutationFn: (msgId) => api.togglePin(activeRoom, msgId),
     onSuccess: (updated) => {
-      const key = activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId];
-      qc.setQueryData(key, (old) => (old ? old.map((m) => (m.id === updated.id ? updated : m)) : old));
+      qc.invalidateQueries({ queryKey: activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId] });
       qc.invalidateQueries({ queryKey: ["pinned", activeRoom] });
       toast.success(updated.is_pinned ? "Pinned" : "Unpinned");
     },
     onError: (e) => toast.error(e?.response?.data?.message || "Could not pin message"),
-  });
-
-  const pinned = useQuery({
-    queryKey: ["pinned", activeRoom],
-    queryFn: () => api.fetchPinned(activeRoom),
-    enabled: !!activeRoom,
-    staleTime: 10_000,
   });
 
   const openChat = useCallback((user) => {
@@ -127,13 +133,16 @@ export function useMessages({ userId = null, room = null } = {}) {
 
   return {
     conversations: conversations.data ?? [],
-    messages: chatMessages.data ?? [],
+    messages,
     pinned: pinned.data ?? [],
     currentChat,
     activeRoom,
     activeUserId: activeRoom ? resolvedPartner?.id : activeUserId,
     isLoading: conversations.isLoading,
     isChatLoading: chatMessages.isLoading,
+    isFetchingNextPage: chatMessages.isFetchingNextPage,
+    hasNextPage: chatMessages.hasNextPage,
+    fetchNextPage: chatMessages.fetchNextPage,
     isError: conversations.isError,
     isSending: send.isPending,
     isDeleting: del.isPending,

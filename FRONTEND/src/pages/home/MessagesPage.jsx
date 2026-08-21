@@ -2,6 +2,7 @@ import LoaderCircle from "@/components/LoaderCircle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useAuth from "@/hooks/useAuth";
 import { useMessages } from "@/hooks/useMessages";
@@ -34,6 +35,9 @@ function MessagesPage() {
     isLoading,
     isChatLoading,
     isSending,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
     messagesEndRef,
     fetchConversations,
     sendMessage,
@@ -49,6 +53,7 @@ function MessagesPage() {
   const [replyingTo, setReplyingTo] = useState(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const scrollViewportRef = useRef(null);
 
   const draftPreviewUrl = useMemo(() => (selectedImage ? URL.createObjectURL(selectedImage) : null), [selectedImage]);
   const messageImages = useMemo(() => messages?.filter((m) => m.image_url).map((m) => m.image_url) ?? [], [messages]);
@@ -74,9 +79,46 @@ function MessagesPage() {
     fetchConversations();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Scroll to bottom on initial load / new messages (reverse infinite shows latest at bottom)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, messagesEndRef]);
+    const vp = scrollViewportRef.current;
+    if (!vp) return;
+    // On first load, jump to bottom; on new messages, smooth scroll if near bottom
+    const isNearBottom = vp.scrollHeight - vp.scrollTop - vp.clientHeight < 120;
+    if (messages.length > 0 && (isNearBottom || vp.scrollTop === 0)) {
+      // Use rAF to ensure DOM updated
+      requestAnimationFrame(() => {
+        vp.scrollTop = vp.scrollHeight;
+      });
+    }
+  }, [messages]);
+
+  // Initial scroll to bottom after chat loads
+  useEffect(() => {
+    if (!isChatLoading && messages.length > 0 && scrollViewportRef.current) {
+      scrollViewportRef.current.scrollTop = scrollViewportRef.current.scrollHeight;
+    }
+  }, [isChatLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reverse infinite scroll: when scrolled near top, load older messages and preserve position
+  useEffect(() => {
+    const vp = scrollViewportRef.current;
+    if (!vp) return;
+    const onScroll = () => {
+      if (vp.scrollTop < 80 && hasNextPage && !isFetchingNextPage) {
+        const prevHeight = vp.scrollHeight;
+        const prevTop = vp.scrollTop;
+        fetchNextPage().then(() => {
+          requestAnimationFrame(() => {
+            const newHeight = vp.scrollHeight;
+            vp.scrollTop = newHeight - prevHeight + prevTop;
+          });
+        });
+      }
+    };
+    vp.addEventListener("scroll", onScroll, { passive: true });
+    return () => vp.removeEventListener("scroll", onScroll);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleEmojiClick = ({ emoji }) => {
     const el = inputRef.current;
@@ -281,14 +323,24 @@ function MessagesPage() {
           </div>
         )}
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto py-3 md:py-4 space-y-2 md:space-y-3">
-          {isChatLoading ? (
-            <LoaderCircle />
-          ) : messages?.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">No messages yet. Say hi 👋</p>
-          ) : (
-            messages?.map((msg) => {
+        {/* Messages — ScrollArea with reverse infinite scroll (latest at bottom, scroll up for older) */}
+        <ScrollArea viewportRef={scrollViewportRef} className="flex-1 py-3 md:py-4">
+          <div className="space-y-2 md:space-y-3 pr-2">
+            {hasNextPage && (
+              <div className="flex justify-center py-2">
+                <Button variant="ghost" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                  {isFetchingNextPage ? <LoaderCircle size={14} className="mr-2" /> : null}
+                  Load older messages
+                </Button>
+              </div>
+            )}
+            {isFetchingNextPage && !hasNextPage ? null : null}
+            {isChatLoading ? (
+              <div className="flex justify-center py-8"><LoaderCircle /></div>
+            ) : messages?.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">No messages yet. Say hi 👋</p>
+            ) : (
+              messages?.map((msg) => {
               const isMine = msg.sender_id === user?.id;
               return (
                 <div
@@ -395,6 +447,7 @@ function MessagesPage() {
           )}
           <div ref={messagesEndRef} />
         </div>
+        </ScrollArea>
 
         {/* Reply banner */}
         {replyingTo && (

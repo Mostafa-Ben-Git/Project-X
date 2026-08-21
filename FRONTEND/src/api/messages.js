@@ -5,9 +5,9 @@ export async function fetchConversations() {
   return data.data;
 }
 
-export async function fetchMessagesWith(userId) {
-  const { data } = await apiService.get(`/api/messages/${userId}`);
-  return data.data;
+export async function fetchMessagesWith(userId, { pageParam = 1 } = {}) {
+  const { data } = await apiService.get(`/api/messages/${userId}`, { params: { page: pageParam, per_page: 20 } });
+  return data;
 }
 
 export async function sendMessage(userId, content, imageFile = null) {
@@ -30,9 +30,9 @@ export async function getRoomForUser(userId) {
   return data.room;
 }
 
-export async function fetchMessagesByRoom(room) {
-  const { data } = await apiService.get(`/api/messages/room/${encodeURIComponent(room)}`);
-  return data.data;
+export async function fetchMessagesByRoom(room, { pageParam = 1 } = {}) {
+  const { data } = await apiService.get(`/api/messages/room/${encodeURIComponent(room)}`, { params: { page: pageParam, per_page: 20 } });
+  return data;
 }
 
 export async function sendMessageToRoom(room, content, imageFile = null) {

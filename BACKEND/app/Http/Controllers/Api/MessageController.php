@@ -84,10 +84,13 @@ class MessageController extends Controller
 
   /**
    * Get messages between the authenticated user and a specific user.
+   * Reverse pagination: latest messages first (page 1 = newest 20), frontend reverses for asc display.
+   * Scroll up loads older pages.
    */
   public function messagesWith(Request $request, User $user)
   {
     $userId = $request->user()->id;
+    $perPage = (int) $request->query('per_page', 20);
 
     $messages = Message::where(function ($query) use ($userId, $user) {
         $query->where('sender_id', $userId)->where('receiver_id', $user->id);
@@ -96,8 +99,8 @@ class MessageController extends Controller
         $query->where('sender_id', $user->id)->where('receiver_id', $userId);
       })
       ->with(['replyTo', 'sender:id,first_name,last_name,username,avatar,status,last_active_at', 'receiver:id,first_name,last_name,username,avatar,status,last_active_at'])
-      ->orderBy('created_at', 'asc')
-      ->paginate(50);
+      ->latest('created_at')
+      ->paginate($perPage);
 
     // Mark messages from the other user as read
     Message::where('sender_id', $user->id)
