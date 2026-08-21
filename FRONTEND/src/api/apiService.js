@@ -26,34 +26,58 @@ apiService.interceptors.request.use(
 );
 
 // Response interceptor: handle auth errors and 429 rate limiting
+let isLoggingOut = false;
+
+function forceLogout() {
+  if (isLoggingOut) return;
+  isLoggingOut = true;
+  localStorage.removeItem("token");
+  localStorage.removeItem("userLogedIn");
+  // Avoid redirect loop if already on login
+  if (window.location.pathname !== "/login") {
+    window.location.href = "/login";
+  }
+}
+
 apiService.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const status = error?.response?.status;
+    // Retry probe must bypass this interceptor to avoid recursion
+    if (error?.config?.__skipAuthRetry) {
+      throw error;
+    }
 
-    // Only force-logout on 401 from the /api/user endpoint (real auth check).
-    // Other 401s may be transient (deploy, server restart) — don't wipe the session.
-    if (status === 401 && error?.config?.url?.includes("/api/user")) {
+    const status = error?.response?.status;
+    const url = error?.config?.url || "";
+
+    // Any 401 from our API with a stored token means the session is dead
+    // (e.g. DB was re-seeded and tokens were wiped). We must handle
+    // /api/posts, /api/conversations etc. — otherwise the UI just shows
+    // {"message":"Unauthenticated."} and stays locked on the protected route.
+    const isApiRequest = url.includes("/api/");
+    const isAuthEndpoint = url.includes("/api/token-login") || url.includes("/register");
+    const hasToken = !!localStorage.getItem("token");
+
+    if (status === 401 && isApiRequest && !isAuthEndpoint && hasToken) {
       // Retry ONCE after a short delay — absorbs transient 401s during a
       // frontend redeploy (non-atomic asset copy / config:clear cold boot).
-      // If the retry also 401s, the session is genuinely dead → log out.
+      // For a real invalid token (fresh seed) the retry will also 401 → logout.
       if (!error.config.__authRetry) {
         error.config.__authRetry = true;
         await new Promise((r) => setTimeout(r, 1500));
         try {
-          await apiService.get("/api/user");
+          // Use skip flag so this probe doesn't re-enter the interceptor
+          await apiService.get("/api/user", { __skipAuthRetry: true });
           // Re-validation succeeded: session is alive, don't log out.
           return Promise.reject({ ...error, __absorbed: true });
         } catch (retryErr) {
           if (retryErr?.response?.status !== 401) {
-            // Not a 401 on retry — leave as-is, don't wipe session.
+            // Not a 401 on retry — transient/server error, don't wipe session.
             return Promise.reject(error);
           }
         }
       }
-      localStorage.removeItem("token");
-      localStorage.removeItem("userLogedIn");
-      window.location.href = "/login";
+      forceLogout();
     }
 
     throw error;

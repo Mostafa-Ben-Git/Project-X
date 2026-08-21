@@ -30,25 +30,34 @@ function UserLayout() {
     }
   }, [user]);
 
+  // Re-validate session on mount — if DB was re-seeded the stored token
+  // is invalid but `user` may still be in Redux from previous session,
+  // so we must call getUser even when `user` exists.
   useEffect(() => {
-    if (!user && isLoggedIn) {
+    if (isLoggedIn) {
       getUser();
     }
-  }, [user, isLoggedIn, getUser]);
+  }, [isLoggedIn, getUser]);
 
-  // Only fetch first page of posts once, not on every render
+  // Only fetch first page of posts when we have a valid session
   useEffect(() => {
-    fetchPosts(1);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (isLoggedIn) {
+      fetchPosts(1);
+    }
+  }, [isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isLoggedIn) return <Navigate to="/login" />;
 
   return (
     <SidebarProvider defaultOpen={false}>
       <AppSidebar />
-      <SidebarInset className="2xl:mr-[340px]">
-        <header className="sticky top-0 z-30 hidden h-12 items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur md:flex">
-          <SidebarTrigger />
+      <SidebarInset className="flex min-h-[100dvh] flex-col 2xl:mr-[340px]">
+        <header className="sticky top-0 z-30 flex h-12 items-center justify-between gap-2 border-b border-border bg-background/80 px-3 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger className="md:flex" />
+            <span className="text-base font-bold tracking-tight md:hidden">X</span>
+          </div>
+          <span className="hidden text-sm font-medium text-muted-foreground md:inline">Project X</span>
         </header>
         {isMessages ? (
           <div className="flex-1 overflow-hidden px-4">
@@ -57,9 +66,9 @@ function UserLayout() {
             </div>
           </div>
         ) : (
-          <div className="px-4 pb-16 md:pb-0">
-            <ScrollArea className="mt-6">
-              <div className="mx-auto w-full max-w-[600px]">
+          <div className="flex min-h-0 flex-1 flex-col px-3 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:px-4 md:px-6 lg:px-8 md:pb-0">
+            <ScrollArea className="mt-3 flex-1 sm:mt-6">
+              <div className="mx-auto w-full max-w-full sm:max-w-[600px] md:max-w-[640px] lg:max-w-[680px] xl:max-w-[720px]">
                 <Outlet />
               </div>
             </ScrollArea>
