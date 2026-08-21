@@ -59,7 +59,9 @@ function MessagesPage() {
   const fileInputRef = useRef(null);
   const scrollViewportRef = useRef(null);
   const prevMessagesCountRef = useRef(0);
+  const prevFirstIdRef = useRef(null);
   const prevLastIdRef = useRef(null);
+  const anchorRef = useRef(null);
 
   const draftPreviewUrl = useMemo(() => (selectedImage ? URL.createObjectURL(selectedImage) : null), [selectedImage]);
   const messageImages = useMemo(() => messages?.filter((m) => m.image_url).map((m) => m.image_url) ?? [], [messages]);
@@ -80,11 +82,19 @@ function MessagesPage() {
   // Reset scroll state when room changes — ensures entering a room always starts at bottom
   useEffect(() => {
     prevMessagesCountRef.current = 0;
+    prevFirstIdRef.current = null;
     prevLastIdRef.current = null;
+    anchorRef.current = null;
     setUnreadBelow(0);
     setIsNearBottom(true);
     if (scrollViewportRef.current) scrollViewportRef.current.scrollTop = 0;
   }, [room, legacyUserId]);
+
+  // Capture scroll anchor before loading older messages so we can preserve position
+  const captureAnchor = () => {
+    const vp = scrollViewportRef.current;
+    if (vp) anchorRef.current = { scrollTop: vp.scrollTop, scrollHeight: vp.scrollHeight };
+  };
 
   // If legacy URL is hit, redirect to secure encrypted room
   useEffect(() => {
@@ -111,16 +121,18 @@ function MessagesPage() {
       setIsNearBottom(distFromBottom < 120);
       // Reset unread badge once user returns to bottom
       if (distFromBottom < 120) setUnreadBelow(0);
-      // Reverse infinite: load older when near top
+      // Reverse infinite: load older when near top — preserve scroll position
       if (vp.scrollTop < 80 && hasNextPage && !isFetchingNextPage && !loadingOlder) {
         loadingOlder = true;
-        const prevHeight = vp.scrollHeight;
-        const prevTop = vp.scrollTop;
+        captureAnchor();
+        const prevHeight = anchorRef.current.scrollHeight;
+        const prevTop = anchorRef.current.scrollTop;
         fetchNextPage().then(() => {
           requestAnimationFrame(() => {
             const newHeight = vp.scrollHeight;
-            // Preserve viewport anchored at same content — keeps top position stable
-            vp.scrollTop = newHeight - prevHeight + prevTop;
+            // Older messages are prepended at the top; shift scrollTop by added height
+            // to keep the same content in view (no jump to top or bottom)
+            vp.scrollTop = prevTop + (newHeight - prevHeight);
             loadingOlder = false;
           });
         });
@@ -139,14 +151,16 @@ function MessagesPage() {
     if (!vp || messages.length === 0) return;
 
     const prevCount = prevMessagesCountRef.current;
+    const prevFirstId = prevFirstIdRef.current;
     const prevLastId = prevLastIdRef.current;
-    const lastMsg = messages[messages.length - 1];
-    const lastId = lastMsg?.id || null;
+    const firstId = messages[0]?.id ?? null;
+    const lastId = messages[messages.length - 1]?.id ?? null;
     prevMessagesCountRef.current = messages.length;
+    prevFirstIdRef.current = firstId;
     prevLastIdRef.current = lastId;
 
     // First load or room switch: always jump to bottom (no smooth)
-    if (prevCount === 0 || !prevLastId) {
+    if (prevCount === 0 || prevFirstId === null || prevLastId === null) {
       requestAnimationFrame(() => {
         vp.scrollTop = vp.scrollHeight;
         setIsNearBottom(true);
@@ -157,12 +171,13 @@ function MessagesPage() {
     const grewBy = messages.length - prevCount;
     if (grewBy <= 0) return;
 
-    // Determine if the new messages are actually *new incoming* (not pagination older)
-    // Only the tail (newest) matters; older pagination adds to the head.
+    // Older messages are prepended at the HEAD → this is pagination, not new activity.
+    // The scroll handler already preserved the viewport position; do NOT auto-scroll here.
+    if (firstId !== prevFirstId) return;
+
+    // Tail grew → real incoming messages (or own send). Handle follow / indicator.
     const newTail = messages.slice(-grewBy);
-    const incomingNew = newTail.filter((m) => m.sender_id !== user?.id && !m._optimistic);
-    const incomingCount = incomingNew.length;
-    // If all new are own optimistic, treat as follow (user sent it)
+    const incomingCount = newTail.filter((m) => m.sender_id !== user?.id && !m._optimistic).length;
     const hasOwnNew = newTail.some((m) => m.sender_id === user?.id);
 
     const distFromBottom = vp.scrollHeight - vp.scrollTop - vp.clientHeight;
@@ -409,7 +424,7 @@ function MessagesPage() {
             <div className="flex flex-col gap-2 md:gap-3 px-1 py-3 md:py-4 pr-2">
               {hasNextPage && (
                 <div className="flex justify-center py-2">
-                  <Button variant="ghost" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                  <Button variant="ghost" size="sm" onClick={() => { captureAnchor(); fetchNextPage(); }} disabled={isFetchingNextPage}>
                     {isFetchingNextPage ? <LoaderCircle size={14} className="mr-2" /> : null}
                     Load older messages
                   </Button>
