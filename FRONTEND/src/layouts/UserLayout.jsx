@@ -49,10 +49,10 @@ function UserLayout() {
   if (!isLoggedIn) return <Navigate to="/login" />;
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={false} className="h-dvh overflow-hidden">
       <AppSidebar />
-      <SidebarInset className="flex min-h-[100dvh] flex-col 2xl:mr-[340px]">
-        <header className="sticky top-0 z-30 flex h-12 items-center justify-between gap-2 border-b border-border bg-background/80 px-3 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <SidebarInset className="flex h-dvh flex-col overflow-hidden 2xl:mr-[340px]">
+        <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/80 px-3 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="md:flex" />
             <span className="text-base font-bold tracking-tight md:hidden">X</span>
@@ -60,15 +60,15 @@ function UserLayout() {
           <span className="hidden text-sm font-medium text-muted-foreground md:inline">Project X</span>
         </header>
         {isMessages ? (
-          <div className="flex-1 overflow-hidden px-4">
-            <div className="h-full">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-2 sm:px-4">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <Outlet />
             </div>
           </div>
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col px-3 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:px-4 md:px-6 lg:px-8 md:pb-0">
-            <ScrollArea className="mt-3 flex-1 sm:mt-6">
-              <div className="mx-auto w-full max-w-full sm:max-w-[600px] md:max-w-[640px] lg:max-w-[680px] xl:max-w-[720px]">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:px-4 md:px-6 lg:px-8 md:pb-0">
+            <ScrollArea className="mt-3 flex-1 overflow-hidden sm:mt-6">
+              <div className="mx-auto w-full max-w-full sm:max-w-[600px] md:max-w-[640px] lg:max-w-[680px] xl:max-w-[720px] pb-4">
                 <Outlet />
               </div>
             </ScrollArea>

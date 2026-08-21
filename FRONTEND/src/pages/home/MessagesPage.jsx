@@ -569,8 +569,10 @@ function MessagesPage() {
       );
     }
     return (
-      <main className="h-full overflow-y-auto p-3 md:p-4">
-        {renderListBody()}
+      <main className="flex h-full flex-col overflow-hidden p-0">
+        <ScrollArea className="flex-1">
+          <div className="p-3 md:p-4">{renderListBody()}</div>
+        </ScrollArea>
       </main>
     );
   }
@@ -579,9 +581,11 @@ function MessagesPage() {
   return (
     <main className="mx-auto flex h-full w-full max-w-[1200px] overflow-hidden">
       <aside className="flex w-[280px] md:w-[320px] lg:w-[350px] shrink-0 flex-col overflow-hidden border-r">
-        <div className="flex-1 overflow-y-auto p-3 md:p-4">{renderListBody()}</div>
+        <ScrollArea className="flex-1">
+          <div className="p-3 md:p-4">{renderListBody()}</div>
+        </ScrollArea>
       </aside>
-      <section className="flex flex-1 flex-col overflow-hidden p-3 md:p-4">
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden p-3 md:p-4">
         {hasActiveChat ? (
           renderChatBody(false)
         ) : (
