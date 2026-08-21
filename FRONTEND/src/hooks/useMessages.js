@@ -59,15 +59,26 @@ export function useMessages({ userId = null, room = null } = {}) {
     getNextPageParam: (lastPage) => lastPage.meta.current_page < lastPage.meta.last_page ? lastPage.meta.current_page + 1 : undefined,
     enabled: !!(activeRoom || activeUserId),
     staleTime: 10_000,
-    onSuccess: (data) => {
-      // Opening a room marks its messages read on the server; refresh the cached
-      // unread counts so the per-room badge and global message badge clear.
-      if (data?.pages?.length === 1) {
-        qc.invalidateQueries({ queryKey: ["conversations"] });
-        qc.invalidateQueries({ queryKey: ["messages", "unread"] });
-      }
-    },
   });
+
+  // Opening a room marks its messages read on the server (MessageController::messagesWith).
+  // React Query v5 dropped per-query onSuccess, so refresh the cached unread counts
+  // via an effect once the first page of a room loads — clears per-room + global badges.
+  const readMarkedRef = useRef(null);
+  useEffect(() => {
+    const currentKey = activeRoom || activeUserId;
+    if (!currentKey) return;
+    if (readMarkedRef.current !== currentKey) readMarkedRef.current = null;
+    if (
+      chatMessages.isSuccess &&
+      chatMessages.data?.pages?.length === 1 &&
+      readMarkedRef.current !== currentKey
+    ) {
+      readMarkedRef.current = currentKey;
+      qc.invalidateQueries({ queryKey: ["conversations"] });
+      qc.invalidateQueries({ queryKey: ["messages", "unread"] });
+    }
+  }, [chatMessages.isSuccess, chatMessages.data, activeRoom, activeUserId, qc]);
 
   // Flatten pages (backend latest-first) and reverse for asc display (oldest top, newest bottom)
   const messages = useMemo(() => {
