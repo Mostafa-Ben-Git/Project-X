@@ -96,3 +96,31 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Auto-hide scrollbar with fade — visible while scrolling/hover, hidden otherwise */
+  .auto-hide-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  .auto-hide-scrollbar:hover,
+  .auto-hide-scrollbar.is-scrolling {
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .auto-hide-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .auto-hide-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .auto-hide-scrollbar::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 9999px;
+    transition: background-color 0.3s ease;
+  }
+  .auto-hide-scrollbar:hover::-webkit-scrollbar-thumb,
+  .auto-hide-scrollbar.is-scrolling::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+  }
+}
