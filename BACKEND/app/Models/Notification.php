@@ -25,6 +25,7 @@ class Notification extends Model
     'content',
     'post_id',
     'message_id',
+    'count',
     'read_at',
   ];
 

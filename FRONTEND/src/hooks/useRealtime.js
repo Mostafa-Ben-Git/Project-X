@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { connectEcho } from "@/lib/echo";
@@ -15,6 +15,9 @@ export function useRealtime(userId) {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [connected, setConnected] = useState(false);
+  // Accumulate rapid incoming messages so we show ONE grouped toast with a count
+  const pendingMessages = useRef([]);
+  const toastTimer = useRef(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -49,21 +52,33 @@ export function useRealtime(userId) {
         qc.invalidateQueries({ queryKey: ["messages", "unread"] });
         if (payload && payload.sender_id !== userId) {
           qc.invalidateQueries({ queryKey: ["user", payload.sender_id] });
+          qc.invalidateQueries({ queryKey: ["notifications"] });
+          qc.invalidateQueries({ queryKey: ["notifications", "unread"] });
           // Suppress toast if user is currently inside a message room (they'll see the bubble + arrow indicator)
           const inMessageRoom = window.location.pathname.startsWith("/messages/");
           if (inMessageRoom) return;
+          // Debounce/group rapid incoming messages into a single toast with a count
           const from = payload?.sender;
           const name = from
             ? `${from.first_name} ${from.last_name}`
             : "Someone";
           const preview = payload.content || (payload.image_url ? "📷 Image" : "");
-          toast("New message", {
-            description: `${name}: ${preview}`,
-            action: {
-              label: "Open chat",
-              onClick: () => navigate(`/messages/${payload.sender_id}`),
-            },
-          });
+          pendingMessages.current.push({ name, preview, senderId: payload.sender_id });
+          if (toastTimer.current) clearTimeout(toastTimer.current);
+          toastTimer.current = setTimeout(() => {
+            toastTimer.current = null;
+            const batch = pendingMessages.current;
+            pendingMessages.current = [];
+            if (batch.length === 0) return;
+            const last = batch[batch.length - 1];
+            toast(batch.length > 1 ? `${batch.length} new messages` : "New message", {
+              description: `${last.name}: ${last.preview}`,
+              action: {
+                label: "Open chat",
+                onClick: () => navigate(`/messages/${last.senderId}`),
+              },
+            });
+          }, 1200);
         } else if (payload && payload.sender_id === userId) {
           qc.invalidateQueries({ queryKey: ["messages", payload.receiver_id] });
         }
@@ -83,6 +98,8 @@ export function useRealtime(userId) {
       } catch {
         /* noop */
       }
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      pendingMessages.current = [];
     };
   }, [userId, qc, navigate]);
 

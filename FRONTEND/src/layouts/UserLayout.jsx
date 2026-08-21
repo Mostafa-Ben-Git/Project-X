@@ -54,7 +54,7 @@ function UserLayout() {
       <SidebarInset className="flex h-dvh flex-col overflow-hidden 2xl:mr-[340px]">
         <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/80 px-3 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <div className="flex items-center gap-2">
-            <SidebarTrigger className="md:flex" />
+            <SidebarTrigger className="hidden md:flex" />
             <span className="text-base font-bold tracking-tight md:hidden">X</span>
           </div>
           <span className="hidden text-sm font-medium text-muted-foreground md:inline">Project X</span>

@@ -288,13 +288,36 @@ class MessageController extends Controller
 
     // Create notification for the receiver (model triggers realtime broadcast)
     $notifContent = $message->content ? substr($message->content, 0, 100) : ($message->image_path ? '📷 Image' : '');
-    Notification::create([
-      'user_id' => $user->id,
-      'from_user_id' => $sender->id,
-      'type' => 'message',
-      'content' => $notifContent,
-      'message_id' => $message->id,
-    ]);
+
+    // Group rapid messages from the same sender into a single notification with a
+    // count instead of creating a new row for every message (debounced window).
+    $groupWindow = now()->subMinutes(1);
+    $existing = Notification::where('user_id', $user->id)
+      ->where('from_user_id', $sender->id)
+      ->where('type', 'message')
+      ->whereNull('read_at')
+      ->where('created_at', '>=', $groupWindow)
+      ->latest()
+      ->first();
+
+    if ($existing) {
+      $existing->increment('count');
+      $existing->update([
+        'content' => $notifContent,
+        'created_at' => now(),
+      ]);
+      // Re-broadcast so clients refresh the grouped notification live.
+      \App\Support\Broadcast::safe(new \App\Events\NotificationCreated($existing));
+    } else {
+      Notification::create([
+        'user_id' => $user->id,
+        'from_user_id' => $sender->id,
+        'type' => 'message',
+        'content' => $notifContent,
+        'message_id' => $message->id,
+        'count' => 1,
+      ]);
+    }
 
     return new MessageResource($message->load('sender:id,first_name,last_name,username,avatar'));
   }

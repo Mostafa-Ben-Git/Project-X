@@ -80,9 +80,14 @@ function NotificationsPage() {
                   !n.read_at ? "bg-accent/40" : ""
                 }`}
               >
-                <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconBg[n.type] || "bg-muted"}`}>
-                  {notificationIcons[n.type] || <Bell size={18} />}
-                </span>
+                 <span className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconBg[n.type] || "bg-muted"}`}>
+                   {notificationIcons[n.type] || <Bell size={18} />}
+                   {n.type === "message" && n.count > 1 && (
+                     <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground">
+                       {n.count > 99 ? "99+" : n.count}
+                     </span>
+                   )}
+                 </span>
                 <Avatar className="h-8 w-8 shrink-0">
                   <AvatarImage src={n.from_user?.avatar} />
                   <AvatarFallback>

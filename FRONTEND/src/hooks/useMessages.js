@@ -176,6 +176,7 @@ export function useMessages({ userId = null, room = null } = {}) {
       } else {
         toast.error(err?.response?.data?.message || "Could not send message");
       }
+      if (import.meta.env.DEV) console.error("Message send error:", err?.response?.data || err);
     },
     onSuccess: (realMsg, _vars, ctx) => {
       const key = activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId];

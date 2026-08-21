@@ -243,13 +243,12 @@ function MessagesPage() {
     try {
       await sendMessage(content, image, replyTo?.id || null, replyTo);
     } catch (err) {
-      // On rate-limit (429) restore composer so user doesn't lose draft
-      const status = err?.response?.status;
-      if (status === 429) {
-        setNewMessage(content || "");
-        if (image) setSelectedImage(image);
-        if (replyTo) setReplyingTo(replyTo);
-      }
+      // On any failure, restore composer so the user doesn't lose their draft.
+      // The send mutation surfaces a meaningful toast; log details in dev.
+      setNewMessage(content || "");
+      if (image) setSelectedImage(image);
+      if (replyTo) setReplyingTo(replyTo);
+      if (import.meta.env.DEV) console.error("Message send failed:", err);
     } finally {
       requestAnimationFrame(() => inputRef.current?.focus());
     }
