@@ -423,8 +423,8 @@ function MessagesPage() {
           </div>
         )}
 
-        {/* Input — emoji + image + text */}
-        <form onSubmit={handleSend} className="flex items-end gap-1.5 md:gap-2 border-t pt-2 md:pt-3 pb-20 md:pb-3">
+        {/* Input — fixed at bottom of room, stays visible while messages scroll */}
+        <form onSubmit={handleSend} className="sticky bottom-0 z-10 -mx-3 -mb-3 flex shrink-0 items-end gap-1.5 border-t bg-background px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 md:-mx-4 md:-mb-4 md:px-4 md:pb-4 md:pt-3">
           <input
             ref={fileInputRef}
             type="file"
