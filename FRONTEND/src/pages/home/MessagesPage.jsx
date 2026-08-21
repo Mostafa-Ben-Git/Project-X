@@ -150,11 +150,13 @@ function MessagesPage() {
     if ((!hasText && !hasImage) || (!room && !legacyUserId)) return;
     try {
       const content = newMessage.trim() || null;
-      await sendMessage(content, selectedImage, replyingTo?.id || null);
+      const replyTo = replyingTo;
+      // Optimistic: clear composer instantly for snappy UX
       setNewMessage("");
       setSelectedImage(null);
       setReplyingTo(null);
       inputRef.current?.focus();
+      await sendMessage(content, selectedImage, replyTo?.id || null, replyTo);
     } catch {
       // error handled in hook
     }
@@ -381,7 +383,7 @@ function MessagesPage() {
                   <div
                     className={`relative max-w-[75%] md:max-w-[70%] overflow-hidden rounded-xl px-3 py-1.5 md:px-4 md:py-2 ${
                       msg.is_pinned ? "ring-1 ring-amber-400" : ""
-                    } ${isMine ? "bg-blue-600 text-white" : "bg-muted text-foreground"}`}
+                    } ${isMine ? "bg-blue-600 text-white" : "bg-muted text-foreground"} ${msg._optimistic ? "opacity-60" : ""}`}
                   >
                     {msg.is_pinned && <span className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-amber-300"><Pin size={10} /> Pinned</span>}
                     {msg.reply_to && (

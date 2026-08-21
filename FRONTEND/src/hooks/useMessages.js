@@ -3,10 +3,12 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { toast } from "sonner";
 import * as api from "@/api/messages";
 import { getUserById } from "@/api/users";
+import useAuth from "@/hooks/useAuth";
 
 export function useMessages({ userId = null, room = null } = {}) {
   const qc = useQueryClient();
   const messagesEndRef = useRef(null);
+  const { user: currentUser } = useAuth();
 
   // Support both legacy userId param and new encrypted room param
   const activeRoom = room || null;
@@ -74,12 +76,113 @@ export function useMessages({ userId = null, room = null } = {}) {
         ? api.sendMessageToRoom(activeRoom, content, imageFile)
         : api.sendMessage(activeUserId, content, imageFile);
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId] });
+    onMutate: async ({ content, imageFile, replyToId, replyTo }) => {
+      const key = activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId];
+      if (!key[1]) return { previous: null, optimisticId: null };
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData(key);
+      const optimisticId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const partnerId = activeRoom ? (resolvedPartner?.id || currentChat?.id) : activeUserId;
+      const optimisticImageUrl = imageFile ? URL.createObjectURL(imageFile) : null;
+      const optimisticMsg = {
+        id: optimisticId,
+        content: content || null,
+        image_url: optimisticImageUrl,
+        type: imageFile ? (content ? "mixed" : "image") : "text",
+        sender_id: currentUser?.id,
+        receiver_id: partnerId,
+        reply_to_id: replyToId || null,
+        reply_to: replyTo
+          ? {
+              id: replyTo.id,
+              content: replyTo.content ? (replyTo.content.length > 80 ? replyTo.content.slice(0, 80) + "…" : replyTo.content) : null,
+              image_url: replyTo.image_url || null,
+              sender_id: replyTo.sender_id,
+            }
+          : null,
+        is_pinned: false,
+        pinned_at: null,
+        is_mine: true,
+        can_delete: true,
+        read_at: null,
+        created_at: new Date().toISOString(),
+        ago: "just now",
+        unread_count: 0,
+        room: activeRoom || null,
+        sender: currentUser
+          ? {
+              id: currentUser.id,
+              first_name: currentUser.first_name,
+              last_name: currentUser.last_name,
+              username: currentUser.username,
+              avatar: currentUser.avatar,
+              status: currentUser.status,
+              last_active_at: currentUser.last_active_at,
+            }
+          : null,
+        receiver: resolvedPartner || currentChat || null,
+        _optimistic: true,
+      };
+
+      qc.setQueryData(key, (old) => {
+        if (!old) {
+          return {
+            pages: [{ data: [optimisticMsg], meta: { current_page: 1, last_page: 1 } }],
+            pageParams: [1],
+          };
+        }
+        // pages[0] is newest page (desc). Prepend optimistic there.
+        const newPages = [...old.pages];
+        if (newPages.length === 0) {
+          newPages.push({ data: [optimisticMsg], meta: { current_page: 1, last_page: 1 } });
+        } else {
+          newPages[0] = { ...newPages[0], data: [optimisticMsg, ...newPages[0].data] };
+        }
+        return { ...old, pages: newPages };
+      });
+
+      // Optimistically bump conversation preview
+      qc.setQueryData(["conversations"], (old) => {
+        if (!Array.isArray(old) || !partnerId) return old;
+        const preview = content || (imageFile ? "📷 Image" : "");
+        return old.map((c) => {
+          const pid = c.sender_id === currentUser?.id ? c.receiver_id : c.sender_id;
+          if (pid === partnerId) return { ...c, content: preview, image_url: optimisticImageUrl, ago: "just now" };
+          return c;
+        });
+      });
+
+      return { previous, optimisticId, optimisticImageUrl };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) {
+        const key = activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId];
+        qc.setQueryData(key, ctx.previous);
+      }
+      if (ctx?.optimisticImageUrl) URL.revokeObjectURL(ctx.optimisticImageUrl);
+      toast.error("Could not send message");
+    },
+    onSuccess: (realMsg, _vars, ctx) => {
+      const key = activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId];
+      // Replace optimistic with real
+      if (ctx?.optimisticId) {
+        qc.setQueryData(key, (old) => {
+          if (!old) return old;
+          const newPages = old.pages.map((p) => ({
+            ...p,
+            data: p.data.map((m) => (m.id === ctx.optimisticId ? realMsg : m)),
+          }));
+          return { ...old, pages: newPages };
+        });
+        if (ctx.optimisticImageUrl) URL.revokeObjectURL(ctx.optimisticImageUrl);
+      }
       qc.invalidateQueries({ queryKey: ["conversations"] });
       qc.invalidateQueries({ queryKey: ["messages", "unread"] });
     },
-    onError: () => toast.error("Could not send message"),
+    onSettled: () => {
+      // Reconcile with server in background without blocking UI
+      qc.invalidateQueries({ queryKey: activeRoom ? ["messages", "room", activeRoom] : ["messages", activeUserId] });
+    },
   });
 
   const del = useMutation({
@@ -113,8 +216,8 @@ export function useMessages({ userId = null, room = null } = {}) {
   }, [qc]);
 
   const sendMessage = useCallback(
-    async (content, imageFile = null, replyToId = null) => {
-      await send.mutateAsync({ content, imageFile, replyToId });
+    async (content, imageFile = null, replyToId = null, replyTo = null) => {
+      await send.mutateAsync({ content, imageFile, replyToId, replyTo });
     },
     [send],
   );
