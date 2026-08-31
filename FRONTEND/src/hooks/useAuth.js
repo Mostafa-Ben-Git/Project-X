@@ -68,12 +68,19 @@ export default function useAuth() {
   const updateUserData = async (data) => {
     dispatch(setIsLoading(true));
     try {
-      const response = await apiService.put(`/api/users/${user.id}`, data);
+      let response;
+      if (data instanceof FormData) {
+        if (!data.has("_method")) data.append("_method", "PUT");
+        response = await apiService.post(`/api/users/${user.id}`, data);
+      } else {
+        response = await apiService.put(`/api/users/${user.id}`, data);
+      }
       dispatch(updateUser(response.data.data || response.data));
       toast.success("Profile updated");
     } catch (error) {
       console.error("Error updating user data:", error.response);
       toast.error("Failed to update profile");
+      throw error;
     } finally {
       dispatch(setIsLoading(false));
     }

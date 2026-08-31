@@ -42,8 +42,7 @@ class UserFactory extends Factory
       'password' => static::$password ??= Hash::make('12345678'),
       'avatar' => $avatar,
       'date_de_naissance' => $this->faker->date,
-      // Unsplash: free random images, no key needed
-      'cover_image' => "https://picsum.photos/seed/{$username}/800/300",
+      'cover_image' => $this->coverImageUrl(),
       'bio' => $this->faker->paragraph,
       'derniere_connexion' => $this->faker->dateTimeThisYear,
       'statut' => $this->faker->randomElement(['en ligne', 'hors ligne']),
@@ -62,6 +61,24 @@ class UserFactory extends Factory
       'status' => $status,
       'last_active_at' => $lastActiveAt,
     ];
+  }
+
+  private function coverImageUrl(): string
+  {
+    $ids = [
+      'photo-1506744038136-46273834b3fb',
+      'photo-1501785888041-af3ef285b470',
+      'photo-1470071459604-3b5ec3a7fe05',
+      'photo-1469474968028-56623f02e42e',
+      'photo-1441974231531-c6227db76b6e',
+      'photo-1534972195531-b367aadb2cced',
+      'photo-1507525428034-b723cf961d3e',
+      'photo-1502082553048-f009c37129b9',
+      'photo-1519681393784-d120267933ba',
+      'photo-1482192596544-9eb780fc7f66',
+    ];
+
+    return 'https://images.unsplash.com/' . fake()->randomElement($ids) . '?w=800&h=300&fit=crop&auto=format&q=80';
   }
 
   public function unverified(): static

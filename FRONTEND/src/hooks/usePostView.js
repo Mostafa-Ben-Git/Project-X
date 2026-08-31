@@ -1,5 +1,6 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useContext } from "react";
 import { recordView } from "@/api/posts";
+import { PostsContext } from "@/context/PostsContext";
 
 /**
  * Records a post view once when the element becomes visible for >= 1s at 50% visibility.
@@ -8,6 +9,8 @@ import { recordView } from "@/api/posts";
  */
 export function usePostView(postId) {
   const hasFired = useRef(false);
+  const ctx = useContext(PostsContext);
+  const incrementViewsInCaches = ctx?.incrementViewsInCaches ?? null;
 
   const ref = useCallback(
     (node) => {
@@ -28,11 +31,15 @@ export function usePostView(postId) {
               if (document.visibilityState !== "visible") return;
               hasFired.current = true;
               sessionStorage.setItem(sessionKey, "1");
-              recordView(postId).catch(() => {
-                // Silent fail — views are best-effort
-                hasFired.current = false;
-                sessionStorage.removeItem(sessionKey);
-              });
+              recordView(postId)
+                .then(() => {
+                  incrementViewsInCaches?.(postId);
+                })
+                .catch(() => {
+                  // Silent fail — views are best-effort
+                  hasFired.current = false;
+                  sessionStorage.removeItem(sessionKey);
+                });
               observer.disconnect();
             }, 1000);
           }
@@ -43,7 +50,7 @@ export function usePostView(postId) {
       observer.observe(node);
       return () => observer.disconnect();
     },
-    [postId]
+    [postId, incrementViewsInCaches]
   );
 
   return ref;

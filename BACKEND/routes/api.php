@@ -1,10 +1,12 @@
 <?php
 
+use App\Events\UserStatusBroadcast;
 use App\Http\Controllers\Api\BookmarkController;
 use App\Http\Controllers\Api\FollowerController;
 use App\Http\Controllers\Api\LikeController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\OAuthController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\PostViewController;
 use App\Http\Controllers\Api\RepostController;
@@ -12,6 +14,7 @@ use App\Http\Controllers\Api\TokenAuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Resources\PostResource;
 use App\Http\Resources\UserResource;
+use App\Support\Broadcast;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +22,16 @@ use Illuminate\Support\Facades\Route;
 Route::post('/token-login', [TokenAuthController::class, 'login'])
     ->middleware('throttle:60,1')
     ->name('token.login');
+
+// ── Public: OAuth (Google / GitHub) ──
+Route::get('/auth/{provider}/redirect', [OAuthController::class, 'redirect'])
+    ->whereIn('provider', ['google', 'github'])
+    ->middleware('throttle:60,1')
+    ->name('oauth.redirect');
+Route::get('/auth/{provider}/callback', [OAuthController::class, 'callback'])
+    ->whereIn('provider', ['google', 'github'])
+    ->middleware('throttle:60,1')
+    ->name('oauth.callback');
 
 // ── Protected (Bearer Token) ──
 Route::middleware('auth:sanctum')->group(function () {
@@ -29,7 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/heartbeat', function (Request $request) {
         $user = $request->user();
         $user->update(['last_active_at' => now(), 'status' => 'online']);
-        \App\Support\Broadcast::safe(new \App\Events\UserStatusBroadcast($user));
+        Broadcast::safe(new UserStatusBroadcast($user));
+
         return response()->json(['ok' => true]);
     });
     Route::post('/status', function (Request $request) {
@@ -39,7 +53,8 @@ Route::middleware('auth:sanctum')->group(function () {
             'status' => $request->status,
             'last_active_at' => $request->status === 'offline' ? now() : $user->last_active_at,
         ]);
-        \App\Support\Broadcast::safe(new \App\Events\UserStatusBroadcast($user));
+        Broadcast::safe(new UserStatusBroadcast($user));
+
         return response()->json(['ok' => true]);
     });
     Route::get('/user/posts', function (Request $request) {

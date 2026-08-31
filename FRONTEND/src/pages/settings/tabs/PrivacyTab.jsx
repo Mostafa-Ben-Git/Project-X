@@ -52,24 +52,19 @@ export default function PrivacyTab() {
             />
           </div>
           <Separator />
-          <div className="space-y-1.5">
-            <Label>Show online status</Label>
-            <p className="text-sm text-muted-foreground">Others can see when you&apos;re active</p>
-            <Select
-              defaultValue={user.status || "online"}
-              onValueChange={(val) => handleSelect("status", val)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="online">🟢 Online</SelectItem>
-                <SelectItem value="away">🟡 Away</SelectItem>
-                <SelectItem value="offline">⚫ Offline</SelectItem>
-                <SelectItem value="dnd">🔴 Do not disturb</SelectItem>
-                <SelectItem value="hidden">👻 Hidden</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Show online status</Label>
+              <p className="text-sm text-muted-foreground">
+                {user.show_online_status !== false
+                  ? "Others can see when you're active"
+                  : "You appear offline to everyone"}
+              </p>
+            </div>
+            <Switch
+              checked={user.show_online_status !== false}
+              onCheckedChange={(val) => handleToggle("show_online_status", val)}
+            />
           </div>
         </CardContent>
       </Card>

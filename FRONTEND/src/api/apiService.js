@@ -55,7 +55,10 @@ apiService.interceptors.response.use(
     // /api/posts, /api/conversations etc. — otherwise the UI just shows
     // {"message":"Unauthenticated."} and stays locked on the protected route.
     const isApiRequest = url.includes("/api/");
-    const isAuthEndpoint = url.includes("/api/token-login") || url.includes("/register");
+    const isAuthEndpoint =
+      url.includes("/api/token-login") ||
+      url.includes("/api/auth/") ||
+      url.includes("/register");
     const hasToken = !!localStorage.getItem("token");
 
     if (status === 401 && isApiRequest && !isAuthEndpoint && hasToken) {

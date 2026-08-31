@@ -10,6 +10,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 const PageNotFound = lazy(() => import("@/pages/PageNotFound"));
 const Login = lazy(() => import("@/pages/authentication/Login"));
 const Register = lazy(() => import("@/pages/authentication/Register"));
+const OAuthCallback = lazy(() => import("@/pages/authentication/OAuthCallback"));
 const PostPage = lazy(() => import("@/pages/dynamic/PostPage"));
 const FriendsPage = lazy(() => import("@/pages/home/FriendsPage"));
 const HomePage = lazy(() => import("@/pages/home/HomePage"));
@@ -172,6 +173,15 @@ const router = createBrowserRouter([
         ),
       },
     ],
+  },
+
+  {
+    path: "/auth/callback",
+    element: (
+      <PageLoader>
+        <OAuthCallback />
+      </PageLoader>
+    ),
   },
 
   {

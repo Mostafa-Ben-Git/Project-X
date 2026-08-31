@@ -40,8 +40,7 @@ class UserStatusBroadcast implements ShouldBroadcast
         return [
             'user_id' => $this->user->id,
             'username' => $this->user->username,
-            'status' => $this->user->status,
-            'last_active_at' => $this->user->last_active_at?->toIso8601String(),
+            ...$this->user->presenceFor(null),
         ];
     }
 }

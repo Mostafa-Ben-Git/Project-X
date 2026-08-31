@@ -92,24 +92,29 @@ export function LogoMark({ size = 32, className, ...props }) {
 }
 
 // ── Wordmark ──
-export function LogoWordmark({ className, size = "default", ...props }) {
+export function LogoWordmark({ className, size = "default", variant = "default", ...props }) {
   const sizeClasses = {
     sm: "text-base",
     default: "text-xl",
     lg: "text-2xl",
     xl: "text-3xl",
   };
+  const isInverted = variant === "inverted";
   return (
     <span
       className={cn(
-        "inline-flex items-baseline font-bold tracking-tight select-none",
+        "inline-flex items-baseline font-bold tracking-tight select-none whitespace-nowrap",
         sizeClasses[size] ?? sizeClasses.default,
         className
       )}
       {...props}
     >
-      <span className="font-semibold tracking-tight text-foreground">Project</span>
-      <span className="font-black tracking-tighter text-primary">-X</span>
+      <span className={cn("font-semibold tracking-tight", isInverted ? "text-primary-foreground" : "text-foreground")}>
+        Project
+      </span>
+      <span className={cn("font-black tracking-tighter", isInverted ? "text-primary-foreground" : "text-primary")}>
+        -X
+      </span>
     </span>
   );
 }
@@ -139,7 +144,7 @@ export function Logo({
       {...props}
     >
       <LogoIcon size={_iconSize} variant={variant} />
-      {showWordmark && <LogoWordmark size={wordmarkSize} className={wordmarkClassName} />}
+      {showWordmark && <LogoWordmark size={wordmarkSize} variant={variant} className={wordmarkClassName} />}
     </div>
   );
 }

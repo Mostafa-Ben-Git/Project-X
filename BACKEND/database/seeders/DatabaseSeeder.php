@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
       'last_name' => 'User',
       'username' => 'testuser',
       'avatar' => 'https://ui-avatars.com/api/?name=Test+User&background=264653&color=fff&bold=true&size=128',
-      'cover_image' => 'https://picsum.photos/seed/testuser/800/300',
+      'cover_image' => 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&h=300&fit=crop&auto=format&q=80',
       'bio' => 'This is the test user account for Project-X.',
     ]);
 
@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
       'last_name' => 'Person',
       'username' => 'otherperson',
       'avatar' => 'https://ui-avatars.com/api/?name=Other+Person&background=e76f51&color=fff&bold=true&size=128',
-      'cover_image' => 'https://picsum.photos/seed/otherperson/800/300',
+      'cover_image' => 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&h=300&fit=crop&auto=format&q=80',
       'bio' => 'Another user for testing social features.',
     ]);
 

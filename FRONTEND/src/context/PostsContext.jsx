@@ -59,8 +59,14 @@ function PostsProvider({ children }) {
       const { data } = await apiService.post("/api/posts", post);
       if (data.parent_id) {
         setComments((prevPosts) => [data, ...prevPosts]);
+        incrementCommentsInCaches(data.parent_id);
+        qc.invalidateQueries({ queryKey: ["comments", data.parent_id] });
       } else {
         setPosts((prevPosts) => [data, ...prevPosts]);
+      }
+      // keep feed counts in sync without waiting for refetch
+      if (data.parent_id) {
+        qc.invalidateQueries({ queryKey: ["post"] });
       }
     } catch (error) {
       const responseData = error.response;
@@ -207,11 +213,55 @@ function PostsProvider({ children }) {
     }
   };
 
+  const toggleLikeInCaches = (postId) => {
+    const patch = (post) => {
+      if (!post || post.post_id !== postId) return post;
+      const wasLiked = !!(post.info?.is_liked ?? post.is_liked);
+      const likes = post.info?.likes ?? post.likes ?? 0;
+      const nextLiked = !wasLiked;
+      const nextLikes = Math.max(0, likes + (nextLiked ? 1 : -1));
+      return {
+        ...post,
+        info: { ...post.info, is_liked: nextLiked, likes: nextLikes },
+        is_liked: nextLiked,
+        likes: nextLikes,
+      };
+    };
+
+    setPosts((prev) => prev.map((p) => (p.post_id === postId ? patch(p) : p)));
+
+    qc.setQueriesData({ predicate: (q) => ["posts", "profile", "comments"].includes(q.queryKey[0]) }, (old) => {
+      if (!old?.pages) return old;
+      let changed = false;
+      const pages = old.pages.map((page) => {
+        if (!Array.isArray(page.data)) return page;
+        const data = page.data.map((p) => {
+          if (p.post_id === postId) {
+            changed = true;
+            return patch(p);
+          }
+          return p;
+        });
+        return changed ? { ...page, data } : page;
+      });
+      return changed ? { ...old, pages } : old;
+    });
+
+    qc.setQueriesData({ queryKey: ["post"] }, (old) => {
+      if (!old?.data || old.data.post_id !== postId) return old;
+      return { ...old, data: patch(old.data) };
+    });
+  };
+
   const likingHandler = async (post_id) => {
+    toggleLikeInCaches(post_id);
     try {
       await apiService.post(`/api/posts/${post_id}/changeLikeStatus`);
+      // keep optimistic state, just ensure server truth eventually
+      qc.invalidateQueries({ queryKey: ["post"] });
       return true;
     } catch (error) {
+      toggleLikeInCaches(post_id);
       const responseData = error.response;
       console.error("Error adding post", responseData);
       setErrors(responseData);
@@ -219,19 +269,103 @@ function PostsProvider({ children }) {
     }
   };
 
+  function patchPost(post, postId, updater) {
+    if (!post || post.post_id !== postId) return post;
+    return updater(post);
+  }
+
+  function patchInCaches(postId, updater) {
+    const wrapped = (post) => patchPost(post, postId, updater);
+    setPosts((prev) => prev.map((p) => wrapped(p)));
+    qc.setQueriesData({ predicate: (q) => ["posts", "profile", "comments"].includes(q.queryKey[0]) }, (old) => {
+      if (!old?.pages) return old;
+      let changed = false;
+      const pages = old.pages.map((page) => {
+        if (!Array.isArray(page.data)) return page;
+        const data = page.data.map((p) => {
+          if (p.post_id === postId) {
+            changed = true;
+            return wrapped(p);
+          }
+          return p;
+        });
+        return changed ? { ...page, data } : page;
+      });
+      return changed ? { ...old, pages } : old;
+    });
+    qc.setQueriesData({ queryKey: ["post"] }, (old) => {
+      if (!old?.data || old.data.post_id !== postId) return old;
+      return { ...old, data: wrapped(old.data) };
+    });
+  }
+
+  function toggleRepostInCaches(postId) {
+    patchInCaches(postId, (post) => {
+      const was = !!(post.info?.is_reposted ?? post.is_reposted);
+      const count = post.info?.reposts_count ?? post.reposts_count ?? 0;
+      const next = !was;
+      const nextCount = Math.max(0, count + (next ? 1 : -1));
+      return {
+        ...post,
+        info: { ...post.info, is_reposted: next, reposts_count: nextCount },
+        is_reposted: next,
+        reposts_count: nextCount,
+      };
+    });
+  }
+
+  function toggleBookmarkInCaches(postId) {
+    patchInCaches(postId, (post) => {
+      const was = !!(post.info?.is_bookmarked ?? post.is_bookmarked);
+      return {
+        ...post,
+        info: { ...post.info, is_bookmarked: !was },
+        is_bookmarked: !was,
+      };
+    });
+  }
+
+  function incrementViewsInCaches(postId) {
+    patchInCaches(postId, (post) => {
+      const v = post.info?.views ?? post.views ?? 0;
+      return { ...post, info: { ...post.info, views: v + 1 }, views: v + 1 };
+    });
+  }
+
+  function incrementCommentsInCaches(postId) {
+    patchInCaches(postId, (post) => {
+      const c = post.info?.comments_count ?? post.comments_count ?? 0;
+      return { ...post, info: { ...post.info, comments_count: c + 1 }, comments_count: c + 1 };
+    });
+  }
+
   const repostingHandler = async (post_id) => {
+    toggleRepostInCaches(post_id);
     try {
       await apiService.post(`/api/posts/${post_id}/repost`);
-      // Invalidate profile tabs and count badges so Home -> Profile stays in sync
       qc.invalidateQueries({ queryKey: ["profile"] });
       qc.invalidateQueries({ queryKey: ["user-reposts-count"] });
       qc.invalidateQueries({ queryKey: ["user-posts-count"] });
       qc.invalidateQueries({ queryKey: ["user-replies-count"] });
+      qc.invalidateQueries({ queryKey: ["post"] });
       return true;
     } catch (error) {
+      toggleRepostInCaches(post_id);
       const responseData = error.response;
       console.error("Error reposting post", responseData);
       setErrors(responseData);
+      return false;
+    }
+  };
+
+  const bookmarkHandler = async (post_id) => {
+    toggleBookmarkInCaches(post_id);
+    try {
+      await apiService.post(`/api/posts/${post_id}/bookmark`);
+      qc.invalidateQueries({ queryKey: ["bookmarks"] });
+      return true;
+    } catch {
+      toggleBookmarkInCaches(post_id);
       return false;
     }
   };
@@ -249,6 +383,9 @@ function PostsProvider({ children }) {
     homePageRef,
     likingHandler,
     repostingHandler,
+    bookmarkHandler,
+    incrementViewsInCaches,
+    incrementCommentsInCaches,
     setComments,
     commentPage,
     setCommentPage,

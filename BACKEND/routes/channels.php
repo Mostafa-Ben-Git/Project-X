@@ -29,6 +29,6 @@ Broadcast::channel('online-users', function ($user) {
         'first_name' => $user->first_name,
         'last_name' => $user->last_name,
         'avatar' => $user->avatar,
-        'status' => $user->status,
+        'status' => $user->show_online_status ? $user->status : 'offline',
     ];
 });

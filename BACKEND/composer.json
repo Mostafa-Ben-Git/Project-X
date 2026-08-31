@@ -11,6 +11,7 @@
         "laravel/framework": "^11.0",
         "laravel/reverb": "^1.11",
         "laravel/sanctum": "^4.0",
+        "laravel/socialite": "^5.30",
         "laravel/tinker": "^2.8",
         "resend/resend-php": "^0.12.0"
     },

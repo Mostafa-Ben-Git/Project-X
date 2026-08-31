@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Post from "@/features/post/Post";
 import { EmptyState } from "@/components/empty-state";
+import { Calendar, Camera } from "lucide-react";
+import { format } from "date-fns";
 
 function ProfilePage() {
   const { username } = useParams();
@@ -94,12 +96,25 @@ function ProfilePage() {
 
   const isOwn = currentUser?.id === displayUser.id;
 
+  const joinedDate = displayUser.created_at
+    ? format(new Date(displayUser.created_at), "MMMM yyyy")
+    : null;
+
   return (
     <main className="mx-auto max-w-2xl">
       {/* Cover */}
       <div className="relative h-48 bg-muted">
         {displayUser.cover_image && (
           <img src={displayUser.cover_image} alt="" className="h-full w-full object-cover" loading="lazy" />
+        )}
+        {isOwn && (
+          <Link
+            to="/settings/profile"
+            className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-md bg-black/60 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition hover:bg-black/75"
+          >
+            <Camera className="h-3.5 w-3.5" />
+            {displayUser.cover_image ? "Change cover" : "Add cover"}
+          </Link>
         )}
       </div>
 
@@ -137,6 +152,12 @@ function ProfilePage() {
           <span><strong className="text-foreground">{displayUser.following_count ?? 0}</strong> following</span>
           <span><strong className="text-foreground">{displayUser.posts_count ?? 0}</strong> posts</span>
         </div>
+        {joinedDate && (
+          <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            <span>Joined {joinedDate}</span>
+          </div>
+        )}
       </div>
 
       {/* Tabs */}

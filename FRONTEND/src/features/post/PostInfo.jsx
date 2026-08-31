@@ -1,5 +1,4 @@
 import usePosts from "@/hooks/usePosts";
-import { toggleBookmark } from "@/api/posts";
 import { cn } from "@/lib/utils";
 import { Bookmark, Eye, Heart, MessageCircle, Repeat, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -20,18 +19,18 @@ function PostInfo({
   replay = false,
 }) {
   const navigate = useNavigate();
-  const { repostingHandler, likingHandler } = usePosts();
+  const { repostingHandler, likingHandler, bookmarkHandler } = usePosts();
 
   const [reposts, setReposts] = useState(reposts_count);
   const [isReposted, setIsReposted] = useState(is_reposted);
 
   const [likesCount, setLikesCount] = useState(likes);
   const [isLiked, setIsLiked] = useState(is_liked);
-  const [viewsCount] = useState(views ?? 0);
+  const [viewsCount, setViewsCount] = useState(views ?? 0);
   const [isBookmarked, setIsBookmarked] = useState(is_bookmarked);
   const [bookmarkPending, setBookmarkPending] = useState(false);
 
-  // keep local state in sync if the underlying post data changes (e.g. refetch)
+  // keep local state in sync if the underlying post data changes (e.g. refetch or cache patch)
   useEffect(() => {
     setReposts(reposts_count);
     setIsReposted(is_reposted);
@@ -41,6 +40,10 @@ function PostInfo({
     setLikesCount(likes);
     setIsLiked(is_liked);
   }, [likes, is_liked]);
+
+  useEffect(() => {
+    setViewsCount(views ?? 0);
+  }, [views]);
 
   useEffect(() => {
     setIsBookmarked(is_bookmarked);
@@ -115,7 +118,8 @@ function PostInfo({
     setIsBookmarked(next);
     setBookmarkPending(true);
     try {
-      await toggleBookmark(post_id);
+      const ok = await bookmarkHandler(post_id);
+      if (!ok) throw new Error("failed");
       toast.success(next ? "Saved to bookmarks" : "Removed from bookmarks");
     } catch {
       setIsBookmarked(prev);
