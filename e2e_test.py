@@ -20,7 +20,12 @@ os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 
 def fetch_api_data():
     """Fetch real data from the backend using personal access tokens."""
-    TOKEN = "1|Y1mdVmT0xAgtON9lVRWJt78Lu4jNYFtLNQJob0lO72bb323e"
+    # Use a fresh token from POST /api/token-login or set TOKEN env var.
+    # Never commit real tokens — this placeholder is replaced at runtime.
+    TOKEN = os.getenv("E2E_TOKEN", "1|REPLACE_WITH_FRESH_TOKEN_FROM_token-login")
+    if "REPLACE" in TOKEN:
+        print("  ⚠ E2E_TOKEN not set — skipping authenticated fetch (run: POST /api/token-login)")
+        return {}
     HEADERS = {"Authorization": f"Bearer {TOKEN}", "Accept": "application/json"}
     data = {}
     
