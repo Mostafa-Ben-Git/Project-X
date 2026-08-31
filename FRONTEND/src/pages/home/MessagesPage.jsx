@@ -364,7 +364,7 @@ function MessagesPage() {
                             {conv.ago}
                           </span>
                         </div>
-                        <p className={cn("block truncate text-xs", isActive ? "text-primary-foreground/80" : hasUnread ? "font-medium text-foreground" : "text-muted-foreground")}>
+                        <p className={cn("block text-xs", isActive ? "text-primary-foreground/80" : hasUnread ? "font-medium text-foreground" : "text-muted-foreground")}>
                           {conv.content || (conv.image_url ? "📷 Image" : "No messages yet")}
                         </p>
                       </div>
