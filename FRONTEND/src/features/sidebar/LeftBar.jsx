@@ -10,6 +10,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Logo } from "@/components/logo";
 
 export default function LeftBar({ className }) {
   const { isLoading } = useSelector((store) => store.auth);
@@ -18,11 +19,7 @@ export default function LeftBar({ className }) {
     <aside className={className}>
       <nav className="flex h-full flex-col border-r border-border shadow-sm">
         <div className="flex items-center justify-between p-4 pb-2">
-          <img
-            src="https://img.logoipsum.com/223.svg"
-            className="overflow-hidden transition-all"
-            alt="Logo"
-          />
+          <Logo size={30} wordmarkSize="default" />
           <ThemeToggle />
         </div>
         <ul className="mt-3 flex-1 px-3 py-2">

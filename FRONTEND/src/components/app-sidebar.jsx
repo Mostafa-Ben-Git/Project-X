@@ -15,6 +15,7 @@ import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserBanner } from "@/features/sidebar/UserBanner";
 import { sidebarItems } from "@/features/sidebar/sidebarItems";
+import { LogoIcon, LogoWordmark } from "@/components/logo";
 
 function SidebarNavItem({ item, count }) {
   const { pathname } = useLocation();
@@ -52,15 +53,16 @@ export function AppSidebar() {
         ? notifications
         : 0;
 
-  return (
+    return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <NavLink
           to="/home"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-primary text-lg font-bold text-sidebar-primary-foreground transition-colors hover:bg-sidebar-accent"
+          className="flex items-center gap-2.5 rounded-lg px-1 py-1 transition-colors hover:bg-sidebar-accent group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
           aria-label="Home"
         >
-          X
+          <LogoIcon size={32} variant="sidebar" className="h-8 w-8 shrink-0" />
+          <LogoWordmark size="default" className="group-data-[collapsible=icon]:hidden" />
         </NavLink>
       </SidebarHeader>
       <SidebarContent>

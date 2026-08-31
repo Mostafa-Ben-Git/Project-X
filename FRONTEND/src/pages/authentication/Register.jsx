@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldError } from "@/components/form-field-error";
+import { Logo } from "@/components/logo";
+import OAuthButtons from "@/components/OAuthButtons";
 
 function Register() {
   const { register: registerUser } = useAuth();
@@ -43,7 +45,10 @@ function Register() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <Card className="w-full max-w-md">
-        <CardHeader>
+        <CardHeader className="space-y-4">
+          <div className="flex justify-center">
+            <Logo size={40} wordmarkSize="lg" />
+          </div>
           <CardTitle className="text-center text-2xl font-extrabold">
             Create your account
           </CardTitle>
@@ -98,6 +103,14 @@ function Register() {
               {isSubmitting ? "Creating account..." : "Register"}
             </Button>
           </form>
+
+          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="h-px flex-1 bg-border" />
+            <span>OR</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <OAuthButtons />
         </CardContent>
       </Card>
     </div>

@@ -4,6 +4,7 @@ import { SidebarMobile } from "@/features/sidebar/sidebar-mobile";
 import { AppSidebar } from "@/components/app-sidebar";
 import { sidebarItems } from "@/features/sidebar/sidebarItems";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { Logo } from "@/components/logo";
 import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 import useAuth from "@/hooks/useAuth";
 import usePosts from "@/hooks/usePosts";
@@ -55,9 +56,9 @@ function UserLayout() {
         <header className="sticky top-0 z-30 hidden h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/80 px-3 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:flex">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="hidden md:flex" />
-            <span className="text-base font-bold tracking-tight md:hidden">X</span>
+            <Logo size={28} wordmarkSize="default" className="md:hidden" />
           </div>
-          <span className="hidden text-sm font-medium text-muted-foreground md:inline">Project X</span>
+          <span className="hidden text-sm font-medium text-muted-foreground md:inline">Connect. Share. Discover.</span>
         </header>
         {isMessages ? (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-2 sm:px-4">
