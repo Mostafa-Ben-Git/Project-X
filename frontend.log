@@ -1,8 +1,0 @@
-$ vite --port 3000 "--host" "127.0.0.1"
-[31merror when starting dev server:
-Error: listen EACCES: permission denied 127.0.0.1:3000
-    at Server.setupListenHandle [as _listen2] (node:net:1987:21)
-    at listenInCluster (node:net:2066:12)
-    at node:net:2275:7
-    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)[39m
-[ELIFECYCLE] Command failed with exit code 1.

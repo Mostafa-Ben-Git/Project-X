@@ -22,5 +22,13 @@ FRONTEND/dist/
 .DS_Store
 Thumbs.db
 
-# E2E test artifacts
+# Logs & temp
+*.log
+*.err
+.hermes/
+docs/screenshots/*.tmp
+
+# E2E local artifacts (public screenshots are in docs/screenshots/)
 e2e-screenshots/
+playwright-report/
+test-results/
