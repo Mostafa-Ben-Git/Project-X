@@ -2,12 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
-  use HasFactory;
+  use HasFactory, HasUuids;
+
+  protected static function booted(): void
+  {
+    // Broadcast every newly-created notification in realtime.
+    static::created(function (Notification $notification) {
+      \App\Support\Broadcast::safe(new \App\Events\NotificationCreated($notification));
+    });
+  }
 
   protected $fillable = [
     'user_id',
@@ -16,6 +25,7 @@ class Notification extends Model
     'content',
     'post_id',
     'message_id',
+    'count',
     'read_at',
   ];
 

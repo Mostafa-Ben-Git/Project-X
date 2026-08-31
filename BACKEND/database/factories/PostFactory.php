@@ -31,7 +31,7 @@ class PostFactory extends Factory
   public function postWithImages()
   {
     return $this->afterCreating(function (Post $post) {
-      $imagesCount = rand(0, 3); // Random number of images
+      $imagesCount = rand(1, 4); // every post gets 1-4 images
       Image::factory()->count($imagesCount)->create(['post_id' => $post->id]);
     });
   }

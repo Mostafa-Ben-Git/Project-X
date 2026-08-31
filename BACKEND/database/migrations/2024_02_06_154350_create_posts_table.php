@@ -13,10 +13,10 @@ return new class extends Migration
   public function up(): void
   {
     Schema::create('posts', function (Blueprint $table) {
-      $table->id();
-      $table->foreignIdFor(User::class);
+      $table->uuid('id')->primary();
+      $table->uuid('user_id');
       $table->text('content');
-      $table->foreignId('parent_id')->nullable()->constrained('posts')->onDelete('cascade');
+      $table->uuid('parent_id')->nullable();
       $table->softDeletes();
       $table->timestamps();
     });

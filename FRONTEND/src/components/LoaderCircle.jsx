@@ -1,13 +1,11 @@
-import { cn } from "@/lib/utils";
-import { MoonLoader } from "react-spinners";
+import { Loader2 } from "lucide-react";
 
-function LoaderCircle({ className, size = 30 }) {
+export function LoaderCircle({ size = 20, className = "" }) {
   return (
-    <div
-      className={cn("flex items-center justify-center rounded-lg", className)}
-    >
-      <MoonLoader color="#ffffff" size={size} />
-    </div>
+    <Loader2
+      className={`animate-spin text-muted-foreground ${className}`}
+      size={size}
+    />
   );
 }
 

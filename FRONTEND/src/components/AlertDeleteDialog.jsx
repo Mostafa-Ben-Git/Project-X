@@ -10,7 +10,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import usePosts from "@/hooks/usePosts";
-import { MoonLoader } from "react-spinners";
+import { Loader2 } from "lucide-react";
 
 export function AlertDeleteDialog({ children, post_id, open }) {
   const { deletePost, isDeleting } = usePosts();
@@ -32,7 +32,7 @@ export function AlertDeleteDialog({ children, post_id, open }) {
             disabled={isDeleting}
             onClick={() => deletePost(post_id)}
           >
-            {isDeleting ? <MoonLoader color="#000000" size={24} /> : "Delete"}
+            {isDeleting ? <Loader2 className="animate-spin h-5 w-5" /> : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

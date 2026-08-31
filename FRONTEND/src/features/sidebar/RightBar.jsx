@@ -1,107 +1,138 @@
 import apiService from "@/api/apiService";
 import LoaderCircle from "@/components/LoaderCircle";
 import UserMiniProfile from "@/components/UserMiniProfile";
+import { Input } from "@/components/ui/input";
+import { Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-function RightBar({ className }) {
+function RightBar() {
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [users, setUsers] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true);
 
-  // const { searchUsers, searchResults, isLoading } = useAuth();
-  useEffect(
-    function () {
-      const controller = new AbortController();
-
-      async function fetchUsers() {
-        try {
-          setIsLoading(true);
-          setError("");
-
-          const { data } = await apiService.get(`/api/users/search`, {
-            signal: controller.signal,
-            params: {
-              q: query,
-            },
-          });
-
-          // if (!res.ok)
-          //   throw new Error("Something went wrong with fetching movies");
-
-          setUsers(data.data);
-          // console.log(data);
-        } catch (err) {
-          if (err.name !== "AbortError") {
-            console.log(err.message);
-            setError(err.message);
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      }
-
-      if (!/\S/.test(query)) {
-        setUsers([]);
-        setError("");
-        return;
-      }
-
-      fetchUsers();
-
-      return function () {
-        controller.abort();
-      };
-    },
-    [query],
-  );
+  // Debounce keystrokes so we don't fire a request per character
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedQuery(query), 300);
+    return () => clearTimeout(timeout);
+  }, [query]);
 
   useEffect(() => {
-    async function fetchSuggestions() {
+    const controller = new AbortController();
+
+    async function fetchUsers() {
+      if (!/\S/.test(debouncedQuery)) {
+        setUsers([]);
+        return;
+      }
       try {
         setIsLoading(true);
-        setError("");
-        const { data } = await apiService.get(`/api/user/suggestions`);
-        setSuggestions(data.data);
+        const { data } = await apiService.get("/api/users/search", {
+          signal: controller.signal,
+          params: { q: debouncedQuery },
+        });
+        setUsers(data.data);
       } catch (err) {
-        if (err.name !== "AbortError") {
-          console.log(err.message);
-          setError(err.message);
-        }
+        if (err.name !== "AbortError") console.error(err.message);
       } finally {
         setIsLoading(false);
       }
     }
+
+    fetchUsers();
+    return () => controller.abort();
+  }, [debouncedQuery]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function fetchSuggestions() {
+      try {
+        const { data } = await apiService.get("/api/user/suggestions", {
+          signal: controller.signal,
+        });
+        setSuggestions(data.data);
+      } catch (err) {
+        if (err.name !== "AbortError") console.error(err.message);
+      } finally {
+        setSuggestionsLoading(false);
+      }
+    }
+
     fetchSuggestions();
+    return () => controller.abort();
   }, []);
 
+  const isSearching = /\S/.test(query);
+
   return (
-    <aside className={`max-w-xs hidden h-screen fixed right-0 top-0 z-40 border-l p-4 2xl:block`}>
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search users..."
-        className="mb-4 w-full rounded-lg border border-gray-300 p-2 text-black focus:outline-none focus:ring-2  focus:ring-blue-500"
-      />
-      {isLoading ? (
-        <LoaderCircle />
-      ) : (
-        <ul className="flex flex-col gap-2">
-          {users.map((user) => (
-            <UserMiniProfile key={user.id} user={user} />
-          ))}
-        </ul>
+    <aside className="fixed right-0 top-0 z-40 hidden h-screen max-w-xs overflow-y-auto border-l border-border p-4 2xl:block">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search users..."
+          aria-label="Search users"
+          className="pl-9 pr-8"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => setQuery("")}
+            aria-label="Clear search"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+
+      {isSearching && (
+        <div className="mt-4">
+          {isLoading ? (
+            <div className="flex justify-center py-6">
+              <LoaderCircle />
+            </div>
+          ) : users.length > 0 ? (
+            <ul className="flex flex-col gap-2">
+              {users.map((user) => (
+                <UserMiniProfile key={user.id} user={user} />
+              ))}
+            </ul>
+          ) : (
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              No users found for &quot;{query}&quot;
+            </p>
+          )}
+        </div>
       )}
-      <section className="mt-4">
-        <h2 className="mb-2 text-lg font-bold">Suggested for you</h2>
-        <ul className="flex flex-col gap-2">
-          {suggestions.map((user) => (
-            <UserMiniProfile key={user.id} user={user} />
-          ))}
-        </ul>
-      </section>
+
+      {!isSearching && (
+        <section className="mt-6">
+          <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
+            Suggested for you
+          </h2>
+          {suggestionsLoading ? (
+            <div className="flex justify-center py-6">
+              <LoaderCircle />
+            </div>
+          ) : suggestions.length > 0 ? (
+            <ul className="flex flex-col gap-2">
+              {suggestions.map((user) => (
+                <UserMiniProfile key={user.id} user={user} />
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No suggestions right now.
+            </p>
+          )}
+        </section>
+      )}
     </aside>
   );
 }

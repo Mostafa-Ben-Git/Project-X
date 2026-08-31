@@ -1,60 +1,46 @@
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import { Menu, X } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
-import { SidebarButtonSheet as SidebarButton } from './sidebar-button';
-import { UserBanner } from './UserBanner';
+import { NavLink } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
+export function SidebarMobile({ sidebarItems, counts }) {
+  const badgeFor = (link) => (link.countKey ? (counts?.[link.countKey] ?? 0) : 0);
 
-export function SidebarMobile(props) {
-  const pathname = useLocation().pathname;
+  // Show all primary links on mobile — Settings included so logout is reachable via /settings -> Account
+  const mobileLinks = sidebarItems.links;
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button size='icon' className='fixed z-[9] top-2 left-2'>
-          <Menu size={20} />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side='left' className='px-3 py-4' hideClose>
-        <SheetHeader className='flex flex-row justify-between items-center space-y-0'>
-          <span className='text-lg font-semibold text-foreground mx-3'>
-            Project-X
-          </span>
-          <SheetClose asChild>
-            <Button className='h-7 w-7 p-0' variant='ghost'>
-              <X size={15} />
-            </Button>
-          </SheetClose>
-        </SheetHeader>
-        <div className='h-full'>
-          <div className='mt-5 flex flex-col w-full gap-1'>
-            {props.sidebarItems.links.map((link, idx) => (
-              <Link key={idx} to={link.href}>
-                <SidebarButton
-                  variant={pathname === link.href ? 'secondary' : 'ghost'}
-                  icon={link.icon}
-                  className='w-full'
-                >
-                  {link.label}
-                </SidebarButton>
-              </Link>
-            ))}
-            {props.sidebarItems.extras}
-          </div>
-          <div className='absolute w-full bottom-4 px-1 left-0'>
-            <Separator className='absolute -top-3 left-0 w-full' />
-            <UserBanner/>
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+    <nav
+      aria-label="Primary"
+      className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t border-border bg-background/95 px-1 pb-[calc(0.25rem+env(safe-area-inset-bottom))] pt-1 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden"
+    >
+      {mobileLinks.map((link) => {
+        const count = badgeFor(link);
+        return (
+          <NavLink
+            key={link.href}
+            to={link.href}
+            aria-label={link.label}
+            className={({ isActive }) =>
+              `relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-150 active:scale-90 ${
+                isActive ? "bg-accent text-primary" : "text-foreground/70 hover:text-primary"
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <link.icon className="h-[22px] w-[22px]" strokeWidth={isActive ? 2.5 : 2} />
+                {count > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute right-0.5 top-0.5 h-4 min-w-4 justify-center rounded-full px-1 text-[10px] leading-none ring-2 ring-background"
+                  >
+                    {count > 99 ? "99+" : count}
+                  </Badge>
+                )}
+              </>
+            )}
+          </NavLink>
+        );
+      })}
+    </nav>
   );
 }

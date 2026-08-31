@@ -1,228 +1,118 @@
-import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "react-router-dom";
-import { MoonLoader } from "react-spinners";
-import useAuth from "../../hooks/useAuth";
-import InputPassWord from "@/components/InputPassWord";
-import { ImagePreview } from "@/components/ImagePreview";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import useAuth from "@/hooks/useAuth";
+import { registerSchema, registerDefaults } from "@/lib/validation/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FieldError } from "@/components/form-field-error";
+import { Logo } from "@/components/logo";
+import OAuthButtons from "@/components/OAuthButtons";
 
 function Register() {
-  const { register, errors, isLoading, clearErrors } = useAuth();
-  const [signUpData, setSignUpData] = useState({
-    first_name: "",
-    last_name: "",
-    username: "",
-    email: "",
-    password: "",
-    password_confirmation: "",
-    avatar: null,
+  const { register: registerUser } = useAuth();
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: registerDefaults,
+    mode: "onTouched",
   });
 
-  useEffect(() => {
-    return () => {
-      clearErrors();
-    };
-  }, []);
-
-  const avatarRef = useRef(null);
-
-  const handleOnChange = (e) => {
-    setSignUpData({ ...signUpData, [e.target.name]: e.target.value });
-  };
-
-  const handleSetAvatar = (e) => {
-    const file = e.target.files[0];
-    // console.log(file);
-    setSignUpData({
-      ...signUpData,
-      avatar: file,
-    });
-  };
-
-  const handleSignUp = (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append("first_name", signUpData.first_name);
-    formData.append("last_name", signUpData.last_name);
-    formData.append("email", signUpData.email);
-    formData.append("password", signUpData.password);
-    formData.append("password_confirmation", signUpData.password_confirmation);
-    formData.append("username", signUpData.username);
-    formData.append("avatar", signUpData.avatar);
-    register(formData);
+  const onSubmit = async (values) => {
+    try {
+      await registerUser(values);
+      toast.success("Account created — welcome!");
+    } catch (err) {
+      const fieldErrors = err?.response?.data?.errors;
+      if (fieldErrors) {
+        Object.entries(fieldErrors).forEach(([field, msgs]) => {
+          setError(field, { message: msgs[0] });
+        });
+      } else {
+        toast.error("Registration failed. Please try again.");
+      }
+    }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-900 text-white">
-      <div className=" relative w-full max-w-md space-y-8 rounded-md bg-gray-800 p-8 shadow-md lg:max-w-xl">
-        <h2 className="mb-4 text-center text-3xl font-extrabold">Register</h2>
-        <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
-          {signUpData.avatar !== null && (
-            <ImagePreview
-              image={signUpData.avatar}
-              OnRemove={() => setSignUpData({ ...signUpData, avatar: null })}
-              className="absolute right-0 top-0 h-32 w-32 -translate-y-[20%] translate-x-1/2"
-              rounded="full"
-              border={4}
-            />
-          )}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label htmlFor="first_name" className="block text-sm font-medium">
-                first_name
-              </label>
-              <input
-                id="first_name"
-                name="first_name"
-                type="text"
-                autoComplete="first_name"
-                required
-                value={signUpData.first_name}
-                onChange={handleOnChange}
-                className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
-              />
-              {errors?.first_name && (
-                <p className="mt-2 text-xs text-red-600">
-                  *{errors.first_name}
-                </p>
-              )}
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-4">
+          <div className="flex justify-center">
+            <Logo size={40} wordmarkSize="lg" />
+          </div>
+          <CardTitle className="text-center text-2xl font-extrabold">
+            Create your account
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="first_name">First name</Label>
+                <Input id="first_name" {...register("first_name")} aria-invalid={!!errors.first_name} />
+                <FieldError message={errors.first_name?.message} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="last_name">Last name</Label>
+                <Input id="last_name" {...register("last_name")} aria-invalid={!!errors.last_name} />
+                <FieldError message={errors.last_name?.message} />
+              </div>
             </div>
-            <div>
-              <label htmlFor="last_name" className="block text-sm font-medium">
-                last_name
-              </label>
-              <input
-                id="last_name"
-                name="last_name"
-                type="text"
-                autoComplete="last_name"
-                required
-                value={signUpData.last_name}
-                onChange={handleOnChange}
-                className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
-              />
-              {errors?.last_name && (
-                <p className="mt-2 text-xs text-red-600">*{errors.last_name}</p>
-              )}
+
+            <div className="space-y-1.5">
+              <Label htmlFor="username">Username</Label>
+              <Input id="username" className="lowercase" {...register("username")} aria-invalid={!!errors.username} />
+              <FieldError message={errors.username?.message} />
             </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" autoComplete="email" {...register("email")} aria-invalid={!!errors.email} />
+              <FieldError message={errors.email?.message} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" autoComplete="new-password" {...register("password")} aria-invalid={!!errors.password} />
+              <FieldError message={errors.password?.message} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password_confirmation">Confirm password</Label>
+              <Input id="password_confirmation" type="password" autoComplete="new-password" {...register("password_confirmation")} aria-invalid={!!errors.password_confirmation} />
+              <FieldError message={errors.password_confirmation?.message} />
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <Link to="/login" className="text-primary underline-offset-4 hover:underline">
+                Already have an account?
+              </Link>
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting ? "Creating account..." : "Register"}
+            </Button>
+          </form>
+
+          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="h-px flex-1 bg-border" />
+            <span>OR</span>
+            <div className="h-px flex-1 bg-border" />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={signUpData.email}
-                onChange={handleOnChange}
-                className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
-              />
-              {errors?.email && (
-                <p className="mt-2 text-xs text-red-600">*{errors.email}</p>
-              )}
-            </div>
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium">
-                Username
-              </label>
-              <input
-                id="username"
-                name="username"
-                type="username"
-                required
-                value={signUpData.username}
-                onChange={handleOnChange}
-                className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
-              />
-              {errors?.username && (
-                <p className="mt-2 text-xs text-red-600">*{errors.username}</p>
-              )}
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium">
-                Password
-              </label>
-              <InputPassWord
-                id="password"
-                name="password"
-                required
-                value={signUpData.password}
-                onChange={handleOnChange}
-                className="mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
-              />
-              {errors?.password && (
-                <p className="mt-2 text-xs text-red-600">
-                  *{errors.password[1]}
-                </p>
-              )}
-            </div>
-            <div>
-              <label
-                htmlFor="password_confirmation"
-                className="block text-sm font-medium"
-              >
-                Password Confirmation
-              </label>
-              <InputPassWord
-                id="password_confirmation"
-                name="password_confirmation"
-                required
-                value={signUpData.password_confirmation}
-                onChange={handleOnChange}
-                className=" mt-1 w-full rounded-md border bg-gray-700 p-3 focus:border-indigo-400 focus:outline-none"
-              />
-              {errors?.password && (
-                <p className="mt-2 text-xs text-red-600">
-                  *{errors.password[0]}
-                </p>
-              )}
-            </div>
-          </div>
-          <div>
-            <label
-              htmlFor="avatar"
-              className="mx-auto flex max-w-max cursor-pointer items-center justify-center rounded-full bg-indigo-500 p-2 text-center text-sm text-white hover:bg-indigo-700 focus:border-indigo-700 focus:outline-none focus:ring"
-            >
-              Upload Your Avatar (Optional)
-            </label>
-            <input
-              id="avatar"
-              name="avatar"
-              type="file"
-              ref={avatarRef}
-              accept="image/*"
-              onChange={handleSetAvatar}
-              className="hidden"
-            />
-            {errors?.avatar && (
-              <p className="mt-2 text-xs text-red-600">*{errors.avatar}</p>
-            )}
-          </div>
-
-          <div className="mt-2 text-right text-blue-200 underline">
-            <Link to="/login">Already Have an Account?</Link>
-          </div>
-          <div>
-            <button
-              type="submit"
-              className="flex w-full items-center justify-center rounded-md bg-indigo-500 p-4 text-white hover:bg-indigo-700 focus:border-indigo-700 focus:outline-none focus:ring disabled:cursor-not-allowed"
-              onClick={handleSignUp}
-              disabled={isLoading}
-            >
-              {!isLoading ? (
-                "Register"
-              ) : (
-                <MoonLoader color="#ffffff" size={20} />
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+          <OAuthButtons />
+        </CardContent>
+      </Card>
     </div>
   );
 }

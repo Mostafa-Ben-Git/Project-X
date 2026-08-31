@@ -1,106 +1,79 @@
 import LoaderCircle from "@/components/LoaderCircle";
 import UserMiniProfile from "@/components/UserMiniProfile";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmptyState } from "@/components/empty-state";
+import { Users, UserPlus, UserCheck } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
-import apiService from "@/api/apiService";
-import { useEffect, useState } from "react";
+import { useFriends } from "@/hooks/useFriends";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+function FriendList({ query, emptyText }) {
+  if (query.isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <LoaderCircle />
+      </div>
+    );
+  }
+  if (query.isError) {
+    return (
+      <EmptyState
+        icon={UserPlus}
+        title="Could not load users"
+        message="An error occurred while fetching this list."
+      />
+    );
+  }
+  const items = query.data ?? [];
+  if (items.length === 0) {
+    return (
+      <EmptyState
+        icon={Users}
+        title={emptyText}
+        message="Try again later or search for people to connect with."
+      />
+    );
+  }
+  return (
+    <ul className="space-y-2">
+      {items.map((user) => (
+        <UserMiniProfile key={user.id} user={user} />
+      ))}
+    </ul>
+  );
+}
 
 function FriendsPage() {
   const { user } = useAuth();
-  const [tab, setTab] = useState("suggestions");
-  const [followers, setFollowers] = useState([]);
-  const [following, setFollowing] = useState([]);
-  const [suggestions, setSuggestions] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true);
-      try {
-        if (tab === "followers" && user?.id) {
-          const { data } = await apiService.get(`/api/users/${user.id}/followers`);
-          setFollowers(data.data);
-        } else if (tab === "following" && user?.id) {
-          const { data } = await apiService.get(`/api/users/${user.id}/following`);
-          setFollowing(data.data);
-        } else if (tab === "suggestions") {
-          const { data } = await apiService.get("/api/user/suggestions");
-          setSuggestions(data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchData();
-  }, [tab, user?.id]);
-
-  const items =
-    tab === "followers" ? followers : tab === "following" ? following : suggestions;
+  const { suggestions, followers, following } = useFriends(user?.id);
 
   return (
     <main className="mx-auto max-w-2xl p-4">
       <h1 className="mb-6 text-2xl font-bold">Friends</h1>
 
-      <Tabs defaultValue="suggestions" onValueChange={setTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
-          <TabsTrigger value="followers">
-            Followers ({user?.followers_count ?? 0})
+      <Tabs defaultValue="suggestions">
+        <TabsList className="mb-4 grid w-full grid-cols-3">
+          <TabsTrigger value="suggestions" className="flex items-center gap-2">
+            <UserPlus className="h-4 w-4" />
+            <span className="hidden sm:inline">Suggestions</span>
           </TabsTrigger>
-          <TabsTrigger value="following">
-            Following ({user?.following_count ?? 0})
+          <TabsTrigger value="followers" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Followers ({user?.followers_count ?? 0})</span>
+          </TabsTrigger>
+          <TabsTrigger value="following" className="flex items-center gap-2">
+            <UserCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">Following ({user?.following_count ?? 0})</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="suggestions">
-          {isLoading ? (
-            <LoaderCircle />
-          ) : suggestions.length === 0 ? (
-            <p className="py-8 text-center text-muted-foreground">
-              No suggestions available
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {suggestions.map((u) => (
-                <UserMiniProfile key={u.id} user={u} />
-              ))}
-            </ul>
-          )}
+          <FriendList query={suggestions} emptyText="No suggestions available" />
         </TabsContent>
-
         <TabsContent value="followers">
-          {isLoading ? (
-            <LoaderCircle />
-          ) : followers.length === 0 ? (
-            <p className="py-8 text-center text-muted-foreground">
-              No followers yet
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {followers.map((u) => (
-                <UserMiniProfile key={u.id} user={u} />
-              ))}
-            </ul>
-          )}
+          <FriendList query={followers} emptyText="No followers yet" />
         </TabsContent>
-
         <TabsContent value="following">
-          {isLoading ? (
-            <LoaderCircle />
-          ) : following.length === 0 ? (
-            <p className="py-8 text-center text-muted-foreground">
-              Not following anyone yet
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {following.map((u) => (
-                <UserMiniProfile key={u.id} user={u} />
-              ))}
-            </ul>
-          )}
+          <FriendList query={following} emptyText="Not following anyone yet" />
         </TabsContent>
       </Tabs>
     </main>

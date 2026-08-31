@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -10,87 +11,137 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-  use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, HasUuids, Notifiable;
 
-  protected $fillable = [
-    'first_name',
-    'last_name',
-    'avatar',
-    'cover_image',
-    'username',
-    'email',
-    'password',
-    'bio',
-    'date_de_naissance',
-    'statut',
-    'genre',
-    'adresse',
-    'ville_origine',
-    'ville_habituelle',
-    'situation_amoureuse',
-    'interets',
-    'education',
-    'liens_sociaux',
-  ];
+    protected $fillable = [
+        'first_name',
+        'last_name',
+        'avatar',
+        'cover_image',
+        'username',
+        'email',
+        'password',
+        'bio',
+        'date_de_naissance',
+        'statut',
+        'genre',
+        'adresse',
+        'ville_origine',
+        'ville_habituelle',
+        'situation_amoureuse',
+        'interets',
+        'education',
+        'liens_sociaux',
+        'phone',
+        'website',
+        'location',
+        'is_private',
+        'show_online_status',
+        'language',
+        'status',
+        'last_active_at',
+    ];
 
-  protected $hidden = [
-    'password',
-    'remember_token',
-  ];
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
-  protected $casts = [
-    'email_verified_at' => 'datetime',
-    'password' => 'hashed',
-    'liens_sociaux' => 'array',
-  ];
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'liens_sociaux' => 'array',
+        'last_active_at' => 'datetime',
+        'is_private' => 'boolean',
+        'show_online_status' => 'boolean',
+    ];
 
-  public function followers()
-  {
-    return $this->belongsToMany(User::class, 'followers', 'following_id', 'follower_id')
-      ->withTimestamps();
-  }
+    public function presenceFor(?self $viewer): array
+    {
+        $isSelf = (string) $viewer?->id === (string) $this->id;
+        $visible = $this->show_online_status || $isSelf;
 
-  public function followings()
-  {
-    return $this->belongsToMany(User::class, 'followers', 'follower_id', 'following_id')
-      ->withTimestamps();
-  }
+        return [
+            'status' => $visible ? $this->status : 'offline',
+            'last_active_at' => $visible ? ($this->last_active_at?->toIso8601String()) : null,
+        ];
+    }
 
-  public function posts(): HasMany
-  {
-    return $this->hasMany(Post::class);
-  }
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'followers', 'following_id', 'follower_id')
+            ->using(Follower::class)
+            ->withTimestamps();
+    }
 
-  public function notifications(): HasMany
-  {
-    return $this->hasMany(Notification::class);
-  }
+    public function followings()
+    {
+        return $this->belongsToMany(User::class, 'followers', 'follower_id', 'following_id')
+            ->withTimestamps();
+    }
 
-  public function sentMessages(): HasMany
-  {
-    return $this->hasMany(Message::class, 'sender_id');
-  }
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class);
+    }
 
-  public function receivedMessages(): HasMany
-  {
-    return $this->hasMany(Message::class, 'receiver_id');
-  }
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
 
-  public function isFollowing(User $user): bool
-  {
-    return $this->followers()->where('users.id', $user->id)->exists();
-  }
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
 
-  public function suggestions()
-  {
-    $followingIds = $this->followings()->pluck('users.id');
+    public function receivedMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'receiver_id');
+    }
 
-    $suggestedUsers = User::whereNotIn('users.id', $followingIds)
-      ->withCount('followers')
-      ->get()
-      ->sortByDesc('followers_count')
-      ->take(4);
+    public function reposts(): HasMany
+    {
+        return $this->hasMany(Repost::class);
+    }
 
-    return $suggestedUsers;
-  }
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
+    public function postViews(): HasMany
+    {
+        return $this->hasMany(PostView::class);
+    }
+
+    public function bookmarkedPosts()
+    {
+        return $this->belongsToMany(Post::class, 'bookmarks', 'user_id', 'post_id')
+            ->withTimestamps()
+            ->withPivot('id');
+    }
+
+    public function socialAccounts(): HasMany
+    {
+        return $this->hasMany(SocialAccount::class);
+    }
+
+    public function isFollowing(User $user): bool
+    {
+        return $this->followers()->where('users.id', $user->id)->exists();
+    }
+
+    public function suggestions()
+    {
+        $followingIds = $this->followings()->pluck('users.id');
+
+        $suggestedUsers = User::whereNotIn('users.id', $followingIds)
+            ->withCount('followers')
+            ->get()
+            ->sortByDesc('followers_count')
+            ->take(4);
+
+        return $suggestedUsers;
+    }
 }

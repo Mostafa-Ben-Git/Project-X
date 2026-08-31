@@ -21,6 +21,9 @@ class DatabaseSeeder extends Seeder
       'first_name' => 'Test',
       'last_name' => 'User',
       'username' => 'testuser',
+      'avatar' => 'https://ui-avatars.com/api/?name=Test+User&background=264653&color=fff&bold=true&size=128',
+      'cover_image' => 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&h=300&fit=crop&auto=format&q=80',
+      'bio' => 'This is the test user account for Project-X.',
     ]);
 
     $otherUser = User::factory()->create([
@@ -28,6 +31,9 @@ class DatabaseSeeder extends Seeder
       'first_name' => 'Other',
       'last_name' => 'Person',
       'username' => 'otherperson',
+      'avatar' => 'https://ui-avatars.com/api/?name=Other+Person&background=e76f51&color=fff&bold=true&size=128',
+      'cover_image' => 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&h=300&fit=crop&auto=format&q=80',
+      'bio' => 'Another user for testing social features.',
     ]);
 
     // ── Create 20 more random users ──
@@ -40,11 +46,11 @@ class DatabaseSeeder extends Seeder
         ->take(rand(1, 8))
         ->pluck('id');
 
-      $syncData = [];
       foreach ($followers as $followerId) {
-        $syncData[$followerId] = ['created_at' => now(), 'updated_at' => now()];
+        if (!$user->followers()->where('follower_id', $followerId)->exists()) {
+          $user->followers()->attach($followerId, ['created_at' => now(), 'updated_at' => now()]);
+        }
       }
-      $user->followers()->sync($syncData);
     });
 
     // ── Posts with images and comments ──
@@ -76,6 +82,17 @@ class DatabaseSeeder extends Seeder
         foreach ($users as $user) {
           if (!Like::where('user_id', $user->id)->where('post_id', $post->id)->exists()) {
             Like::factory()->create([
+              'user_id' => $user->id,
+              'post_id' => $post->id,
+            ]);
+          }
+        }
+
+        // Repost the post
+        $repostUsers = User::inRandomOrder()->take(rand(0, 4))->get();
+        foreach ($repostUsers as $user) {
+          if (!\App\Models\Repost::where('user_id', $user->id)->where('post_id', $post->id)->exists()) {
+            \App\Models\Repost::create([
               'user_id' => $user->id,
               'post_id' => $post->id,
             ]);

@@ -8,7 +8,15 @@ export function ImagePreview({
   rounded = "none",
   border = 0,
   borderColor = "none",
+  onExpand,
 }) {
+  const src =
+    typeof image === "string" || image instanceof String
+      ? image
+      : URL.createObjectURL(image);
+
+  const expandable = typeof onExpand === "function";
+
   return (
     <div className={cn("relative", className)}>
       <div
@@ -16,13 +24,25 @@ export function ImagePreview({
         style={{ borderColor: borderColor, borderWidth: border + "px" }}
       >
         <img
-          src={
-            typeof image === "string" || image instanceof String
-              ? image
-              : URL.createObjectURL(image)
-          }
+          src={src}
           alt="Post Image"
-          className="aspect-square w-full object-cover"
+          onClick={expandable ? onExpand : undefined}
+          role={expandable ? "button" : undefined}
+          tabIndex={expandable ? 0 : undefined}
+          onKeyDown={
+            expandable
+              ? (e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onExpand();
+                  }
+                }
+              : undefined
+          }
+          className={cn(
+            "aspect-square w-full object-cover",
+            expandable && "cursor-zoom-in",
+          )}
         />
       </div>
       <span

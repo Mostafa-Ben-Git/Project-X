@@ -1,20 +1,25 @@
-import apiService from "@/api/apiService";
-import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { toggleFollow } from "@/api/users";
 
 export function useFollow() {
-  const [loading, setLoading] = useState(false);
+  const qc = useQueryClient();
 
-  async function handleFollow(user_id) {
-    setLoading(true);
-    try {
-      await apiService.post(`api/users/${user_id}/changeFollowStatus`);
-    } catch (error) {
-      const responseData = error.response;
-      console.error("Error changing follow status", responseData);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const followMutation = useMutation({
+    mutationFn: toggleFollow,
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["friends"] });
+      qc.invalidateQueries({ queryKey: ["user"] });
+      qc.invalidateQueries({ queryKey: ["suggestions"] });
+      toast.success(data?.user === "followed" ? "Following" : "Unfollowed");
+    },
+    onError: () => toast.error("Could not update follow status"),
+  });
 
-  return { loading, handleFollow };
+  const handleFollow = (userId) => followMutation.mutateAsync(userId);
+
+  return {
+    handleFollow,
+    isPending: followMutation.isPending,
+  };
 }

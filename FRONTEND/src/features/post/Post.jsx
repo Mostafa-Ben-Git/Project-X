@@ -1,40 +1,39 @@
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { useQueryClient } from "@tanstack/react-query";
 import usePosts from "@/hooks/usePosts";
+import useAuth from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-import { Dot, Settings } from "lucide-react";
+import { Loader2, Pin, Settings } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import DOMPurify from "dompurify";
+import { togglePinPost } from "@/api/posts";
 import { UserHoverCart } from "../../components/UserHoverCart";
 import { ImagesCarousel } from "./ImagesCarousel";
 import PostInfo from "./PostInfo";
-
-import {
-    Dialog,
-    DialogTrigger
-} from "@/components/ui/dialog";
-
-import useAuth from "@/hooks/useAuth";
-import { MoonLoader } from "react-spinners";
 import PostEditForm from "./PostEditForm";
+import { usePostView } from "@/hooks/usePostView";
 
 function Post({
   content,
@@ -48,59 +47,135 @@ function Post({
   innerRef,
   type = "post",
   clickable = true,
-  extraInfo = false,
+  is_pinned = false,
 }) {
   const nav = useNavigate();
-
-  const [showEditPanel, setShowEditPanel] = useState(true);
-  const [showPanelDelete, setShowPanelDelete] = useState(false);
-  const [showDropDown, setShowDropDown] = useState(false);
-
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const { isDeleting, deletePost } = usePosts();
   const { user: currentUser } = useAuth();
+  const queryClient = useQueryClient();
+  const viewRef = usePostView(post_id);
 
-  const handelClick = (e) => {
-    e.stopPropagation();
-    nav(`/${user.username}/post/${post_id}`, {
-      state: {
-        postData,
-      },
-    });
+  const handleTogglePin = async () => {
+    setDropdownOpen(false);
+    try {
+      await togglePinPost(post_id);
+      queryClient.invalidateQueries({ queryKey: ["profile", currentUser?.id] });
+      toast.success(is_pinned ? "Unpinned from profile" : "Pinned to profile");
+    } catch {
+      toast.error("Could not update pin");
+    }
   };
+
+  const handleDelete = async () => {
+    await deletePost(post_id);
+    // When deleting the post from its own page, return to where the user came from
+    if (type === "post" && /\/post\//.test(window.location.pathname)) {
+      nav(-1);
+    }
+  };
+
+  // Guard against null user (e.g. when loaded from URL without state)
+  if (!user) return null;
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    nav(`/${user.username}/post/${post_id}`, { state: { postData } });
+  };
+
+  const initials = `${user.first_name?.[0] ?? ""}${user.last_name?.[0] ?? ""}`;
+  const safeContent = DOMPurify.sanitize(content);
+  const isArabic = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(
+    (content || "").replace(/<[^>]*>/g, "")
+  );
+
+  // Merge intersection refs: infinite scroll sentinel + view tracking
+  const setRefs = (el) => {
+    if (typeof innerRef === "function") innerRef(el);
+    else if (innerRef) innerRef.current = el;
+    viewRef(el);
+  };
+
   return (
     <li
-      className={cn("relative w-full list-none p-4", className)}
-      ref={innerRef}
+      ref={setRefs}
+      className={cn(
+        "relative w-full list-none overflow-hidden border-b border-border p-3 transition-colors hover:bg-accent/30 sm:p-4",
+        className,
+      )}
     >
-      {currentUser.username === user.username && (
-        <div className="absolute right-0 -translate-x-1/2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar className="h-9 w-9 shrink-0 sm:h-10 sm:w-10">
+            <AvatarImage
+              src={user.avatar}
+              alt={`${user.first_name} ${user.last_name}`}
+              className="aspect-square h-full w-full rounded-full object-cover"
+            />
+            <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-muted text-xs font-medium">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+            <UserHoverCart user={user} />
+            <span className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground">
+              {dates.ago}
+              {is_pinned && (
+                <span className="inline-flex items-center gap-0.5 text-primary">
+                  <Pin size={12} />
+                  Pinned
+                </span>
+              )}
+            </span>
+          </div>
+        </div>
+
+        {currentUser.username === user.username && (
           <AlertDialog>
             <Dialog>
-              <DropdownMenu>
+              <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline">
-                    <Settings />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="Post options"
+                    className="h-9 w-9 shrink-0"
+                  >
+                    <Settings size={16} />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="flex flex-col gap-2 p-2">
+                <DropdownMenuContent className="flex w-44 flex-col gap-1 p-2">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline">Delete Post</Button>
-                  </AlertDialogTrigger>
+                  <Button variant="ghost" className="justify-start" onClick={handleTogglePin}>
+                    {is_pinned ? "Unpin from profile" : "Pin to profile"}
+                  </Button>
                   <DialogTrigger asChild>
-                    <Button variant="outline">Edit Post</Button>
+                    <Button variant="ghost" className="justify-start" onClick={() => setDropdownOpen(false)}>
+                      Edit post
+                    </Button>
                   </DialogTrigger>
-                  <PostEditForm post_id={post_id} />
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-destructive hover:text-destructive"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Delete post
+                    </Button>
+                  </AlertDialogTrigger>
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              <PostEditForm post_id={post_id} />
+
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogTitle>Delete this post?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete
-                    your Post and remove your data from our servers.
+                    This action can&apos;t be undone. The post and its data will
+                    be permanently removed from our servers.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -109,10 +184,10 @@ function Post({
                   </AlertDialogCancel>
                   <AlertDialogAction
                     disabled={isDeleting}
-                    onClick={() => deletePost(post_id)}
+                    onClick={handleDelete}
                   >
                     {isDeleting ? (
-                      <MoonLoader color="#000000" size={24} />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       "Delete"
                     )}
@@ -121,43 +196,30 @@ function Post({
               </AlertDialogContent>
             </Dialog>
           </AlertDialog>
-        </div>
-      )}
-      <div className="flex items-center">
-        <span>
-          <Avatar className="h-20 w-20">
-            <AvatarImage
-              src={user.avatar}
-              className="aspect-square max-w-[50px] rounded-full"
-            />
-            <AvatarFallback>
-              {user.first_name[0]}
-              {user.last_name[0]}
-            </AvatarFallback>
-          </Avatar>
-        </span>
-        <div className=" ml-4 space-x-4">
-          <UserHoverCart user={user} />
-          <span className="text-sm text-gray-400">{dates.ago}</span>
-        </div>
+        )}
       </div>
+
       <p
-        className="mt-6 p-1 text-lg hover:bg-slate-100 hover:bg-opacity-10"
-        dangerouslySetInnerHTML={{ __html: content }}
-        {...(clickable && { onClick: handelClick })}
-      ></p>
+        dir={isArabic ? "rtl" : "ltr"}
+        className={cn(
+          "mt-3 px-1 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-foreground",
+          isArabic ? "text-right" : "text-left",
+          clickable && "cursor-pointer transition-opacity hover:opacity-90",
+        )}
+        dangerouslySetInnerHTML={{ __html: safeContent }}
+        {...(clickable && { onClick: handleClick })}
+      />
 
       {images && <ImagesCarousel images={images} />}
 
-      {extraInfo && (
-        <div className="mt-4 flex items-center space-x-2 border-y-2 text-sm">
-          <p>{dates.time}</p>
-          <Dot size={40} />
-          <p>{dates.date}</p>
-        </div>
-      )}
-      <PostInfo {...info} post_id={post_id} replay={type === "replay"} />
+      <PostInfo
+        {...info}
+        post_id={post_id}
+        postData={postData}
+        replay={type === "replay"}
+      />
     </li>
   );
 }
+
 export default Post;

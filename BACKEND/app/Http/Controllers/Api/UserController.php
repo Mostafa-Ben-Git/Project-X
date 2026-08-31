@@ -3,98 +3,279 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateProfileRequest;
+use App\Http\Resources\PostResource;
 use App\Http\Resources\UserResource;
+use App\Models\Post;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
-  public function index()
-  {
-    return UserResource::collection(User::all());
-  }
-
-  public function store(Request $request)
-  {
-    $user = User::create($request->all());
-    return response()->json($user, 201);
-  }
-
-  public function show(User $user)
-  {
-    return new UserResource($user);
-  }
-
-  public function update(Request $request, User $user)
-  {
-    $user->update($request->except(['avatar', 'cover_image']));
-
-    if ($request->hasFile('avatar')) {
-      if ($user->avatar) {
-        $oldAvatarPath = public_path('images/profiles/' . basename($user->avatar));
-        if (file_exists($oldAvatarPath)) {
-          unlink($oldAvatarPath);
-        }
-      }
-
-      $image = $request->file('avatar');
-      $imageName = $user->username . '_' . time() . '_' . str_replace(' ', '_', $image->getClientOriginalName());
-      $image->move(public_path('images/profiles'), $imageName);
-      $user->avatar = asset('images/profiles/' . $imageName);
-      $user->save();
+    public function index()
+    {
+        return UserResource::collection(User::all());
     }
 
-    if ($request->hasFile('cover_image')) {
-      if ($user->cover_image) {
-        $oldCoverImagePath = public_path('images/profiles/' . basename($user->cover_image));
-        if (file_exists($oldCoverImagePath)) {
-          unlink($oldCoverImagePath);
-        }
-      }
+    public function show(User $user)
+    {
+        $user->loadCount(['followers', 'followings', 'posts']);
 
-      $image = $request->file('cover_image');
-      $imageName = $user->username . '_' . time() . '_' . str_replace(' ', '_', $image->getClientOriginalName());
-      $image->move(public_path('images/profiles'), $imageName);
-      $user->cover_image = asset('images/profiles/' . $imageName);
-      $user->save();
+        return new UserResource($user);
     }
 
-    return new UserResource($user->fresh());
-  }
+    /**
+     * Update user profile (owner only).
+     * Handles avatar and cover_image uploads safely.
+     */
+    public function update(UpdateProfileRequest $request, User $user): UserResource
+    {
+        // Authorization: only the user themselves can update their profile
+        if ($request->user()->id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized. You can only edit your own profile.'], 403);
+        }
 
-  public function destroy(User $user)
-  {
-    $user->delete();
-    return response()->json(null, 204);
-  }
+        $validated = $request->validated();
 
-  public function search(Request $request)
-  {
-    $query = $request->input('q');
+        // Update text fields only (exclude file fields)
+        $textFields = collect($validated)->except(['avatar', 'cover_image'])->toArray();
+        if (! empty($textFields)) {
+            $user->update($textFields);
+        }
 
-    $users = User::where('username', 'like', '%' . $query . '%')
-      ->orwhere('first_name', 'like', '%' . $query . '%')
-      ->orWhere('last_name', 'like', '%' . $query . '%')
-      ->limit(5)->get();
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            // Delete old avatar file if it exists
+            if ($user->avatar) {
+                $oldAvatarPath = public_path('images/profiles/'.basename($user->avatar));
+                if (file_exists($oldAvatarPath)) {
+                    @unlink($oldAvatarPath);
+                }
+            }
 
-    return UserResource::collection($users);
-  }
+            $image = $request->file('avatar');
+            $imageName = $user->username.'_'.time().'_'.Str::random(4).'.'.$image->getClientOriginalExtension();
+            $image->move(public_path('images/profiles'), $imageName);
+            $user->avatar = asset('images/profiles/'.$imageName);
+            $user->save();
+        }
 
-  /**
-   * Get followers of a user.
-   */
-  public function followers(User $user)
-  {
-    $followers = $user->followers()->withCount('followers')->get();
-    return UserResource::collection($followers);
-  }
+        // Handle cover image upload
+        if ($request->hasFile('cover_image')) {
+            // Delete old cover image file if it exists
+            if ($user->cover_image) {
+                $oldCoverPath = public_path('images/profiles/'.basename($user->cover_image));
+                if (file_exists($oldCoverPath)) {
+                    @unlink($oldCoverPath);
+                }
+            }
 
-  /**
-   * Get users that a user is following.
-   */
-  public function following(User $user)
-  {
-    $following = $user->followings()->withCount('followers')->get();
-    return UserResource::collection($following);
-  }
+            $image = $request->file('cover_image');
+            $imageName = $user->username.'_cover_'.time().'_'.Str::random(4).'.'.$image->getClientOriginalExtension();
+            $image->move(public_path('images/profiles'), $imageName);
+            $user->cover_image = asset('images/profiles/'.$imageName);
+            $user->save();
+        }
+
+        return new UserResource($user->fresh());
+    }
+
+    /**
+     * Delete user (owner only).
+     */
+    public function destroy(Request $request, User $user): JsonResponse
+    {
+        if ($request->user()->id !== $user->id && ! $request->user()->hasRole('admin')) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $user->delete();
+
+        return response()->json(null, 204);
+    }
+
+    public function search(Request $request)
+    {
+        $query = $request->input('q', '');
+
+        if (empty(trim($query))) {
+            return UserResource::collection(collect());
+        }
+
+        $users = User::where('username', 'like', '%'.$query.'%')
+            ->orWhere('first_name', 'like', '%'.$query.'%')
+            ->orWhere('last_name', 'like', '%'.$query.'%')
+            ->limit(5)
+            ->get();
+
+        return UserResource::collection($users);
+    }
+
+    /**
+     * Get followers of a user.
+     */
+    public function followers(User $user)
+    {
+        $followers = $user->followers()->withCount('followers')->get();
+
+        return UserResource::collection($followers);
+    }
+
+    /**
+     * Get users that a user is following.
+     */
+    public function following(User $user)
+    {
+        $following = $user->followings()->withCount('followers')->get();
+
+        return UserResource::collection($following);
+    }
+
+    /**
+     * Get a user's profile by username.
+     */
+    public function showByUsername(string $username)
+    {
+        $user = User::where('username', $username)
+            ->withCount(['followers', 'followings', 'posts'])
+            ->firstOrFail();
+
+        return new UserResource($user);
+    }
+
+    /**
+     * Get top-level posts created by a user (no replies).
+     */
+    public function userPosts(User $user)
+    {
+        $userId = auth()->id();
+
+        $posts = $user->posts()
+            ->whereNull('parent_id')
+            ->withCount(['likes', 'comments', 'reposts'])
+            ->with([
+                'user' => fn ($q) => $q->withCount(['followers', 'followings', 'posts']),
+                'images',
+            ])
+            ->withCount([
+                'likes as liked_by_current_user' => fn ($q) => $q->where('user_id', $userId),
+                'reposts as reposted_by_current_user' => fn ($q) => $q->where('user_id', $userId),
+            ])
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('pinned_at')
+            ->orderByDesc('created_at')
+            ->paginate(10);
+
+        return PostResource::collection($posts);
+    }
+
+    /**
+     * Get replies (comments) made by a user.
+     */
+    public function userReplies(User $user)
+    {
+        $userId = auth()->id();
+
+        $replies = $user->posts()
+            ->whereNotNull('parent_id')
+            ->with('parent.user', 'images')
+            ->withCount(['likes', 'comments', 'reposts'])
+            ->with([
+                'user' => fn ($q) => $q->withCount(['followers', 'followings', 'posts']),
+            ])
+            ->withCount([
+                'likes as liked_by_current_user' => fn ($q) => $q->where('user_id', $userId),
+                'reposts as reposted_by_current_user' => fn ($q) => $q->where('user_id', $userId),
+            ])
+            ->latest()
+            ->paginate(10);
+
+        return PostResource::collection($replies);
+    }
+
+    /**
+     * Get posts liked by a user.
+     */
+    public function userLikes(User $user)
+    {
+        $userId = auth()->id();
+        $likedPostIds = $user->likes()->pluck('post_id');
+
+        $posts = Post::whereIn('id', $likedPostIds)
+            ->whereNull('parent_id')
+            ->with('user', 'images')
+            ->withCount(['likes', 'comments', 'reposts'])
+            ->withCount([
+                'likes as liked_by_current_user' => fn ($q) => $q->where('user_id', $userId),
+                'reposts as reposted_by_current_user' => fn ($q) => $q->where('user_id', $userId),
+            ])
+            ->latest()
+            ->paginate(10);
+
+        return PostResource::collection($posts);
+    }
+
+    public function userReposts(User $user)
+    {
+        $userId = auth()->id();
+        $repostedPostIds = $user->reposts()->pluck('post_id');
+
+        $posts = Post::whereIn('id', $repostedPostIds)
+            ->whereNull('parent_id')
+            ->with('user', 'images')
+            ->withCount(['likes', 'comments', 'reposts'])
+            ->withCount([
+                'likes as liked_by_current_user' => fn ($q) => $q->where('user_id', $userId),
+                'reposts as reposted_by_current_user' => fn ($q) => $q->where('user_id', $userId),
+            ])
+            ->latest()
+            ->paginate(10);
+
+        return PostResource::collection($posts);
+    }
+
+    public function userPostsCount(User $user): JsonResponse
+    {
+        $count = $user->posts()->whereNull('parent_id')->count();
+
+        return response()->json(['count' => $count]);
+    }
+
+    public function userRepliesCount(User $user): JsonResponse
+    {
+        $count = $user->posts()->whereNotNull('parent_id')->count();
+
+        return response()->json(['count' => $count]);
+    }
+
+    public function userRepostsCount(User $user): JsonResponse
+    {
+        $count = $user->reposts()->count();
+
+        return response()->json(['count' => $count]);
+    }
+
+    /**
+     * Change password (owner only).
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect.'], 422);
+        }
+
+        $user->update(['password' => Hash::make($request->new_password)]);
+
+        return response()->json(['message' => 'Password updated successfully.']);
+    }
 }

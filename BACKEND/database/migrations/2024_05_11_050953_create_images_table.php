@@ -13,8 +13,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('images', function (Blueprint $table) {
-            $table->id();
-            $table->foreignIdFor(Post::class)->constrained()->cascadeOnDelete();
+            $table->uuid("id")->primary();
+            $table->uuid('post_id');
             $table->string('image_path');
             $table->softDeletes();
             $table->timestamps();

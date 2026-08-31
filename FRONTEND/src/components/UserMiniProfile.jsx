@@ -1,37 +1,100 @@
 import { UserHoverCart } from "@/components/UserHoverCart";
-import { useFollow } from "@/hooks/useFollow";
-import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import LoaderCircle from "./LoaderCircle";
+import useAuth from "@/hooks/useAuth";
+import { useFollow } from "@/hooks/useFollow";
+import { formatLastActive, statusDotClass } from "@/lib/status";
+import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 function UserMiniProfile({ user }) {
-  const { loading, handleFollow } = useFollow();
-  const [User, setUser] = useState(user);
+  const { user: currentUser } = useAuth();
+  const { handleFollow, isPending } = useFollow();
+  const navigate = useNavigate();
+  const [isFollowing, setIsFollowing] = useState(user.is_following ?? false);
+  const [pending, setPending] = useState(false);
+
+  const isSelf = currentUser?.id === user.id;
+  const dot = statusDotClass(user.status);
+
+  const goToProfile = () => {
+    if (user.username) navigate(isSelf ? "/profile" : `/profile/${user.username}`);
+  };
+
+  const onFollow = async () => {
+    if (isPending) return;
+    setPending(true);
+    setIsFollowing((prev) => !prev); // optimistic
+    try {
+      await handleFollow(user.id);
+    } catch {
+      setIsFollowing((prev) => !prev); // rollback
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
-    <li
-      key={user.id}
-      className="flex w-full items-center justify-around gap-1 rounded-xl border p-2 shadow-lg"
-    >
-      <img
-        className="block h-12 rounded-full sm:mx-0 sm:shrink-0"
-        src={user.avatar}
-      />
-
-      <div className="flex flex-col gap-1">
-        <UserHoverCart user={user} className={"text-sm font-bold"} />
-        <p className="text-muted-foreground">{user.username}</p>
+    <li className="flex w-full items-center justify-between gap-3 rounded-xl border border-border p-2">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <button
+          type="button"
+          onClick={goToProfile}
+          className="relative shrink-0 rounded-full"
+          aria-label={`View ${user.first_name} ${user.last_name}'s profile`}
+        >
+          <Avatar className="h-12 w-12">
+            <AvatarImage
+              src={user.avatar}
+              alt={`${user.first_name} ${user.last_name}`}
+              loading="lazy"
+            />
+            <AvatarFallback>
+              {user.first_name?.[0]}
+              {user.last_name?.[0]}
+            </AvatarFallback>
+          </Avatar>
+          {dot && (
+            <span
+              className={cn(
+                "absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-background",
+                dot,
+              )}
+            />
+          )}
+        </button>
+        <div className="flex min-w-0 flex-col">
+          <UserHoverCart user={user} className="text-sm font-bold" />
+          <p className="truncate text-xs text-muted-foreground">@{user.username}</p>
+          {dot && (
+            <p className="truncate text-xs text-muted-foreground">
+              {user.status === "online" ? (
+                <span className="text-green-500">Online</span>
+              ) : user.status === "away" ? (
+                <span className="text-yellow-500">Away</span>
+              ) : user.status === "dnd" ? (
+                <span className="text-red-500">Do not disturb</span>
+              ) : (
+                <span>Last seen {formatLastActive(user.last_active_at) || "recently"}</span>
+              )}
+            </p>
+          )}
+        </div>
       </div>
 
-      <button
-        className="rounded-full border border-purple-200 px-4 py-1 text-sm font-semibold hover:border-transparent hover:bg-purple-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2"
-        onClick={() => {
-          handleFollow(user.id);
-          setUser({ ...User, is_following: !User.is_following });
-        }}
-      >
-        {loading && <LoaderCircle size={15} />}
-        {!loading ? (User.is_following ? "Unfollow" : "Follow") : null}
-      </button>
+      {!isSelf && (
+        <Button
+          variant={isFollowing ? "outline" : "default"}
+          size="sm"
+          className="shrink-0 rounded-full"
+          disabled={pending}
+          onClick={onFollow}
+        >
+          {pending ? <LoaderCircle size={14} /> : isFollowing ? "Unfollow" : "Follow"}
+        </Button>
+      )}
     </li>
   );
 }

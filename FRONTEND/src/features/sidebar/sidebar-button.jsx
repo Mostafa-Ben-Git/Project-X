@@ -2,18 +2,15 @@ import { Button } from "@/components/ui/button";
 import { SheetClose } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-export function SidebarButton({ icon: Icon, className, children, ...props}) {
-
-
-
+export function SidebarButton({ icon: Icon, className, children, ...props }) {
   return (
     <Button
       variant="ghost"
-      className={cn("justify-start gap-2", className)}
+      className={cn("h-11 justify-start gap-3 text-[15px]", className)}
       {...props}
     >
-      {Icon && <Icon size={30} />}
-      <span className="text-lg ">{children}</span>
+      {Icon && <Icon size={22} />}
+      <span>{children}</span>
     </Button>
   );
 }

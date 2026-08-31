@@ -3,155 +3,250 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\CommentResource;
-use App\Http\Resources\PostCollection;
+use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\PostResource;
-use App\Models\Comment;
 use App\Models\Image;
+use App\Models\Notification;
 use App\Models\Post;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-
-use function PHPUnit\Framework\isInstanceOf;
-use function Symfony\Component\VarDumper\Dumper\esc;
 
 class PostController extends Controller
 {
   /**
-   * Display a listing of the resource.
+   * Display a listing of posts (top-level only).
    */
-  public function index()
+  public function index(Request $request)
   {
-    return PostResource::collection(Post::whereNull('parent_id')->latest()->paginate(6));
+    $viewer = $request->user();
+    $followingIds = $viewer->followings()->pluck('users.id');
+
+    // Hide posts from private authors unless the viewer follows them or owns the post.
+    $posts = Post::whereNull('parent_id')
+      ->where(function ($query) use ($viewer, $followingIds) {
+        $query
+          ->whereHas('user', fn($q) => $q->where('is_private', false))
+          ->orWhere('user_id', $viewer->id)
+          ->orWhereIn('user_id', $followingIds);
+      })
+      ->latest();
+
+    return PostResource::collection(
+      PostResource::prepare($posts)->paginate(6)
+    );
   }
 
   /**
-   * Store a newly created resource in storage.
+   * Store a newly created post.
    */
-  public function store(Request $request)
+  public function store(StorePostRequest $request)
   {
+    $validated = $request->validated();
     $user = $request->user();
 
     $post = new Post();
-
-    $trimmedText = nl2br(Str::of($request->content)->trim());
-    $post->content = $trimmedText;
-
-    if ($request->has("parent_id")) {
-      $post->parent_id = $request->parent_id;
-    } else {
-      $post->parent_id = null;
-    }
+    $post->content = nl2br(Str::of($validated['content'])->trim());
+    $post->parent_id = $validated['parent_id'] ?? null;
 
     $user->posts()->save($post);
 
-    if ($request->has("images")) {
-      foreach ($request->images as $image) {
-        $post_image = new Image();
-
-        $imageName = time() . '.' . $image->getClientOriginalExtension();
-
-        $image->move(public_path('images/posts'), $imageName);
-        $post_image->image_path = asset('images/posts/' . $imageName);
-
-        $post->images()->save($post_image);
+    // Notify the parent post's author when this is a comment/reply.
+    if (!empty($validated['parent_id'])) {
+      $parent = Post::find($validated['parent_id']);
+      if ($parent && $parent->user_id !== $user->id) {
+        Notification::create([
+          'user_id' => $parent->user_id,
+          'from_user_id' => $user->id,
+          'type' => 'comment',
+          'content' => $user->first_name . ' ' . $user->last_name . ' commented on your post',
+          'post_id' => $parent->id,
+        ]);
       }
     }
 
+    // Handle image uploads
+    if ($request->hasFile('images')) {
+      foreach ($request->file('images') as $image) {
+        $imageName = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
+        $image->move(public_path('images/posts'), $imageName);
 
-    return new PostResource($post);
+        $post->images()->create([
+          'image_path' => asset('images/posts/' . $imageName),
+        ]);
+      }
+    }
+
+    return new PostResource($post->load(['user', 'images']));
   }
 
   /**
-   * Display the specified resource.
+   * Display the specified post.
    */
   public function show(Post $post)
   {
-    return new PostResource($post);
-  }
-  /**
-   * Remove the specified resource from storage.
-   */
-  public function destroy(Post $post)
-  {
-    $post->delete();
-
-    return response()->json(["message" => "Post deleted successfully"], 200);
-    //
-  }
-
-  public function getPostComments(Post $post)
-  {
-    if ($post->comments->count() > 0) {
-      return PostResource::collection($post->comments()->latest()->paginate(5));
-    } else {
-      return response()->json(["message" => "No comments found"], 404);
-    }
-  }
-
-  public function getPostByUsernameAndId($username, $post_id)
-  {
-    $post = User::where('username', $username)->first()->posts()->where('id', $post_id)->first();
-    if ($post == null) {
-      return response()->json(['message' => 'Post not found.'], 404);
-    } else {
-      return new PostResource($post);
-    }
+    return new PostResource(PostResource::prepare($post->newQuery()->whereKey($post->id))->first());
   }
 
   /**
-   * Update the specified resource in storage.
+   * Update the specified post (owner only).
    */
-
-  public function updatePost(Request $request, Post $post)
+  public function updatePost(UpdatePostRequest $request, Post $post)
   {
-
-    $trimmedText = nl2br(Str::of($request->input('content'))->trim());
-
-    $post->content = $trimmedText;
-
-    if ($request->hasAny('content')) {
-      # code...
+    // Authorization: only the post owner can update
+    if ($request->user()->id !== $post->user_id) {
+      return response()->json(['message' => 'Unauthorized. You can only edit your own posts.'], 403);
     }
 
-    if ($request->has("parent_id")) {
-      $post->parent_id = $request->parent_id;
-    } else {
-      $post->parent_id = null;
+    $validated = $request->validated();
+
+    if (isset($validated['content'])) {
+    $post->content = $validated['content'] ? nl2br(Str::of($validated['content'])->trim()) : "";
     }
-    // Process images
-    if ($request->has('images')) {
-      $array_image_path = $post->images->pluck('image_path')->toArray();
-      foreach ($request->images as $image) {
-        if (is_string($image)) {
-          foreach ($array_image_path as $path) {
-            if ($path != $image) {
-              // Find the image in the database and delete
-              $postImage = $post->images()->where('image_path', $path)->first();
-              if ($postImage) {
-                $postImage->delete();
-              }
-            }
+
+    $post->parent_id = $validated['parent_id'] ?? $post->parent_id;
+    $post->save();
+
+    // Handle images
+    if ($request->hasFile('images')) {
+      // Collect existing image paths from the request
+      $keptPaths = collect($validated['images'] ?? [])
+        ->filter(fn($item) => is_string($item))
+        ->values();
+
+      // Delete images not in the kept list
+      foreach ($post->images as $existingImage) {
+        if (!$keptPaths->contains($existingImage->image_path)) {
+          // Delete the physical file
+          $oldPath = public_path('images/posts/' . basename($existingImage->image_path));
+          if (file_exists($oldPath)) {
+            unlink($oldPath);
           }
-        } else {
-          // Process the new uploaded image
-          $post_image = new Image();
-          $imageName = time() . '.' . $image->getClientOriginalExtension();
-          $image->move(public_path('images/posts'), $imageName);
-          $post_image->image_path = asset('images/posts/' . $imageName);
+          $existingImage->delete();
+        }
+      }
 
-          $post->images()->save($post_image);
+      // Upload new images
+      foreach ($request->file('images') as $image) {
+        if ($image instanceof \Illuminate\Http\UploadedFile) {
+          $imageName = time() . '_' . Str::random(8) . '.' . $image->getClientOriginalExtension();
+          $image->move(public_path('images/posts'), $imageName);
+
+          $post->images()->create([
+            'image_path' => asset('images/posts/' . $imageName),
+          ]);
         }
       }
     } else {
-      $post->images()->delete();
+      // No images key sent: delete all existing images
+      foreach ($post->images as $existingImage) {
+        $oldPath = public_path('images/posts/' . basename($existingImage->image_path));
+        if (file_exists($oldPath)) {
+          unlink($oldPath);
+        }
+        $existingImage->delete();
+      }
     }
-    $post->save();
 
+    return new PostResource($post->fresh(['images', 'user']));
+  }
 
-    $updated = Post::where('id', $post->id)->first();
+  /**
+   * Remove the specified post (owner only).
+   */
+  public function destroy(Request $request, Post $post): JsonResponse
+  {
+    // Authorization: only the post owner can delete
+    if ($request->user()->id !== $post->user_id) {
+      return response()->json(['message' => 'Unauthorized. You can only delete your own posts.'], 403);
+    }
 
-    return new PostResource($updated);
+    // Delete associated images
+    foreach ($post->images as $image) {
+      $oldPath = public_path('images/posts/' . basename($image->image_path));
+      if (file_exists($oldPath)) {
+        unlink($oldPath);
+      }
+    }
+
+    $post->delete();
+
+    return response()->json(['message' => 'Post deleted successfully'], 200);
+  }
+
+  /**
+   * Pin / unpin a post to the owner's profile (owner only, capped at 3).
+   */
+  public function togglePin(Request $request, Post $post)
+  {
+    if ($request->user()->id !== $post->user_id) {
+      return response()->json(['message' => 'Unauthorized. You can only pin your own posts.'], 403);
+    }
+
+    if ($post->is_pinned) {
+      $post->update(['is_pinned' => false, 'pinned_at' => null]);
+    } else {
+      $maxPins = 3;
+      $pinnedCount = Post::where('user_id', $post->user_id)
+        ->where('is_pinned', true)
+        ->count();
+      if ($pinnedCount >= $maxPins) {
+        // Release the oldest pinned post so the new one can take its place
+        Post::where('user_id', $post->user_id)
+          ->where('is_pinned', true)
+          ->oldest('pinned_at')
+          ->first()
+          ?->update(['is_pinned' => false, 'pinned_at' => null]);
+      }
+      $post->update(['is_pinned' => true, 'pinned_at' => now()]);
+    }
+
+    return response()->json(['is_pinned' => $post->is_pinned]);
+  }
+
+  /**
+   * Get comments for a post.
+   */
+  public function getPostComments(Request $request, Post $post)
+  {
+    // Sort: "top" by likes count desc, otherwise newest first.
+    $sort = $request->query('sort', 'top');
+    $query = $post->comments();
+    if ($sort === 'new') {
+      $query->latest();
+    } else {
+      // likes_count is added by PostResource::prepare's withCount
+      $query->orderByDesc('likes_count')->orderByDesc('created_at');
+    }
+
+    if ($query->count() === 0) {
+      return response()->json(['message' => 'No comments found'], 404);
+    }
+
+    return PostResource::collection(
+      PostResource::prepare($query)->paginate(5)
+    );
+  }
+
+  /**
+   * Get a post by username and post ID.
+   */
+  public function getPostByUsernameAndId($username, $post_id)
+  {
+    $user = User::where('username', $username)->first();
+
+    if (!$user) {
+      return response()->json(['message' => 'User not found.'], 404);
+    }
+
+    $post = $user->posts()->where('id', $post_id)->first();
+
+    if (!$post) {
+      return response()->json(['message' => 'Post not found.'], 404);
+    }
+
+    return new PostResource(PostResource::prepare($post->newQuery()->whereKey($post->id))->first());
   }
 }
