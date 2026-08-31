@@ -299,8 +299,8 @@ function MessagesPage() {
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-2">
+      <ScrollArea className="flex-1 overflow-hidden">
+        <div className="min-w-0 overflow-hidden p-2">
           {isLoading && conversations.length === 0 ? (
             <div className="flex justify-center py-10">
               <LoaderCircle />
@@ -321,18 +321,18 @@ function MessagesPage() {
               )}
             </div>
           ) : (
-            <ul className="space-y-1">
+            <ul className="min-w-0 space-y-1 overflow-hidden">
               {filteredConversations.map((conv) => {
                 const partner = getChatPartner(conv);
                 if (!partner) return null;
                 const isActive = currentChat?.id === partner.id;
                 const hasUnread = conv.unread_count > 0;
                 return (
-                  <li key={conv.id}>
+                  <li key={conv.id} className="min-w-0">
                     <button
                       onClick={() => goToRoom(partner.id, conv.room)}
                       className={cn(
-                        "group flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all",
+                        "group flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-xl p-3 text-left transition-all",
                         isActive ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-muted",
                         hasUnread && !isActive && "bg-accent/60 hover:bg-accent"
                       )}
@@ -355,16 +355,16 @@ function MessagesPage() {
                           />
                         )}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className={cn("truncate text-sm", hasUnread || isActive ? "font-semibold" : "font-medium")}>
+                      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                        <div className="flex min-w-0 items-center justify-between gap-2">
+                          <p className={cn("min-w-0 flex-1 truncate text-sm", hasUnread || isActive ? "font-semibold" : "font-medium")}>
                             {partner?.first_name} {partner?.last_name}
                           </p>
-                          <span className={cn("shrink-0 text-[11px]", isActive ? "text-primary-foreground/70" : hasUnread ? "font-medium text-foreground" : "text-muted-foreground")}>
+                          <span className={cn("max-w-[78px] shrink-0 truncate whitespace-nowrap text-right text-[11px]", isActive ? "text-primary-foreground/70" : hasUnread ? "font-medium text-foreground" : "text-muted-foreground")}>
                             {conv.ago}
                           </span>
                         </div>
-                        <p className={cn("truncate text-xs", isActive ? "text-primary-foreground/80" : hasUnread ? "font-medium text-foreground" : "text-muted-foreground")}>
+                        <p className={cn("block truncate text-xs", isActive ? "text-primary-foreground/80" : hasUnread ? "font-medium text-foreground" : "text-muted-foreground")}>
                           {conv.content || (conv.image_url ? "📷 Image" : "No messages yet")}
                         </p>
                       </div>
@@ -750,7 +750,7 @@ function MessagesPage() {
 
   return (
     <div className="flex h-[calc(100dvh-3rem)] w-full overflow-hidden rounded-xl border bg-background shadow-sm md:h-[calc(100dvh-4rem)]">
-      <aside className="flex w-[360px] shrink-0 flex-col border-r bg-muted/10 lg:w-[380px]">
+      <aside className="flex w-[360px] min-w-0 shrink-0 flex-col overflow-hidden border-r bg-muted/10 lg:w-[380px]">
         {renderConversationList()}
       </aside>
       <section className="flex min-w-0 flex-1 flex-col bg-background">
