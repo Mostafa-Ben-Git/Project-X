@@ -52,7 +52,7 @@ function UserLayout() {
   return (
     <SidebarProvider defaultOpen={false} className="h-dvh overflow-hidden">
       <AppSidebar />
-      <SidebarInset className="flex h-dvh flex-col overflow-hidden 2xl:mr-[340px]">
+      <SidebarInset className={`flex h-dvh flex-col overflow-hidden ${isMessages ? "" : "2xl:mr-[340px]"}`}>
         <header className="sticky top-0 z-30 hidden h-12 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/80 px-3 pt-[env(safe-area-inset-top)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:flex">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="hidden md:flex" />
@@ -61,10 +61,8 @@ function UserLayout() {
           <span className="hidden text-sm font-medium text-muted-foreground md:inline">Connect. Share. Discover.</span>
         </header>
         {isMessages ? (
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-2 sm:px-4">
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <Outlet />
-            </div>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-muted/30">
+            <Outlet />
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-3 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:px-4 md:px-6 lg:px-8 md:pb-0">
@@ -76,7 +74,7 @@ function UserLayout() {
           </div>
         )}
       </SidebarInset>
-      <RightBar />
+      {!isMessages && <RightBar />}
       <SidebarMobile
         sidebarItems={sidebarItems}
         counts={{ messages, notifications }}
