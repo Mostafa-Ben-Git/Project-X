@@ -1,12 +1,21 @@
 import path from "path";
 import react from "@vitejs/plugin-react";
+import eslint from "vite-plugin-eslint";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), eslint({ failOnWarning: false })],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  server: {
+    port: 3000,
+    proxy: {
+      "/api": "http://localhost:8000",
+      "/broadcasting": "http://localhost:8000",
+      "/sanctum": "http://localhost:8000",
     },
   },
   build: {

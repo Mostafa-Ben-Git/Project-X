@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "formatter": {
+    "BACKEND": "composer pint --test",
+    "FRONTEND": "pnpm lint"
+  },
+  "commands": {
+    "test:backend": "cd BACKEND && php artisan test",
+    "test:frontend": "cd FRONTEND && pnpm test:run",
+    "lint:backend": "cd BACKEND && ./vendor/bin/pint --test",
+    "lint:frontend": "cd FRONTEND && pnpm lint"
+  }
+}
