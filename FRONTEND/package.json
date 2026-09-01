@@ -60,8 +60,7 @@
     "react-loader-spinner": "^6.1.6",
     "react-redux": "^9.3.0",
     "react-responsive-carousel": "^3.2.23",
-    "react-router-dom": "^6.30.4",
-    "react-scripts": "^5.0.1",
+    "react-router-dom": "^7.18.3",
     "react-textarea-autosize": "^8.5.9",
     "sonner": "^2.0.8",
     "tailwind-merge": "^2.6.1",
@@ -87,8 +86,8 @@
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.5.14",
     "tailwindcss": "^3.4.19",
-    "vite": "^5.4.21",
+    "vite": "^6.4.3",
     "vite-plugin-eslint": "^1.8.1",
-    "vitest": "^2.1.9"
+    "vitest": "^3.2.7"
   }
 }
